@@ -1,0 +1,29 @@
+{
+  "port": 4300,
+  "targets": {
+    "local": "http://127.0.0.1:8000"
+  },
+  "accounts": [
+    {
+      "name": "admin",
+      "login": [
+        { "path": "/login/", "fields": { "username": "admin@example.test", "password": "change-me" } },
+        { "path": "/login/otp/", "fields": { "token": { "totp": "JBSWY3DPEHPK3PXP" } } }
+      ]
+    },
+    {
+      "name": "viewer",
+      "login": [
+        { "path": "/login/", "fields": { "username": "viewer@example.test", "password": "change-me" } }
+      ]
+    },
+    {
+      "name": "customer with a PIN link",
+      "home": "/c/0123456789abcdef/",
+      "follow": false,
+      "login": [
+        { "path": "/c/0123456789abcdef/", "fields": { "pin": "123456" } }
+      ]
+    }
+  ]
+}
