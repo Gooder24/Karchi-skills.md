@@ -5,7 +5,7 @@ Osobné skilly pre Clauda. Každý priečinok je jeden skill (`SKILL.md` + jeho 
 | Skill | Čo robí |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchiho vkus: vzhľad, ovládanie, výkon, informácie, spôsob práce |
-| [`playwright-cli`](playwright-cli/SKILL.md) | Ovládanie prehliadača príkazom `playwright-cli` |
+| [`playwright-cli`](playwright-cli/SKILL.md) | Ovládanie prehliadača príkazom `playwright-cli`, aj za viac prihlásených účtov naraz |
 
 ## Claude Code
 
@@ -31,3 +31,8 @@ Bez skillov stačí obsah `taste/taste.md` vložiť do inštrukcií projektu ale
 Skill je z [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli) (Apache-2.0,
 `playwright-cli/LICENSE`), stav `b85c7a7` (v0.1.22). Potrebuje príkaz `playwright-cli`:
 `npm install -g @playwright/cli@latest`.
+
+Oproti pôvodnému pribudla brána na testovanie aplikácie za viac prihlásených účtov naraz
+([`accounts/`](playwright-cli/accounts/README.md), Node.js 18+, bez závislostí), návod pre agentov
+`references/multi-account.md` a jeden riadok v `SKILL.md`, ktorý naň odkazuje. Pri obnove
+z pôvodného repozitára stačí prekopírovať `skills/playwright-cli/` a ten riadok vrátiť.

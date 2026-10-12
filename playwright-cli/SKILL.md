@@ -481,6 +481,7 @@ See [references/pr-attachments.md](references/pr-attachments.md) for alt text, i
 * **Request mocking** [references/request-mocking.md](references/request-mocking.md)
 * **Running Playwright code** [references/running-code.md](references/running-code.md)
 * **Browser session management** [references/session-management.md](references/session-management.md)
+* **Several logged-in accounts at once** [references/multi-account.md](references/multi-account.md)
 * **Storage state (cookies, localStorage)** [references/storage-state.md](references/storage-state.md)
 * **Test generation (plan / generate / heal)** [references/test-generation.md](references/test-generation.md)
 * **Tracing** [references/tracing.md](references/tracing.md)

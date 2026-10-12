@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accounts side by side</title>
+<style>
+  :root { color-scheme: light dark; --ink: #1a1d21; --muted: #5b6470; --line: #c5ccd6; --bar: #f2f4f7; --accent: #0b5cab; --bad: #a4161a; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e6e8eb; --muted: #9aa3ad; --line: #3b424b; --bar: #1d2126; --accent: #7db7f7; --bad: #ff8a8e; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; height: 100vh; display: flex; flex-direction: column; font: 14px/1.4 system-ui, sans-serif; color: var(--ink); background: var(--bar); }
+  #bar { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--line); }
+  #bar label { display: flex; gap: 0.4rem; align-items: center; color: var(--muted); }
+  #bar label.grow { flex: 1 1 16rem; }
+  #bar input { flex: 1; min-width: 8rem; }
+  input, select, button { font: inherit; padding: 0.25rem 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: Canvas; color: CanvasText; }
+  button { border-color: var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { button { color: #10151b; } }
+  .note { color: var(--muted); flex: 1 1 100%; font-size: 13px; }
+  #grid { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 1px; background: var(--line);
+    grid-template-columns: repeat(var(--columns, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); }
+  #grid.tall { grid-auto-rows: 80vh; }
+  .pane { display: flex; flex-direction: column; min-height: 0; background: var(--bar); }
+  /* A zoomed pane covers the whole window. The others stay loaded underneath, so nothing reloads. */
+  .pane.zoomed { position: fixed; inset: 0; z-index: 1; }
+  .pane header { display: flex; flex-wrap: wrap; gap: 0.2rem 0.75rem; align-items: baseline; padding: 0.3rem 0.75rem; }
+  .pane .state { color: var(--bad); }
+  .pane .links { margin-left: auto; display: flex; gap: 0.9rem; }
+  .pane a { color: var(--accent); }
+  .pane iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+<form id="bar">
+  <strong>Accounts side by side</strong>
+  <label id="target-box">Target <select id="target"></select></label>
+  <label>Columns <select id="columns"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+  <label class="grow">Path <input id="path" placeholder="/path to open in every pane" autocomplete="off"></label>
+  <button>Open in all</button>
+  <span class="note">Every pane is a different account. The logins live in the gateway, not in this browser, so they cannot overwrite each other. Ctrl+Space zooms the pane under the pointer to the whole window, Ctrl+Space again brings the grid back.</span>
+</form>
+<main id="grid"></main>
+<script>
+const data = /*DATA*/null;
+const grid = document.getElementById('grid');
+const targetSelect = document.getElementById('target');
+const columnsSelect = document.getElementById('columns');
+const recall = (key, fallback) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
+const remember = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
+
+data.targets.forEach((name, index) => targetSelect.add(new Option(name, index)));
+document.getElementById('target-box').hidden = data.targets.length < 2;
+targetSelect.value = Math.min(Number(recall('target', 0)), data.targets.length - 1);
+// The layout is remembered per number of accounts: what suits 4 panes does not suit 8.
+const columnsKey = 'columns:' + data.accounts.length;
+columnsSelect.value = recall(columnsKey, data.accounts.length > 4 ? 4 : Math.min(data.accounts.length, 2));
+
+// The same host name as the board keeps the panes same-site, which the gateway requires.
+const origin = index => `http://${location.hostname}:${data.port + 1 + index + data.step * Number(targetSelect.value)}`;
+
+// Ctrl+Space zooms the pane under the pointer to the whole window and restores the grid when pressed again.
+let hovered = null;
+let last = 0;
+const zoomKey = event => event.ctrlKey && event.code === 'Space' && !event.altKey && !event.metaKey && !event.shiftKey;
+const toggleZoom = index => (grid.querySelector('.zoomed') || grid.children[index]).classList.toggle('zoomed');
+
+const panes = data.accounts.map((account, index) => {
+  const pane = document.createElement('section');
+  pane.className = 'pane';
+  pane.innerHTML = '<header><strong></strong><span class="state"></span><span class="links">' +
+    '<a class="zoom" href="#">zoom</a><a class="home" href="#">home</a><a class="relogin" href="#">log in again</a><a class="tab" target="_blank" rel="noopener">own tab</a>' +
+    '</span></header><iframe></iframe>';
+  pane.onmouseenter = () => { hovered = last = index; };
+  pane.onmouseleave = () => { hovered = null; };
+  pane.querySelector('.zoom').onclick = event => { event.preventDefault(); toggleZoom(index); };
+  pane.querySelector('strong').textContent = account.name;
+  const state = pane.querySelector('.state');
+  state.textContent = account.state === 'logged in' ? '' : account.state;
+  const frame = pane.querySelector('iframe');
+  frame.title = account.name;
+  const open = path => {
+    frame.src = origin(index) + path;
+    pane.querySelector('.tab').href = origin(index) + account.home;
+  };
+  pane.querySelector('.home').onclick = event => { event.preventDefault(); open(account.home); };
+  pane.querySelector('.relogin').onclick = event => { event.preventDefault(); state.textContent = ''; open(data.relogin); };
+  grid.append(pane);
+  return { account, open, frame };
+});
+
+addEventListener('keydown', event => {
+  if (zoomKey(event)) {
+    event.preventDefault();
+    toggleZoom(hovered ?? last);
+  }
+});
+// A key pressed inside a pane never reaches this page: the gateway's script in the pane passes it on.
+addEventListener('message', event => {
+  const index = panes.findIndex(pane => pane.frame.contentWindow === event.source);
+  if (index >= 0 && event.data === data.zoom)
+    toggleZoom(hovered ?? index);
+});
+
+function layout() {
+  const columns = Number(columnsSelect.value);
+  grid.style.setProperty('--columns', columns);
+  grid.classList.toggle('tall', Math.ceil(panes.length / columns) > 2);
+}
+
+targetSelect.onchange = () => { remember('target', targetSelect.value); panes.forEach(pane => pane.open(pane.account.home)); };
+columnsSelect.onchange = () => { remember(columnsKey, columnsSelect.value); layout(); };
+document.getElementById('bar').onsubmit = event => {
+  event.preventDefault();
+  const path = document.getElementById('path').value.trim();
+  if (path.startsWith('/'))
+    panes.filter(pane => pane.account.follow).forEach(pane => pane.open(path));
+};
+layout();
+panes.forEach(pane => pane.open(pane.account.home));
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# Account configs for the playwright-cli gateway hold passwords
+*.local.json
