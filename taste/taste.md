@@ -1,85 +1,86 @@
-# Karchiho vkus
+# Karchi's taste
 
-Odvodené zo 163 správ, ktoré Karchi napísal Claudovi v 66 konverzáciách (stav 2026-10-12).
-Väčšina z nich sa týka jeho desktopu (KarchiOS, Hyprland, ThinkPad X270), takže tam je vkus
-doložený najlepšie. Citáty v zátvorkách sú jeho vlastné slová. Všetko ostatné je Claudov výklad.
-Keď Karchi v aktuálnej konverzácii povie niečo iné, platí to, čo povie teraz.
+Derived from 163 messages that Karchi wrote to Claude in 66 conversations (as of 2026-10-12).
+Most of them concern his desktop (KarchiOS, Hyprland, ThinkPad X270), so that is where his taste is
+best documented. The quotes in parentheses are his own words (translated from Slovak). Everything else
+is Claude's interpretation. When Karchi says something different in the current conversation, what he
+says now applies.
 
-## Vzhľad
+## Look
 
-- **Pixel art je identita.** Ikony, widgety aj aplikácie majú ladiť s pixel-art témou systému a
-  meniť sa spolu s ňou („nech to celé matchuje s mojím počítačom pixelartom", „je to súčasťou
-  môjho distra takže sa to bude meniť podľa pixelartu").
-- **Žiadne hranaté prvky, okrem samotného pixel artu.** Lišta, widgety aj file manager majú byť
-  zaoblené („vyzerá ten bar zle keď je celý hranatý"). Mieru zaoblenia chce vedieť nastaviť:
-  prirodzené, alebo pixelové.
-- **Vstavané, nie prilepené vedľa.** Nová funkcia patrí dovnútra toho, čo už existuje („chcem mať
-  kalendarix vstavaný priamo v kalendári čo mám vo widgete, nie vedľa ako ikonu").
-- **Dotiahnuté zobrazenie.** Funkčný, ale holý výpis nestačí („krajšie… nie iba tak primitívne").
+- **Pixel art is the identity.** Icons, widgets and apps should match the system's pixel-art theme and
+  change along with it ("so the whole thing matches my computer with the pixelart", "it's part of
+  my distro so it'll change according to the pixelart").
+- **No square-cornered elements, except the pixel art itself.** The bar, the widgets and the file manager
+  should be rounded ("the bar looks bad when it's all square"). He wants to be able to set the amount of
+  rounding: natural, or pixel-style.
+- **Built in, not stuck on next to it.** A new feature belongs inside what already exists ("I want to have
+  kalendarix built right into the calendar I have in the widget, not next to it as an icon").
+- **A polished presentation.** A functional but bare listing is not enough ("nicer… not just so primitive").
 
-## Menej je viac
+## Less is more
 
-- Čo nepoužíva, nemá byť vidieť a nemá sa ani načítať: žiadna voľba wallpaperov, žiadny kôš vo
-  file manageri, žiadna stavová ikona bežiacej služby, žiadne zvuky, ktoré si nevybral.
-- Nič sa nemá vytvárať samo bez opýtania („nechcem aby sa mi tam vždy automaticky vytvárali
-  kategórie ako dokumenty alebo work").
-- Jeden účel, jedna cesta („žiadne iné možnosti… iba tohto").
-- Zavreté znamená zavreté. Aplikácia po zatvorení nemá ostať bežať na pozadí.
+- What he does not use should not be visible and should not even load: no wallpaper picker, no trash in
+  the file manager, no status icon for a running service, no sounds he did not choose.
+- Nothing should be created on its own without asking ("I don't want categories like documents or work
+  to always get created there automatically").
+- One purpose, one way ("no other options… only this").
+- Closed means closed. An app should not keep running in the background after it is closed.
 
-## Ovládanie
+## Controls
 
-- **Klávesnica na prvom mieste.** Každá častá akcia má mať ľahkú skratku (Super+Tab,
-  Super+Shift+Enter, F9 bez Fn). Ak je skratka obsadená, pôvodnú väzbu zruš a daj tam novú.
-- **Hlavná akcia je hneď po ruke.** Po otvorení okna je výber na hlavnom tlačidle, spúšťa sa
-  medzerníkom alebo Enterom, šípkami sa dá dôjsť všade.
-- **Neber fokus ani kurzor.** Po zatvorení panela má kurzor ostať tam, kde bol v poslednej
-  aplikácii.
-- **Automatika namiesto klikania** („je celkom unconvenient keby som klikal tlačidlo, keby sa to
-  automaticky triggerlo keď skončím tú časť"). Rozumné predvolené nastavenie sa má urobiť samo
-  už pri otvorení, ručná úprava ostáva možná.
-- **Nastavenia patria do Nastavení.** Čo chce ladiť (citlivosť touchpadu, zaoblenie, režim
-  batérie), má byť viditeľné a voliteľné v UI, nie v konfiguračnom súbore.
-- **Priamo čitateľná informácia** popri šikovnej skratke: heslo k Wi-Fi ako text, nie iba QR kód.
-- **Ovládanie podľa kontextu.** Jas sa mení len na monitore, kde je kurzor.
-- **Využiť celú obrazovku** a listovať gestom na touchpade.
+- **Keyboard first.** Every frequent action should have an easy shortcut (Super+Tab,
+  Super+Shift+Enter, F9 without Fn). If the shortcut is taken, remove the original binding and put the new one there.
+- **The main action is right at hand.** When a window opens, the selection is on the main button, it is
+  triggered with Space or Enter, and the arrow keys reach everything.
+- **Do not take the focus or the cursor.** After a panel closes, the cursor should stay where it was in the
+  last application.
+- **Automation instead of clicking** ("it's pretty unconvenient if I had to click a button, if it got
+  triggered automatically when I finish that part"). A sensible default should apply itself
+  as soon as it opens; manual adjustment stays possible.
+- **Settings belong in Settings.** What he wants to tune (touchpad sensitivity, rounding, battery
+  mode) should be visible and selectable in the UI, not in a config file.
+- **Directly readable information** alongside a smart shortcut: the Wi-Fi password as text, not just a QR code.
+- **Context-aware controls.** Brightness changes only on the monitor where the cursor is.
+- **Use the whole screen** and page through with a touchpad gesture.
 
-## Výkon a spoľahlivosť
+## Performance and reliability
 
-- **Šetrnosť je požiadavka, nie bonus.** Pri každom novom nástroji sa pýta „žerie to veľa ramky
-  alebo computu?" a chce, aby to „nežralo veľa baterky/resources". Daj mu ľahké riešenie a povedz
-  mu spotrebu skôr, než sa opýta.
-- **Rýchlosť.** Pomalé veci odmieta, aj keď sú inak dobré („to rozšírenie je pomalé… inak je to
-  vynikajúce"). Firefoxové jadro nemá rád, používa prehliadače na Chromiu (Helium, Brave Origin).
-- **Vždy to musí ísť** („aby sa vedeli vždy otvárať hocijaké workspaces a nikdy sa nestalo že
-  neviem to otvoriť").
-- **Údaje si nesmú protirečiť.** Ukazovateľ batérie, ktorý nesedí s batériami, je „úplný chaos".
-  Hlasitosť v prehrávači má zodpovedať systémovej hlasitosti.
-- **Plynulosť.** Žiadne skoky medzi krokmi, žiadne blikanie.
-- **Trvalé riešenie, nie dočasná záplata** („tieto riešenia čo robíme sú dočasné alebo už mi to
-  po tomto nastavení bude všetko fungovať?"). Ak je niečo dočasné, povedz to vopred.
+- **Frugality is a requirement, not a bonus.** With every new tool he asks "does it eat a lot of RAM
+  or compute?" and wants it to "not eat a lot of battery/resources". Give him a lightweight solution and tell
+  him its consumption before he asks.
+- **Speed.** He rejects slow things even when they are otherwise good ("that extension is slow… otherwise it's
+  excellent"). He does not like the Firefox engine; he uses Chromium-based browsers (Helium, Brave Origin).
+- **It must always work** ("so that any workspaces can always be opened and it never happens that
+  I can't open it").
+- **Data must not contradict itself.** A battery indicator that does not match the batteries is "total chaos".
+  The volume in the player should match the system volume.
+- **Smoothness.** No jumps between steps, no flickering.
+- **A permanent solution, not a temporary patch** ("are these solutions we're doing temporary, or will
+  everything work for me after this setup?"). If something is temporary, say so up front.
 
-## Informácie a obsah
+## Information and content
 
-- **Chronologicky, nie algoritmicky.** Chce RSS od najnovšieho po najstaršie, nie feed, ktorý sa
-  mu prispôsobuje.
-- **Všeobecné AI zhrnutia sú „také meh".** Radšej pôvodný zdroj a konkrétne správy, „nechcem
-  wastovať čas".
-- **Neprikrášľuj.** V reportoch o ňom samom vyzdvihni negatíva aj pozitíva rovnako otvorene.
-- **Skutočné čísla za celé obdobie**, nie výrez. Keď dáta chýbajú, povedz presne, čo chýba a prečo.
-- Open source má prednosť. Lokálne riešenie má prednosť pred cloudom, ak je možné.
+- **Chronological, not algorithmic.** He wants RSS from newest to oldest, not a feed that
+  adapts itself to him.
+- **Generic AI summaries are "kinda meh".** He prefers the original source and specific news, "I don't want
+  to waste time".
+- **Do not embellish.** In reports about himself, point out the negatives and the positives equally openly.
+- **Real numbers for the whole period**, not a slice. When data is missing, say exactly what is missing and why.
+- Open source takes precedence. A local solution takes precedence over the cloud, where possible.
 
-## Ako s ním pracovať
+## How to work with him
 
-- **Jazyk:** po slovensky, neformálne, krátko. Sám píše stručne a so slangom.
-- **Dotiahni to za neho.** Deleguje naplno a nechce riešiť detaily („ja sa o to nechcem zaujímať,
-  potrebujem aby si to spravil", „nevieš to spraviť za mňa?"). Rád necháva prácu bežať cez noc.
-- **Keď zúži rozsah, drž sa ho** („s asus serverom nič nerob, potrebujem riešiť teraz iba to usb").
-- **Keď musí niečo urobiť sám, daj mu presné príkazy a hodnoty na prepísanie**, nie vysvetlenie
-  princípu („daj mi príkazy ktoré musím spustiť").
-- **Najprv over, potom stavaj.** Pri nápadoch chce najskôr prieskum, či to už neexistuje, pri
-  optimalizácii najskôr meranie. Pri výbere chce porovnanie a rozhodne sám („porovnaj a rozhodnem").
-- **Demo čo najskôr.** Radšej rýchly funkčný prototyp než dlhé plánovanie.
-- **Spätnú väzbu dáva po kolách**, často screenshotom s jednou vetou. Oprav presne to, čo
-  ukazuje, a nepridávaj nič navyše.
-- **Zmeny v jeho projektoch:** jedna vetva a jeden pull request na jednu opravu. Úpravy desktopu
-  patria do jeho distra (KarchiOS), nie iba do jedného počítača.
+- **Language:** Slovak, informal, brief. He himself writes tersely and with slang.
+- **Finish it for him.** He delegates fully and does not want to deal with details ("I don't want to get into it,
+  I need you to do it", "can't you do it for me?"). He likes to leave work running overnight.
+- **When he narrows the scope, stick to it** ("don't do anything with the asus server, right now I only need to sort out the usb").
+- **When he has to do something himself, give him exact commands and values to type in**, not an explanation
+  of the principle ("give me the commands I have to run").
+- **Verify first, then build.** With ideas he first wants research into whether it already exists; with
+  optimization, measurement first. When choosing, he wants a comparison and decides himself ("compare and I'll decide").
+- **A demo as soon as possible.** Rather a fast working prototype than long planning.
+- **He gives feedback in rounds**, often as a screenshot with one sentence. Fix exactly what it
+  shows, and do not add anything extra.
+- **Changes in his projects:** one branch and one pull request per fix. Desktop changes
+  belong in his distro (KarchiOS), not just on one computer.
