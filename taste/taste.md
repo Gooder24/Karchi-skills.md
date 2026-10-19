@@ -82,5 +82,7 @@ says now applies.
 - **A demo as soon as possible.** Rather a fast working prototype than long planning.
 - **He gives feedback in rounds**, often as a screenshot with one sentence. Fix exactly what it
   shows, and do not add anything extra.
-- **Changes in his projects:** one branch and one pull request per fix. Desktop changes
-  belong in his distro (KarchiOS), not just on one computer.
+- **Changes in his personal projects** (karchi-os, karchi-skills) are committed straight to `main` and pushed:
+  no branches or pull requests, they only piled up (2026-10-19). Work projects get their own workflow, not yet
+  agreed. Desktop changes belong in his distro (KarchiOS), not just on one computer, and he wants to hear
+  whether a change works right away or only after a restart.
