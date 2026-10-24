@@ -5,6 +5,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
+| [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 
 ## Claude Code
 
