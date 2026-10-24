@@ -1,6 +1,6 @@
 ---
 name: taste
-description: Karchi's personal taste (Karchiho vkus) in visual design, UI behaviour, tool choice, performance and how he likes to work with Claude. Use before designing or changing any UI, widget, app, theme or desktop setting for him, before choosing or recommending a tool, before writing a report or summary for him, and whenever a decision depends on what he would like.
+description: Karchi's personal taste (Karchiho vkus) in visual design, UI behaviour, tool choice, performance and how he likes to work with Claude. Use before designing or changing any UI, widget, app, theme or desktop setting for him, before choosing or recommending a tool, before writing a report or summary for him, before looking for, copying or moving his files or data on any of his machines, and whenever a decision depends on what he would like.
 ---
 
 Read `taste.md` in this folder before deciding anything, and apply it to the task.

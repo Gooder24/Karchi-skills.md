@@ -86,3 +86,25 @@ says now applies.
   no branches or pull requests, they only piled up (2026-10-19). Work projects get their own workflow, not yet
   agreed. Desktop changes belong in his distro (KarchiOS), not just on one computer, and he wants to hear
   whether a change works right away or only after a restart.
+
+## Finding and moving his files
+
+His files are spread over x270, asus, dell, e540, folder backups of old machines and external disks. On
+2026-10-24 "do you have the songbook files and some SQL dumps here?" took five rounds and ended with "wtf,
+all it took was for me to word it right". One short request should be enough: work out what it is for
+(that time: real data in the test site on dell) and get there in one go.
+
+- **"Do you have X?" means "find X wherever I keep it".** Before saying it is not there, read the project
+  memory files themselves (not just the index; another thread may have changed them), then search every
+  machine you can reach. Reading on his machines is part of the request; changing anything there still
+  needs his word.
+- **Search all of it.** On btrfs `/home` is its own mount, so `find / -xdev` skips it: search each mount
+  from `findmnt` and any plugged-in disk. Match names case-insensitively, with and without diacritics.
+- **"The asus backup" is a folder, not the machine**, e.g. `~/ZALOHA-ASUS-Vivobook_2026-10-10` on x270.
+- **Check the content, not the name.** A `.sql` file is the dump he wants only if it holds that project's
+  tables and data.
+- **"Move it" means copy it there and finish the job.** Keep the source until he says to delete it, then do
+  what the data is for (a dump: import it into the test database and run the migrations). Do not answer
+  with a menu of options; "compare and I'll decide" is for choosing tools and designs. If the real source
+  cannot be reached (a disk that is not plugged in), do everything else and end with one sentence on what
+  is missing and the one thing he has to do.
