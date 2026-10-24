@@ -9,8 +9,17 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 ## Claude Code
 
 ```sh
-git clone https://github.com/Gooder24/Karchi-skills.md ~/.work/karchi-skills
-ln -s ~/.work/karchi-skills/taste ~/.claude/skills/taste
+curl -fsSL https://raw.githubusercontent.com/Gooder24/Karchi-skills.md/main/install.sh | bash
+```
+
+It clones the repo to `~/.work/karchi-skills` and links every skill into `~/.claude/skills` (and
+`~/.codex/skills` if Codex is installed). Installed on x270, asus, dell, e540 and the VPS, where a
+`SessionStart` hook in `~/.claude/settings.json` runs `install.sh` again at the start of every session,
+so a pushed change reaches every machine in its next session:
+
+```json
+"SessionStart": [{ "hooks": [{ "type": "command", "async": true, "timeout": 30,
+  "command": "GIT_TERMINAL_PROMPT=0 timeout 20 bash ~/.work/karchi-skills/install.sh >/dev/null 2>&1 || true" }] }]
 ```
 
 ## Claude on the web (claude.ai) and in the desktop app
