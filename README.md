@@ -6,6 +6,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
+| [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
 
 ## Claude Code
 
