@@ -8,6 +8,19 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
 
+## One-off skills
+
+Playbooks that were used once and worked. `install.sh` does not link them, so they do not load into every
+session. When the situation comes back, link the one you need:
+
+```sh
+ln -s ~/.work/karchi-skills/one-off/ntfs-dirty-flag ~/.claude/skills/
+```
+
+| Skill | Used for |
+|-------|---------|
+| [`ntfs-dirty-flag`](one-off/ntfs-dirty-flag/SKILL.md) | External NTFS disk that Linux mounts only read-only: check the hardware, back up the metadata, rehearse `ntfsfix` on a copy, repair, verify (2026-10) |
+
 ## Claude Code
 
 ```sh
