@@ -82,6 +82,9 @@ says now applies.
   after guessed NicNames labels and a Cloudflare "Authorize" button he never saw).
   - His steps come first, as a numbered list, one action per line, values to type in code blocks. Status and
     background go after them, briefly.
+  - Name the site or app where the steps happen, with its address (e.g. "on nicnames.com"). Never point at
+    "the page from your screenshot"; show the image again if it helps. Keep links that are not a step out of the
+    list: he read a side link to another registrar as the place to go.
   - Name only buttons and screens you have actually seen: in his screenshot, in official docs, or on the page
     itself. Never guess labels from similar sites. Where you do not know the next screen, end the list there and
     ask for a screenshot of what he sees, then continue screen by screen.
