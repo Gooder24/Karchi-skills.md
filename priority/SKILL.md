@@ -36,3 +36,9 @@ deadline), `## P3 niekedy` (ideas) and `## Hotové` (done, `- [x]`).
   Hotové. Delete a line only when he says „vyhoď“.
 - Change only the lines concerned, keep the format, and put nothing else into `~/inbox`. A safe way
   to edit from another machine is `ssh asus 'python3 - <<"PY" ... PY'` on the file.
+
+## Night worker
+
+A scheduled T3 task (00:30, new thread per run) works through the inbox while Karchi sleeps; its
+rules are in `worker.md` here. Its report lands in `~/inbox/worker/<date>.md` on asus and the hook
+shows it in the morning.
