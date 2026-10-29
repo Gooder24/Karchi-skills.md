@@ -77,6 +77,16 @@ says now applies.
 - **When he narrows the scope, stick to it** ("don't do anything with the asus server, right now I only need to sort out the usb").
 - **When he has to do something himself, give him exact commands and values to type in**, not an explanation
   of the principle ("give me the commands I have to run").
+- **Steps he does by hand must be exact, short and only what is known** ("it's happened several times that when
+  you write a longer text and give me instructions, they don't match what I actually have to do", 2026-10-29,
+  after guessed NicNames labels and a Cloudflare "Authorize" button he never saw).
+  - His steps come first, as a numbered list, one action per line, values to type in code blocks. Status and
+    background go after them, briefly.
+  - Name only buttons and screens you have actually seen: in his screenshot, in official docs, or on the page
+    itself. Never guess labels from similar sites. Where you do not know the next screen, end the list there and
+    ask for a screenshot of what he sees, then continue screen by screen.
+  - Say what he should see when it worked.
+  - If you can do it yourself (API, CLI, a token he gives you), do that instead of sending him to click.
 - **Verify first, then build.** With ideas he first wants research into whether it already exists; with
   optimization, measurement first. When choosing, he wants a comparison and decides himself ("compare and I'll decide").
 - **A demo as soon as possible.** Rather a fast working prototype than long planning.
