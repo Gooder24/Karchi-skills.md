@@ -16,7 +16,9 @@ deadline), `## P3 niekedy` (ideas) and `## Hotové` (done, `- [x]`).
 
 ## At the start of a task
 
-1. Read the inbox: one command, before the first tool call of the task.
+1. The inbox is already in your context: the SessionStart hook `inbox-context.sh` (this folder,
+   wired in `~/.claude/settings.json` on every machine) prints the open items when a session starts.
+   If it is missing, read it with the command above before the first tool call.
 2. Compare the task with P1. If something there is more important or more urgent than what he just
    asked, say it in one line in Slovak, „V inboxe čaká: <item> (P1, od <date>).“, then do what he
    asked anyway. The decision is his; he does not want to be blocked or asked. When nothing beats the

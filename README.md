@@ -24,6 +24,14 @@ so a pushed change reaches every machine in its next session:
   "command": "GIT_TERMINAL_PROMPT=0 timeout 20 bash ~/.work/karchi-skills/install.sh >/dev/null 2>&1 || true" }] }]
 ```
 
+The `priority` skill needs a second `SessionStart` hook next to it, which prints the open inbox items
+into the session's context:
+
+```json
+{ "hooks": [{ "type": "command", "timeout": 10,
+  "command": "bash ~/.work/karchi-skills/priority/inbox-context.sh" }] }
+```
+
 ## Claude on the web (claude.ai) and in the desktop app
 
 ```sh
