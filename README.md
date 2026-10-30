@@ -8,6 +8,16 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
 | [`priority/worker.md`](priority/worker.md) | The night worker: a scheduled T3 task takes one inbox item per night |
+| [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
+| [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every UI before Karchi sees it |
+
+## Third-party skills
+
+`frontend-design` is `skills/frontend-design` from [anthropics/skills](https://github.com/anthropics/skills)
+(commit ca45fc4, 2026-10-28, Apache-2.0, `LICENSE.txt` kept). `avoid-ai-design` is
+[funboy322/avoid-ai-design](https://github.com/funboy322/avoid-ai-design) without its README, docs and
+examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). To update one, copy the same files from upstream
+again. The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).
 
 ## One-off skills
 

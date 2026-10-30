@@ -5,6 +5,11 @@ description: Karchi's personal taste (Karchiho vkus) in visual design, UI behavi
 
 Read `taste.md` in this folder before deciding anything, and apply it to the task.
 
+For any UI he will see: design with `frontend-design` first (direction, type and colour before code), and
+before showing the result run the `avoid-ai-design` detector over the files and fix every P0 and P1
+(`node ~/.work/karchi-skills/avoid-ai-design/scripts/detect.mjs <files>`; a deliberate choice is kept
+with `avoid-ai-design-ignore: <ID>`). Both skills are in this repo.
+
 It holds his preferences with his own words as evidence. Treat it as a default, not a rule:
 what he says in the current conversation wins. When he expresses a new lasting preference or
 corrects one written there, offer to update `taste.md`.
