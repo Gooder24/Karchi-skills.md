@@ -11,6 +11,21 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every UI before Karchi sees it |
 
+## Hooks
+
+Scripts in `hooks/` are not skills; each is wired into `~/.claude/settings.json` on every machine.
+
+| Hook | What it does |
+|------|---------|
+| [`background-wait.py`](hooks/background-wait.py) | `PostToolUse` on `Bash\|Monitor`: in a T3 thread, each background task reminds the agent to call `t3_background_wait`, so the thread stays in Working instead of showing Done ([pingdotgg/t3code#25585](https://github.com/pingdotgg/t3code/issues/25585)) |
+
+Wiring, the same on every machine:
+
+```json
+"PostToolUse": [{ "matcher": "Bash|Monitor", "hooks": [{ "type": "command",
+  "command": "python3 -I ~/.work/karchi-skills/hooks/background-wait.py", "timeout": 5 }] }]
+```
+
 ## Third-party skills
 
 `frontend-design` is `skills/frontend-design` from [anthropics/skills](https://github.com/anthropics/skills)
