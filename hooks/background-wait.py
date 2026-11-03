@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PostToolUse hook for Bash and Monitor (~/.claude/settings.json on every machine).
+# PostToolUse hook for Bash and Monitor, wired in ~/.claude/settings.json on asus only.
 # T3 Code keeps a thread in its sidebar's Working section only for background work the agent
 # marks with t3_background_wait; agents often skip that call, so the thread shows Done while its
 # tests or build still run (pingdotgg/t3code#25585). Each time a background task starts in a T3
