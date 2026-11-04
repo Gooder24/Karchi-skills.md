@@ -3,7 +3,7 @@
 
 Run on asus as the user service prehlad.service: python3 server.py [port]. It listens on 127.0.0.1
 only; Caddy puts it at /prehlad next to Rerun. Every 30 minutes it reruns ../inventory.py, every
-6 hours ../updates.py, and keeps the last good result in ~/.cache/prehlad. Colours live in
+6 hours ../updates.py, every 10 minutes ../cakajuce.py (what waits for Karchi), and keeps the last good result in ~/.cache/prehlad. Colours live in
 ~/.config/prehlad/farby.json, which the page edits through POST api/farby.
 """
 import datetime as dt
@@ -22,7 +22,7 @@ ROOT = os.path.dirname(HERE)
 CACHE = os.path.expanduser("~/.cache/prehlad")
 CONFIG = os.path.expanduser("~/.config/prehlad/farby.json")
 TZ = ZoneInfo("Europe/Bratislava")
-REFRESH = {"inventory.py": 30 * 60, "updates.py": 6 * 3600}
+REFRESH = {"inventory.py": 30 * 60, "updates.py": 6 * 3600, "cakajuce.py": 10 * 60}
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8"),
           "/DepartureMono-Regular.woff2": ("DepartureMono-Regular.woff2", "font/woff2")}
@@ -127,7 +127,8 @@ def data():
         u["dalsi"] = nxt.isoformat() if nxt else None
         updates.append(u)
     return {"teraz": now.isoformat(), "inventar": inv.get("generated"), "aktualizacie_z": upd.get("generated"),
-            "chyba": inv.get("missing", []), "procesy": rows, "aktualizacie": updates, "farby": cfg}
+            "chyba": inv.get("missing", []), "procesy": rows, "aktualizacie": updates, "farby": cfg,
+            "caka": cached("cakajuce.py")}
 
 
 class Handler(BaseHTTPRequestHandler):

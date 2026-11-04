@@ -20,7 +20,7 @@ function icon(device) {
   return `<svg class="pix" viewBox="0 0 11 11" aria-hidden="true">${rects}</svg>`
 }
 
-let state = { data: null, off: { rodiny: new Set(), stroje: new Set() } }
+let state = { data: null, off: { rodiny: new Set(), stroje: new Set() }, strana: 'vsetko' }
 
 function proj(id) {
   const f = state.data.farby
@@ -93,6 +93,45 @@ function renderRozpis() {
   $('#rozpis').innerHTML = html || '<p class="hint">Nič nenaplánované pre zvolené filtre.</p>'
 }
 
+// What waits on Karchi, company and personal in one list. Live asks first, then the inbox.
+const SOURCE = { rerun: 'R', t3: 'T3' }
+const STRANY = [['vsetko', 'Všetko'], ['firma', 'Firma'], ['osobne', 'Osobné']]
+
+const DM = new Intl.DateTimeFormat('sk-SK', { day: 'numeric', month: 'numeric', timeZone: 'Europe/Bratislava' })
+
+function cakaRow(r) {
+  const firma = state.data.farby.rodiny.esyst.farba
+  const at = r.zdroj === 'inbox' ? new Date(r.kedy + 'T12:00:00') : new Date(r.kedy)
+  const when = r.zdroj !== 'inbox' && dayKey(at) === dayKey(new Date()) ? HM.format(at) : DM.format(at)
+  const device = r.zdroj === 'inbox' ? '' : r.zdroj === 'rerun' ? 'asus' : r.zariadenie
+  const where = r.zdroj === 'inbox' ? 'inbox' : r.zdroj === 'rerun' ? 'Rerun' : `${r.zariadenie} · ${r.projekt_t3}`
+  return `<div class="row" style="--c:${r.firma ? firma : 'var(--line)'}">
+    <span class="bar" title="${r.firma ? 'Firma' : 'Osobné'}"></span>
+    <time>${esc(when)}</time>
+    <span class="mono-cell"><span class="tag-src">${esc(r.priorita || SOURCE[r.zdroj])}</span></span>
+    <span class="what"><b>${esc(r.nazov)}</b><span class="sub">${esc(r.detail)}</span></span>
+    <span class="where">${icon(device)}${esc(where)}</span>
+  </div>`
+}
+
+function renderCaka() {
+  const c = state.data.caka || { rows: [] }
+  const keep = r => state.strana === 'vsetko' || (state.strana === 'firma') === r.firma
+  const rows = c.rows.filter(keep)
+  const live = rows.filter(r => r.zdroj !== 'inbox').sort((a, b) => (a.zdroj === 'rerun' ? -1 : 0) - (b.zdroj === 'rerun' ? -1 : 0) || b.kedy.localeCompare(a.kedy))
+  const p1 = rows.filter(r => r.priorita === 'P1'), p2 = rows.filter(r => r.priorita === 'P2')
+  const count = s => c.rows.filter(r => s === 'vsetko' || (s === 'firma') === r.firma).length
+  $('#f-strana').innerHTML = STRANY.map(([id, label]) =>
+    `<button data-strana="${id}" aria-pressed="${state.strana === id}">${label} ${count(id)}</button>`).join('')
+  const p2open = $('#caka .caka-more')?.open ? ' open' : ''
+  let html = ''
+  if (live.length) html += `<p class="group-title">Odpovedz alebo pozri</p>` + live.map(cakaRow).join('')
+  if (p1.length) html += `<p class="group-title">Inbox P1</p>` + p1.map(cakaRow).join('')
+  if (p2.length) html += `<details class="caka-more"${p2open}><summary>Inbox P2, ${p2.length} ďalších</summary>${p2.map(cakaRow).join('')}</details>`
+  if (c.missing?.length) html += `<p class="hint">Neozvalo sa: ${esc(c.missing.join(', '))}.</p>`
+  $('#caka').innerHTML = html || '<p class="hint">Nič nečaká.</p>'
+}
+
 function renderStale() {
   const d = state.data
   const by = {}
@@ -162,7 +201,7 @@ function render() {
   const age = d.inventar ? Math.round((Date.now() - Date.parse(d.inventar)) / 60000) : null
   $('#stamp').textContent = (age == null ? 'Inventúra ešte nebežala.' : `Stroje prečítané pred ${age} min.`) +
     (d.chyba.length ? ` Nedostupné: ${d.chyba.join(', ')}.` : '')
-  renderFilters(); renderRozpis(); renderStale(); renderAkt(); renderSucty()
+  renderFilters(); renderCaka(); renderRozpis(); renderStale(); renderAkt(); renderSucty()
   if (!$('#farby').open) renderFarby()
 }
 
@@ -172,6 +211,8 @@ async function load() {
 }
 
 document.addEventListener('click', async e => {
+  const seg = e.target.closest('[data-strana]')
+  if (seg) { state.strana = seg.dataset.strana; return renderCaka() }
   const chip = e.target.closest('.chip')
   if (chip) {
     const set = state.off[chip.dataset.k]

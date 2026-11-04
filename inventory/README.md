@@ -6,6 +6,7 @@ Rerun, behind Cloudflare Access) and on Tailscale at https://100.110.180.15:3443
 
 - `inventory.py`: every recurring or always-on process on asus, dell, e540, x270 and the VPS (read-only).
 - `updates.py`: system updates per machine and the hand-installed tools on asus against their newest release.
+- `cakajuce.py`: what waits for Karchi, split into firma and osobné: open P1/P2 inbox lines, T3 threads with an unread reply or open request on every machine (`prehlad/t3-caka.py` over ssh, read-only), and Rerun coworkers whose last word was a question or approval.
 - `prehlad/server.py`: reruns both (30 min and 6 h), works out the next run of each job, serves the page.
 - `prehlad/farby.default.json`: project families and their colours, taken from Kalendarix where a
   calendar fits. Edits from the page land in `~/.config/prehlad/farby.json`.
