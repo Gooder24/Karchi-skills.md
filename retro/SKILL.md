@@ -13,6 +13,10 @@ least, and has Opus (`claude -p`, high effort) review it with `prompt.md`. The r
 `~/inbox/retro/<date>.md` and copied to Rerun Chief of Staff `notes/retro/`, so the 07:30
 „Ranný prehľad“ opens with a three-line tip. On a day without such a thread nothing is written.
 
+- The tip itself comes from section „0b. Prompt tip“ of the Rerun skill `ranny-prehlad`. That skill lives
+  only inside the container (`/data/agents/x8j38cwag1625bjbuk6od/skills/ranny-prehlad/SKILL.md` in
+  `rerun-engine-1`, previous version `SKILL.md.bak-20261104-retro`), not in this repo.
+- Cron log: `~/.local/state/retro.log`. Threads already reviewed: `~/inbox/retro/.hotove`.
 - Test without calling Claude: `retro.py --dry`.
 - One particular thread: `retro.py --thread <id>`. Other window: `--hours 48`, `--min-rounds 3`.
 
