@@ -8,6 +8,8 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
+| [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
+| [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, in Rerun's Ranný prehľad |
 | [`priority/review.md`](priority/review.md) | Nightly inbox review: closes done items and adds unfinished work from every machine's T3 threads (`thread-digest.py`) |
 | [`priority/worker.md`](priority/worker.md) | The night worker: a scheduled T3 task on asus proposes one inbox item per night as a branch or patch |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
