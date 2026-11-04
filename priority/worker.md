@@ -33,6 +33,10 @@ use. Everything below follows from that.
    finish within the rules above. A line whose trigger is his word („stačí napísať …“) waits for it.
 3. Nothing fits: check disks and failed systemd units on asus, dell and e540. Add a P3 line only
    for a real problem that is not in the inbox yet. A healthy system adds nothing. Do not invent work.
+3a. Every night, also check open lines older than 7 days whose state you can read (a file, a
+   service, a repo, a URL, the other lines). A line that no longer holds (done elsewhere, deadline
+   gone, superseded by another line, he said he does not use the thing) goes into the report with
+   one reason; he answers „vyhoď“ or keeps it. Do not change those lines yourself.
 
 ## Do it
 
@@ -52,5 +56,6 @@ use. Everything below follows from that.
 
 8. Write `~/inbox/worker/<YYYY-MM-DD>.md` on asus (the morning's date), 3 to 6 lines in Slovak:
    the item and where the result is; his one step (exact command or click); every change you made
-   outside `~/nocny-worker` and `~/worker` (there should be none but the inbox line). Nothing done:
+   outside `~/nocny-worker` and `~/worker` (there should be none but the inbox line); stale lines
+   from 3a, one per line. Nothing done:
    one line why. No questions, no „všetko v poriadku“.
