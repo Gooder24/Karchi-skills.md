@@ -23,8 +23,20 @@ deadline), `## P3 niekedy` (ideas) and `## Hotové` (done, `- [x]`).
    asked, say it in one line in Slovak, „V inboxe čaká: <item> (P1, od <date>).“, then do what he
    asked anyway. The decision is his; he does not want to be blocked or asked. When nothing beats the
    task, do not mention the inbox.
-3. If the task is already in the inbox, do it and move it to Hotové when it is done.
+3. If the task is already in the inbox, do it, and at the end of the turn update that line (below).
 4. If asus does not answer, say „inbox na asuse nedostupný“ once and go on.
+
+## At the end of a turn
+
+Before your last reply of a turn, make the inbox match what the turn left behind. This is the one
+habit that keeps the inbox true; the nightly review (`review.md`) only catches what you forgot.
+
+1. You finished an inbox item: `[x]`, move it under `## Hotové`, append ` · hotové <date>: <where>`.
+2. Your reply leaves Karchi a step (a „tvoj krok“, a decision, a login, a test only he can do), or
+   you stop with the work unfinished: that thread gets one line, added or updated in place, never a
+   second one. `- [ ] <date> · <what is left> · <machine> vlákno „<thread title>“`, at most 300
+   characters; the details stay in the thread.
+3. Nothing left for him and no inbox item touched: change nothing.
 
 ## Moving the thread to asus
 

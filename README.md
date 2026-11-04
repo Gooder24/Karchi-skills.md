@@ -7,6 +7,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
+| [`priority/review.md`](priority/review.md) | Nightly inbox review: closes done items and adds unfinished work from every machine's T3 threads (`thread-digest.py`) |
 | [`priority/worker.md`](priority/worker.md) | The night worker: a scheduled T3 task on asus proposes one inbox item per night as a branch or patch |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every UI before Karchi sees it |
