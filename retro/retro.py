@@ -84,7 +84,9 @@ def main():
     since = (now - dt.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
     only = opt("--thread", "")
     threads = collect(since, only)
-    threads = [t for t in threads if only or len(t["mine"]) >= opt("--min-rounds", MIN_ROUNDS)]
+    done_file = os.path.expanduser("~/inbox/retro/.hotove")
+    done = set(open(done_file).read().split()) if os.path.exists(done_file) else set()
+    threads = [t for t in threads if only or (t["id"] not in done and len(t["mine"]) >= opt("--min-rounds", MIN_ROUNDS))]
     if not threads:
         print(f"no settled thread with {MIN_ROUNDS}+ rounds since {since}Z")
         return
@@ -115,6 +117,8 @@ def main():
     with open(path, "rb") as f:
         subprocess.run(["docker", "exec", "-i", "-u", "rerun", "rerun-engine-1", "sh", "-c",
                         f"cat > '{RERUN_NOTES}/{day}.md'"], stdin=f)
+    with open(done_file, "a") as f:
+        f.write(t["id"] + "\n")
     print(path)
 
 
