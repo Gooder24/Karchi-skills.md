@@ -58,6 +58,8 @@ thread has to start working on its own; Karchi must never find it stopped.
 
 ## Night worker
 
-A scheduled T3 task (00:30, new thread per run) works through the inbox while Karchi sleeps; its
-rules are in `worker.md` here. Its report lands in `~/inbox/worker/<date>.md` on asus and the hook
-shows it in the morning.
+A scheduled T3 task on asus (00:30, new thread per run) takes one inbox item while Karchi sleeps;
+its rules are in `worker.md` here. It only proposes (a `worker/*` branch or a patch), never changes
+anything live. „na noc“ or „nech to spraví worker“: append ` · noc` to that line, the worker takes
+tagged lines first. Its report lands in `~/inbox/worker/<date>.md` on asus and the hook shows it in
+the morning.
