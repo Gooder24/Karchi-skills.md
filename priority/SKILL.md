@@ -75,3 +75,8 @@ its rules are in `worker.md` here. It only proposes (a `worker/*` branch or a pa
 anything live. „na noc“ or „nech to spraví worker“: append ` · noc` to that line, the worker takes
 tagged lines first. Its report lands in `~/inbox/worker/<date>.md` on asus and the hook shows it in
 the morning.
+
+Longer night tasks (one brief each in asus `~/nocny-worker/ulohy/`, a scheduled T3 task per brief, every
+night until the brief's progress file says done) write `~/inbox/worker/<date>-<slug>.md`. The hook shows
+every report from the last 20 hours, and `noc-pre-rerun.sh` here (cron 07:20 Mon-Fri on asus) copies them
+to Rerun's Chief of Staff, whose 07:30 „Ranný prehľad“ opens with a „Noc“ block.
