@@ -1,0 +1,98 @@
+/* Karchi's desktop palette (x270 ~/.local/share/karchi-dev/kalendarix/colors.toml) and its pixel font.
+   Departure Mono is drawn on an 11 px grid, so every size is a multiple of 11. */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("DepartureMono-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --bg: #000a07;
+  --surface: #0a1512;
+  --raised: #1a2320;
+  --line: #2b3632;
+  --text: #f0f0eb;
+  --muted: #a3aca8;
+  --accent: #628790;
+  --problem: #e5786d;
+  --radius: 11px;
+  font-family: "Departure Mono", ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 22px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-size: 11px; -webkit-font-smoothing: none; font-smooth: never; }
+a { color: var(--text); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.top { display: flex; align-items: baseline; gap: 22px; flex-wrap: wrap; padding: 22px 22px 11px; }
+h1 { font-size: 33px; line-height: 44px; margin: 0; font-weight: normal; }
+.stamp { margin: 0; color: var(--muted); }
+.to-rerun { margin-left: auto; padding: 0 11px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; }
+.to-rerun:hover { background: var(--raised); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 11px 33px; padding: 0 22px 11px; position: sticky; top: 0; background: var(--bg); z-index: 2; border-bottom: 1px solid var(--line); padding-top: 11px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.chip[aria-pressed="false"] { opacity: .45; }
+.chip .dot { width: 11px; height: 11px; border-radius: 3px; background: var(--c); }
+
+main { padding: 0 22px 44px; max-width: 1100px; }
+h2 { font-size: 22px; line-height: 33px; font-weight: normal; margin: 33px 0 0; }
+.hint { color: var(--muted); margin: 0 0 11px; }
+
+/* One row = one job. The bar and the monogram carry the project colour, the icon the machine. */
+.group-title { color: var(--muted); margin: 15px 0 4px; }
+.row { display: grid; grid-template-columns: 6px 44px 34px minmax(0, 1fr) 120px; align-items: center; gap: 0 11px; min-height: 33px; padding: 4px 11px 4px 0; border-radius: var(--radius); background: var(--surface); margin-bottom: 4px; }
+.row .bar { align-self: stretch; border-radius: 3px; background: var(--c); }
+.row time, .row .tag { color: var(--text); }
+.mono { display: inline-grid; place-items: center; min-width: 30px; height: 22px; padding: 0 5px; border-radius: 6px; background: var(--c); color: #000a07; }
+.what { min-width: 0; }
+.what b { font-weight: normal; }
+.what .sub { color: var(--muted); display: block; overflow-wrap: anywhere; }
+.where { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); justify-self: end; }
+.row.problem { box-shadow: inset 0 0 0 1px var(--problem); }
+.flag { color: var(--problem); }
+
+.pix { width: 22px; height: 22px; image-rendering: pixelated; flex: none; }
+.pix rect { fill: currentColor; }
+
+.devices { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 11px; margin-top: 11px; }
+.device { background: var(--surface); border-radius: var(--radius); padding: 11px; }
+.device h3 { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: normal; margin: 0 0 6px; }
+.svc { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.svc .bar { width: 6px; height: 18px; border-radius: 3px; background: var(--c); flex: none; }
+.svc .n { color: var(--muted); margin-left: auto; }
+
+table { border-collapse: collapse; width: 100%; margin-top: 11px; }
+th, td { text-align: left; padding: 4px 11px 4px 0; vertical-align: top; }
+th { color: var(--muted); font-weight: normal; border-bottom: 1px solid var(--line); }
+td .mono { margin-right: 6px; }
+tr.manual td:last-child { color: var(--problem); }
+
+.sums { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 11px; }
+.sum { background: var(--surface); border-radius: var(--radius); padding: 11px 15px; min-width: 150px; }
+.sum strong { display: block; font-size: 33px; line-height: 44px; font-weight: normal; }
+.sum span { color: var(--muted); }
+
+.farby { margin-top: 44px; background: var(--surface); border-radius: var(--radius); padding: 11px 15px; }
+.farby summary { cursor: pointer; }
+.fam { display: grid; grid-template-columns: 44px 160px minmax(0, 1fr); gap: 11px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
+.fam input[type=color] { width: 44px; height: 24px; border: 0; padding: 0; background: none; border-radius: 6px; }
+.fam .src { color: var(--muted); display: block; }
+.projs { display: flex; flex-wrap: wrap; gap: 6px; }
+.projs label { display: inline-flex; align-items: center; gap: 6px; }
+select, button.save { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; height: 24px; }
+button.save { padding: 0 11px; margin-top: 11px; cursor: pointer; }
+.saved { color: var(--muted); margin-left: 11px; }
+
+@media (max-width: 700px) {
+  .top, .filters, main { padding-left: 11px; padding-right: 11px; }
+  .row { grid-template-columns: 6px 44px minmax(0, 1fr); }
+  .row .mono-cell { display: none; }
+  .row .where { grid-column: 3; justify-self: start; }
+  .fam { grid-template-columns: 44px minmax(0, 1fr); }
+  .fam .projs { grid-column: 1 / -1; }
+}

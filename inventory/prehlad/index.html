@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prehľad dvora</title>
+<link rel="stylesheet" href="style.css">
+<!-- avoid-ai-design-ignore: K7 (the :focus-visible style lives in style.css) -->
+</head>
+<body>
+<header class="top">
+  <h1>Prehľad dvora</h1>
+  <p class="stamp" id="stamp">Načítavam…</p>
+  <a class="to-rerun" href="../">Otvoriť Rerun</a>
+</header>
+
+<nav class="filters" aria-label="Filtre">
+  <div class="chips" id="f-rodiny"></div>
+  <div class="chips" id="f-stroje"></div>
+</nav>
+
+<main>
+  <section aria-labelledby="h-rozpis">
+    <h2 id="h-rozpis">Rozpis</h2>
+    <p class="hint">Najbližšie behy podľa času a aktualizácie, ktoré čakajú. Farba je projekt, ikona stroj.</p>
+    <div id="rozpis"></div>
+  </section>
+
+  <section aria-labelledby="h-stale">
+    <h2 id="h-stale">Stále beží</h2>
+    <div id="stale" class="devices"></div>
+  </section>
+
+  <section aria-labelledby="h-akt">
+    <h2 id="h-akt">Aktualizácie</h2>
+    <div id="aktualizacie"></div>
+  </section>
+
+  <section aria-labelledby="h-sucty">
+    <h2 id="h-sucty">Koľko toho je</h2>
+    <div id="sucty" class="sums"></div>
+  </section>
+
+  <details class="farby" id="farby">
+    <summary>Upraviť farby projektov</summary>
+    <div id="farby-body"></div>
+  </details>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
