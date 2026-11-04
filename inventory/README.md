@@ -1,8 +1,8 @@
 # Prehľad dvora
 
 What runs on Karchi's machines on a schedule or all the time, which of it calls AI and on what
-subscription, and what is waiting for an update. Served on asus at
-https://100.110.180.15:3443/prehlad (next to Rerun) by the user unit `prehlad.service`.
+subscription, and what is waiting for an update. Served on asus by the user unit `prehlad.service` at https://rerun.dvoriste.xyz/prehlad/ (next to
+Rerun, behind Cloudflare Access) and on Tailscale at https://100.110.180.15:3443/prehlad/.
 
 - `inventory.py`: every recurring or always-on process on asus, dell, e540, x270 and the VPS (read-only).
 - `updates.py`: system updates per machine and the hand-installed tools on asus against their newest release.
