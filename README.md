@@ -5,6 +5,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
+| [`prezentacie`](prezentacie/SKILL.md) | School PowerPoints with real images and a reusable GitHub Primer adaptation |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |

@@ -18,6 +18,15 @@ says now applies.
   kalendarix built right into the calendar I have in the widget, not next to it as an icon").
 - **A polished presentation.** A functional but bare listing is not enough ("nicer… not just so primitive").
 
+## School presentations
+
+- Use the `prezentacie` skill and its reusable **GitHub Primer** adaptation for new presentations,
+  unless Karchi supplies another reference. Real pictures, plain readable type, short text, white
+  content slides and dark opening/closing slides. This is the new default, not a claim that all his
+  older decks had the same style (2026-11-05: „daj tam aspoň fotku… ak si ho nenašiel tak nájdi nový
+  napíš si ho teda vždy keď vytváraš prezentácie tak nech ho použiješ… cez github… celkom simple
+  dizajn language“). Full rules and reusable PowerPoint components: `prezentacie/SKILL.md`.
+
 ## Less is more
 
 - What he does not use should not be visible and should not even load: no wallpaper picker, no trash in
