@@ -11,6 +11,9 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
   No branches or pull requests.
 - Work projects do not have an agreed workflow yet. Ask before creating a branch or a PR.
 - Never open a pull request unless Karchi explicitly asks. One request is one PR.
+- A repo with `scripts/land.sh` (Partsheet) lands PRs only through it, never with `gh pr merge` or the
+  merge button: it merges only when CI passed on the PR's current head. On a private repo without
+  GitHub Pro nothing else stops a merge on red CI.
 
 ## Commits and pull requests
 
