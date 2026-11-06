@@ -70,6 +70,11 @@ thread has to start working on its own; Karchi must never find it stopped.
 
 ## Night worker
 
+Paused by Karchi on 2026-11-06: every night task on asus (the worker, the briefs in `~/nocny-worker/ulohy/`,
+the weekly Partsheet CI check) is disabled, not deleted. Do not enable one or create a new scheduled task
+that runs while he sleeps unless he asks for it in that thread. „na noc“ until then: tell him the worker is
+paused and ask whether to turn it back on; tagging ` · noc` alone does nothing.
+
 A scheduled T3 task on asus (00:30, new thread per run) takes one inbox item while Karchi sleeps;
 its rules are in `worker.md` here. It only proposes (a `worker/*` branch or a patch), never changes
 anything live. „na noc“ or „nech to spraví worker“: append ` · noc` to that line, the worker takes
