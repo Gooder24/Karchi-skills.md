@@ -85,6 +85,7 @@ fi
 CLAUDE = "Claude (administrativa@esyst.sk)"
 KNOWN = {
     ("asus", "limit-ping"): ("áno", CLAUDE, "Haiku 5.5", "posúva 5-hodinové okno limitu Claude na 06/11/16/21 h"),
+    ("asus", "codex-limit-ping"): ("áno", "Codex (ChatGPT Plus)", "gpt-6-luna", "posúva 5-hodinové okno limitu Codex na 3/4 okna Claude (04:45/09:45/14:45/19:45 h)"),
     ("asus", "reboot-when-idle"): ("nie", "", "", "reštart po aktualizácii, len keď nič nebeží"),
     ("asus", "diktovanie"): ("áno", CLAUDE, "Whisper lokálne + Haiku 5.5", "prepis reči pre voxtype na x270, text čistí Haiku"),
     ("asus", "spevnik-audio"): ("áno", CLAUDE, "Whisper, demucs lokálne + Haiku 5.5", "import piesne z nahrávky (akordy, text, tagy)"),

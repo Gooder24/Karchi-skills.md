@@ -39,6 +39,7 @@
   ["*",    "Babysit t3code",            "t3code-pr"],
   ["*",    "spravy-shots-cleanup",      "matrix"],
   ["*",    "Dell: overiť spevník",      "spevnik-web"],
+  ["asus", "codex-limit-ping",          "limit"],
   ["asus", "limit-ping",                "limit"],
   ["asus", "prehlad",                   "stroje"],
   ["asus", "reboot-when-idle",          "stroje"],
