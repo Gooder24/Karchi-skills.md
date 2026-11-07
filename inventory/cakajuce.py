@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Print, as one JSON object, everything that waits for Karchi: open inbox items, T3 threads with an
-unread reply or an open request on every machine, and Rerun coworkers that asked him something.
+unread reply or an open request on every machine.
 
 Each row has "firma": true for company work (inbox lines starting „eSYST“, T3 threads whose project
-or title names eSYST, SPOTREX, Hermes or a zákazka, everything in Rerun), so the page can split the
+or title names eSYST, SPOTREX, Hermes or a zákazka), so the page can split the
 view into Firma and Osobné without two setups. Read-only everywhere. Prehľad runs it every 10 min.
 """
 import datetime as dt, json, os, re, subprocess, sys
@@ -14,7 +14,6 @@ from inventory import MACHINES  # noqa: E402
 
 FIRMA = re.compile(r"esyst|spotrex|hermes|zákazk|zakazk|hurbanova|firm|firem", re.I)
 INBOX = os.path.expanduser("~/inbox/inbox.md")
-DB = ["docker", "exec", "-i", "supabase_db_rerun-oss", "psql", "-U", "postgres", "-At", "-F", "\t"]
 
 
 def inbox():
@@ -50,32 +49,11 @@ def t3():
     return rows, missing
 
 
-def rerun():
-    # The latest notification of each coworker session decides: a question or approval still open
-    # is the last thing it said. Rerun never marks them read until he opens the app, so read_at alone lies.
-    q = """select distinct on (n.engine_session_id) n.kind, coalesce(a.name, 'Rerun'), n.message, n.created_at, n.read_at is null
-           from notifications n left join agents a on a.id = n.agent_id
-           where n.created_at > now() - interval '7 days'
-           order by n.engine_session_id, n.created_at desc"""
-    try:
-        out = subprocess.run(DB, input=q, capture_output=True, text=True, timeout=20).stdout
-    except (OSError, subprocess.TimeoutExpired):
-        return [], ["rerun"]
-    rows = []
-    for line in out.splitlines():
-        kind, agent, msg, created, unread = (line.split("\t") + [""] * 5)[:5]
-        if kind in ("question", "approval", "error", "connector") and unread == "t":
-            rows.append({"zdroj": "rerun", "kedy": created.replace(" ", "T")[:19] + "Z", "nazov": agent,
-                         "detail": {"question": "pýta sa", "approval": "čaká na schválenie", "error": "chyba",
-                                    "connector": "chce pripojenie"}[kind] + " · " + " ".join(msg.split())[:220], "firma": True})
-    return rows, []
-
 
 def main():
     t3rows, missing = t3()
-    rr, rmiss = rerun()
-    print(json.dumps({"generated": dt.datetime.now(dt.timezone.utc).isoformat(), "rows": inbox() + t3rows + rr,
-                      "missing": missing + rmiss}, ensure_ascii=False))
+    print(json.dumps({"generated": dt.datetime.now(dt.timezone.utc).isoformat(), "rows": inbox() + t3rows,
+                      "missing": missing}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

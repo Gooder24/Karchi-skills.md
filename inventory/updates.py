@@ -3,7 +3,7 @@
 
 Usage (on asus): python3 updates.py > aktualizacie.json
 System: apt on the Debian machines, pacman on x270 (pending count, last upgrade, automatic or not).
-Custom tools: what is installed by hand on asus (whisper, demucs, Matrix bridges, Rerun...) against
+Custom tools: what is installed by hand on asus (whisper, demucs, Matrix bridges...) against
 the newest release on PyPI or GitHub. AI CLIs (Claude Code, Codex) are left out: T3 Code keeps those.
 Reads only; GitHub goes through `gh api` so the rate limit is the logged-in one.
 """
@@ -45,9 +45,8 @@ TOOLS = [
     ("mautrix-telegram", "matrix", ["cmd", "matrix-spike/bin/mautrix-telegram", "--version"], ["gh", "mautrix/telegram"]),
     ("mautrix-discord", "matrix", ["cmd", "matrix-spike/bin/mautrix-discord", "--version"], ["gh", "mautrix/discord"]),
     ("tuwunel (Matrix server)", "matrix", ["cmd", "matrix-spike/bin/tuwunel", "--version"], ["gh", "matrix-construct/tuwunel"]),
-    ("caddy (Správy, Rerun HTTPS)", "stroje", ["cmd", "matrix-spike/bin/caddy", "version"], ["gh", "caddyserver/caddy"]),
+    ("caddy (Správy, Prehľad HTTPS)", "stroje", ["cmd", "matrix-spike/bin/caddy", "version"], ["gh", "caddyserver/caddy"]),
     ("cinny (web Správ)", "matrix", ["git", "matrix-spike/cinny"], ["gh", "cinnyapp/cinny"]),
-    ("Rerun", "rerun", ["git", "rerun"], ["gh", "rerun-build/rerun"]),
 ]
 
 SYSTEM_PROJECT = "stroje"

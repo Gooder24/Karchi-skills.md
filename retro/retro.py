@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Morning prompt retro: the settled T3 thread that cost Karchi the most rounds, reviewed by Opus.
 
-Cron on asus, 07:05 Mon-Fri, before Rerun's 07:30 "Ranný prehľad":
+Cron on asus, 07:05 Mon-Fri:
     5 7 * * 1-5 python3 -I ~/.work/karchi-skills/retro/retro.py
 Reads every machine's T3 database read-only over ssh (this file runs itself there with --extract),
 picks the thread settled in the last 24 h (72 h on Monday) where Karchi wrote the most messages
 (at least MIN_ROUNDS), asks `claude -p` with prompt.md for the retro, saves it to
-~/inbox/retro/<date>.md and copies it into Rerun Chief of Staff notes/retro/. No thread, no retro.
+~/inbox/retro/<date>.md. No thread, no retro.
 Options: --dry (print the chosen thread, no Claude call), --hours N, --min-rounds N, --thread <id>.
 """
 import datetime as dt
@@ -21,7 +21,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 HOSTS = {"asus": "asus-vivobook", "dell": "dell-latitude", "e540": "thinkpad-e540", "x270": "karchi"}
 MIN_ROUNDS = 5
 NOISE = ("Continue where you left off.", ".", "pokračuj", "/compact", "/clear", "/autocompact")
-RERUN_NOTES = "/data/agents/x8j38cwag1625bjbuk6od/workspace/notes/retro"
 args = sys.argv[1:]
 
 
@@ -113,10 +112,6 @@ def main():
     path = os.path.expanduser(f"~/inbox/retro/{day}.md")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(head + r.stdout.strip() + "\n")
-    subprocess.run(["docker", "exec", "-u", "rerun", "rerun-engine-1", "mkdir", "-p", RERUN_NOTES])
-    with open(path, "rb") as f:
-        subprocess.run(["docker", "exec", "-i", "-u", "rerun", "rerun-engine-1", "sh", "-c",
-                        f"cat > '{RERUN_NOTES}/{day}.md'"], stdin=f)
     with open(done_file, "a") as f:
         f.write(t["id"] + "\n")
     print(path)

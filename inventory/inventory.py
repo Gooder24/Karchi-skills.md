@@ -3,7 +3,7 @@
 
 Usage (on asus): python3 inventory.py > procesy.json
 Reads only: systemd timers and services, crontabs, docker containers, T3 scheduled tasks
-(statev2.sqlite opened read-only) and Rerun schedules, over ssh on each machine. Distro units are
+(statev2.sqlite opened read-only), over ssh on each machine. Distro units are
 skipped: only units whose file lives in /etc/systemd/system or the user's home count.
 What runs AI and on which subscription is not visible from outside, so KNOWN below says it; a
 process KNOWN does not name is reported with ai "?" so it shows up as unclassified on the dashboard.
@@ -68,16 +68,6 @@ if os.path.exists(p):
         print(json.dumps({"kind": "t3", "name": title, "when": sch, "cmd": "", "desc": f"last={last} runs={runs}",
                           "model": (m.get("model") or "") + (f" {eff[0]}" if eff else ""), "enabled": str(en), "next": nxt or ""}))
 PY
-if command -v docker >/dev/null && sudo -n docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^rerun-engine-1$'; then
-  sudo -n docker exec rerun-engine-1 sh -c 'for f in /data/agents/*/schedules/*.md; do [ -f "$f" ] && { echo "@@ $f"; sed -n "1,20p" "$f"; }; done' 2>/dev/null |
-  python3 -c '
-import sys, json, re
-for block in sys.stdin.read().split("@@ ")[1:]:
-    head, _, body = block.partition("\n")
-    get = lambda k: (re.search(rf"^{k}: *(.*)$", body, re.M) or [None, ""])[1].strip().strip("\x27\"")
-    print(json.dumps({"kind": "rerun", "name": get("name"), "when": get("cron"), "cmd": head, "desc": get("description"),
-                      "enabled": "1" if get("enabled") == "true" else "0", "model": get("model")}))'
-fi
 '''
 
 # What each process is, by device and name. ai: "áno" (calls a model), "spúšťa" (starts AI work
@@ -111,17 +101,14 @@ KNOWN = {
 }
 PREFIX = [  # (device, name prefix) -> same tuple; first match wins
     (("asus", "matrix-spike-"), ("nie", "", "", "Správy: Matrix server a mosty")),
-    (("asus", "supabase_"), ("nie", "", "", "Rerun: databáza a služby Supabase")),
-    (("asus", "rerun-"), ("spúšťa", CLAUDE, "", "Rerun: Foreman a coworkeri")),
     (("x270", "karchi-"), ("nie", "", "", "KarchiOS: služba plochy")),
     (("vps", "spotrex-skuska-"), ("nie", "", "", "eSYST SPOTREX: skúšobná kópia")),
     (("vps", "spotrex-vpn-pokus"), ("nie", "", "", "eSYST SPOTREX: pokus s VPN")),
     (("vps", "spotrex-"), ("nie", "", "", "eSYST SPOTREX")),
 ]
-RERUN_AI = ("áno", CLAUDE, "Claude connection v Rerune", "Rerun coworker")
 
 KIND = {"timer": "časovač", "cron": "cron", "service": "služba", "container": "kontajner",
-        "t3": "T3 úloha", "rerun": "Rerun úloha"}
+        "t3": "T3 úloha"}
 
 
 DAYS = {"Mon": "pondelok", "Tue": "utorok", "Wed": "streda", "Thu": "štvrtok", "Fri": "piatok", "Sat": "sobota", "Sun": "nedeľa"}
@@ -146,7 +133,7 @@ def when_text(r):
         s = json.loads(w or "{}")
         return {"fixed_time": f"denne {s.get('timeOfDay')}", "interval": f"každých {int(s.get('everyMs', 0)) // 60000} min",
                 "once": f"raz {s.get('runAt', '')[:16]}", "webhook": "webhook"}.get(s.get("type"), w)
-    if r["kind"] in ("cron", "rerun"):
+    if r["kind"] == "cron":
         m = re.fullmatch(r"(\d+) ([\d,]+) \* \* (\*|1-5)", w.strip())
         if m:
             hours = ", ".join(f"{int(h):02d}:{int(m[1]):02d}" for h in m[2].split(","))
@@ -163,8 +150,6 @@ def classify(device, r):
     hit = KNOWN.get((device, r["name"]))
     if not hit:
         hit = next((v for (d, p), v in PREFIX if d == device and r["name"].startswith(p)), None)
-    if not hit and r["kind"] == "rerun":
-        hit = RERUN_AI
     return hit
 
 

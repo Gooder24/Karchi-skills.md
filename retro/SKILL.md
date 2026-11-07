@@ -10,12 +10,10 @@ description: Prompt retro for Karchi - reviews a finished thread and tells him h
 Cron on asus, 07:05 Mon-Fri: `python3 -I ~/.work/karchi-skills/retro/retro.py`. It takes the T3 thread
 settled in the last 24 h (72 h on Monday) on any machine where Karchi wrote the most messages, five at
 least, and has Opus (`claude -p`, high effort) review it with `prompt.md`. The retro is saved to
-`~/inbox/retro/<date>.md` and copied to Rerun Chief of Staff `notes/retro/`, so the 07:30
-„Ranný prehľad“ opens with a three-line tip. On a day without such a thread nothing is written.
+`~/inbox/retro/<date>.md`. On a day without such a thread nothing is written.
 
-- The tip itself comes from section „0b. Prompt tip“ of the Rerun skill `ranny-prehlad`. That skill lives
-  only inside the container (`/data/agents/x8j38cwag1625bjbuk6od/skills/ranny-prehlad/SKILL.md` in
-  `rerun-engine-1`, previous version `SKILL.md.bak-20261104-retro`), not in this repo.
+- Until 2026-11-07 Rerun's Chief of Staff turned it into a three-line tip in its 07:30 „Ranný prehľad“.
+  Rerun is gone; its `ranny-prehlad` skill is kept in asus `~/zaloha/rerun-2026-11-07/engine-data.tar.gz`.
 - Cron log: `~/.local/state/retro.log`. Threads already reviewed: `~/inbox/retro/.hotove`.
 - Test without calling Claude: `retro.py --dry`.
 - One particular thread: `retro.py --thread <id>`. Other window: `--hours 48`, `--min-rounds 3`.

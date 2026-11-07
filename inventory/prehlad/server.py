@@ -2,7 +2,7 @@
 """Prehľad: one page with every recurring job on Karchi's machines and what needs an update.
 
 Run on asus as the user service prehlad.service: python3 server.py [port]. It listens on 127.0.0.1
-only; Caddy puts it at /prehlad next to Rerun. Every 30 minutes it reruns ../inventory.py, every
+only; Caddy puts it at /prehlad. Every 30 minutes it reruns ../inventory.py, every
 6 hours ../updates.py, every 10 minutes ../cakajuce.py (what waits for Karchi), and keeps the last good result in ~/.cache/prehlad. Colours live in
 ~/.config/prehlad/farby.json, which the page edits through POST api/farby.
 """
@@ -104,7 +104,7 @@ def parse_next(row, now):
         return dt.datetime.fromisoformat(f"{m[1]}T{m[2]}").replace(tzinfo=TZ)
     if re.match(r"\d{4}-\d\d-\d\dT", raw):
         return dt.datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(TZ)
-    if row.get("druh") in ("cron", "rerun") and row.get("kedy_raw"):
+    if row.get("druh") == "cron" and row.get("kedy_raw"):
         return cron_next(row["kedy_raw"], now)
     return None
 
