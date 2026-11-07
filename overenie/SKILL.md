@@ -84,6 +84,13 @@ the real target, hence the full-access sandbox; `verifier.md` forbids it to edit
 If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
 ends with `Overenie: neoverené – …`. A verdict written by the builder never says `prešlo` for those checks.
 
+On dell and e540 (3.7 GB) do not run the verifier locally: an Opus verifier with its browser took an hour
+there and froze dell for every other thread (7. 11.). Run it on asus (15 GB). Weft has a runner,
+`tools/verify-on-asus <brief> [verdict]`: it copies the working tree, uncommitted changes included, runs the
+command above on asus and brings back only the verdict and `verifier-output.txt`. Any project without one: copy
+the tree to asus and run the same command there over `ssh asus`. The verifier stays just as strict; only where it
+runs changes.
+
 `overenie/verifier.md` gives it only the checks, where the thing runs, and these rules: run
 `overenie/run.sh`; read what each check really measures and flag a check that tests a proxy instead of
 what he sees (the 5. 11. partsheet check measured only the line width and missed chords torn from their
