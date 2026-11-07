@@ -7,7 +7,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
 | [`prezentacie`](prezentacie/SKILL.md) | School PowerPoints with real images and a reusable GitHub Primer adaptation |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
-| [`priority`](priority/SKILL.md) | Karchi's inbox on asus and the priority check at the start of every thread |
+| [`priority`](priority/SKILL.md) | Karchi's inbox on asus: only Hermes reads it, every chat only writes to it; moving threads to asus |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
 | [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
 | [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
@@ -70,14 +70,6 @@ so a pushed change reaches every machine in its next session:
 ```json
 "SessionStart": [{ "hooks": [{ "type": "command", "async": true, "timeout": 30,
   "command": "GIT_TERMINAL_PROMPT=0 timeout 20 bash ~/.work/karchi-skills/install.sh >/dev/null 2>&1 || true" }] }]
-```
-
-The `priority` skill needs a second `SessionStart` hook next to it, which prints the open inbox items
-into the session's context:
-
-```json
-{ "hooks": [{ "type": "command", "timeout": 10,
-  "command": "bash ~/.work/karchi-skills/priority/inbox-context.sh" }] }
 ```
 
 ## Claude on the web (claude.ai) and in the desktop app
