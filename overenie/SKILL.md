@@ -47,6 +47,11 @@ run it after every later change too, so an old fix cannot break without anyone n
   check, next to the reference image when there is one, and a short video for anything that moves or
   needs several key presses.
 - Desktop (x270, Hyprland): `hyprctl` and `grim` screenshots; say when a check needs a restart.
+  Never put anything on his live screen to test it (a lock screen demo, a fullscreen overlay, a modal, a test
+  window outside workspace 5): he is working, it interrupts him, he clicks it away, and the check then measures
+  his desktop instead (7. 11.: `dms ipc call lock demo` from run.sh and the verifier, several times). Test such UI
+  in the KarchiOS test VM (`python3 -B tools/vm.py test-up` → `push` → screenshot → `test-down`). If only his
+  screen will do, ask once for a moment and show it once, never from a verifier.
 - Services: an HTTP request or a command against the real endpoint, plus a check that it survives a
   restart when it is meant to.
 - Where he will see it, test it there, not on a stand-in: his x270 session over `ssh x270` (`hyprctl`,
