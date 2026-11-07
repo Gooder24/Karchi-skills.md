@@ -6,9 +6,26 @@ description: Verification Karchi can trust, done before saying any change is fin
 # Overenie: proof, not a promise
 
 Karchi does not trust "funguje" from the agent that wrote the change, and he is right: he asked
-"takže už to funguje?" 28 times in October and often found it broken. Trust comes from four things:
-the checks are fixed before the work, someone other than the builder runs them, every result leaves
-evidence he can see in ten seconds, and every miss becomes a new check.
+"takže už to funguje?" 28 times in October and often found it broken. An audit on 7. 11. 2026 of 343
+threads on five machines found him discovering the breakage himself after a done-claim at least 20
+times, also after this skill existed, on 5 and 6 November (partsheet 404, Rerun, Weft), because the
+skill was used on 4-5 November and then skipped. When the independent verifier did run, it caught real
+errors that the builder's own green `run.sh` let through. Trust comes from four things: the checks are
+fixed before the work, someone other than the builder runs them, every result leaves evidence he can
+see in ten seconds, and every miss becomes a new check.
+
+Every reply after a turn that changed something ends with one line he can trust at a glance:
+
+- `Overenie: <full path to …/overenie/verdikt.md or …/overenie/<date>/index.html>`, written in this
+  turn after the checks below and the independent verifier;
+- `Overenie: neoverené – <what he should try and what he should then see>`; then the reply calls
+  nothing hotové or funguje;
+- `Overenie: netreba – <why>`, only for a change he will not see or use;
+- `Overenie: prebieha – <what still runs>`.
+
+The Stop hook `hooks/overenie-gate.py` (asus, x270, dell, e540) sends a turn back once when the line is
+missing, names no such fresh, non-empty file, or says neoverené while the opening says hotové. Write the line truthfully from the start; never touch
+an evidence file or pick `netreba` only to get past the hook.
 
 ## 1. Fix the checks before you build
 
@@ -32,20 +49,40 @@ run it after every later change too, so an old fix cannot break without anyone n
 - Desktop (x270, Hyprland): `hyprctl` and `grim` screenshots; say when a check needs a restart.
 - Services: an HTTP request or a command against the real endpoint, plus a check that it survives a
   restart when it is meant to.
+- Where he will see it, test it there, not on a stand-in: his x270 session over `ssh x270` (`hyprctl`,
+  `grim` of the live screen), his phone through Playwright WebKit with an iPhone profile on dell, the
+  public URL rather than localhost. What you truly cannot reach (his real chats, a physical cable, his
+  eyes) is a `tvoj krok` check: put it on the `Overenie: neoverené – …` line and add it to his inbox.
 - Looks that no machine can judge ("not AI generic", "nice icons"): mark them `👁 tvoje oko`, put the
   screenshot beside the reference, and never count them as passed.
 
 ## 3. Verify with fresh eyes
 
 After building, start a verifier that has not seen your work: a separate headless Claude on Opus, not a
-subagent, because subagents run on Haiku and inherit your assumptions.
+subagent, because subagents run on Haiku and inherit your assumptions. When Claude cannot run it (the
+5-hour limit, an expired login), use Codex, a different model with its own limits. On 5. 11. two
+verdicts were written by the builder because the verifier hit the limit; that must not happen again.
 
 ```sh
-claude -p "$(cat overenie/verifier.md)" --model claude-opus-5-5 --effort high --no-session-persistence
+cd "$PROJECT" && rm -f overenie/verdikt.md
+export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
+claude -p "$(cat overenie/verifier.md)" --model claude-opus-5-5 --effort high --no-session-persistence \
+  --permission-mode bypassPermissions < /dev/null > overenie/verifier-output.txt 2>&1
+# claude exits 0 even when it hit the limit or could not write, so judge by the verdict file
+[ -s overenie/verdikt.md ] || "$(command -v codex || echo ~/.local/bin/codex)" exec --skip-git-repo-check \
+  -s danger-full-access -C "$PWD" "$(cat overenie/verifier.md)" < /dev/null >> overenie/verifier-output.txt 2>&1
 ```
 
+Run it in the foreground or as `systemd-run --user` with a wait on `overenie/verdikt.md`: in a T3 thread a
+plain background command can end before the verifier does. The verifier needs network and SSH to reach
+the real target, hence the full-access sandbox; `verifier.md` forbids it to edit anything but the verdict.
+If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
+ends with `Overenie: neoverené – …`. A verdict written by the builder never says `prešlo` for those checks.
+
 `overenie/verifier.md` gives it only the checks, where the thing runs, and these rules: run
-`overenie/run.sh`; then try to break each item by hand (another order, a reload or restart, keyboard
+`overenie/run.sh`; read what each check really measures and flag a check that tests a proxy instead of
+what he sees (the 5. 11. partsheet check measured only the line width and missed chords torn from their
+words; a run.sh that finds a number anywhere on the page instead of in its row); then try to break each item by hand (another order, a reload or restart, keyboard
 only, empty and long data, a second monitor); look at every screenshot yourself and compare it with the
 reference; do not edit any code; write the verdict for each check (prešlo, neprešlo, nedá sa overiť)
 with the evidence path to `overenie/verdikt.md`. Fix what it found and run it again, three rounds at
@@ -54,9 +91,11 @@ most. Then report what is still failing.
 ## 4. Show the evidence
 
 Generate `overenie/<YYYY-MM-DD>/index.html` from the results, not from your own summary: one row per
-check with its status, the screenshot or video, and the command that reruns it. Link it in the final
-reply, or show it with `html_render` in T3. The reply lists every check that failed or could not be
-verified, then the `zadanie` footer (Commit, Beží, Tvoj krok).
+check with its status, the screenshot or video, and the command that reruns it. Put its full path (or that of
+`verdikt.md`) on the reply's `Overenie:` line, which is what the Stop hook checks, and show it with
+`html_render` in T3 when it has screenshots.
+The reply lists every check that failed or could not be verified, then the `zadanie` footer (Commit,
+Beží, Tvoj krok).
 
 ## 5. Every miss becomes a check
 
