@@ -1,0 +1,6 @@
+[Unit]
+Description=T3: pri tyzdennom Claude limite prepni default na Codex
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/t3-claude-fallback

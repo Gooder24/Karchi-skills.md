@@ -25,3 +25,12 @@ if ! grep -qx 'overenie/' "$ign" 2>/dev/null; then
   [ -s "$ign" ] && [ -n "$(tail -c1 "$ign")" ] && echo >> "$ign"
   echo 'overenie/' >> "$ign" && echo "ok $ign: overenie/"
 fi
+# limit-fallback: pri 3 % zvyšku týždenného Claude limitu prepne T3 default na Codex, po resete späť.
+if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
+  mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
+  ln -sfn "$R/limit-fallback/t3-claude-fallback" "$HOME/.local/bin/t3-claude-fallback"
+  if ! cmp -s "$R/limit-fallback/t3-claude-fallback.timer" "$HOME/.config/systemd/user/t3-claude-fallback.timer"; then
+    cp "$R"/limit-fallback/t3-claude-fallback.{service,timer} "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload && systemctl --user enable --now t3-claude-fallback.timer && echo "ok t3-claude-fallback.timer"
+  fi
+fi

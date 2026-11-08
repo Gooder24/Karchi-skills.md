@@ -1,0 +1,9 @@
+[Unit]
+Description=T3 Claude->Codex fallback kazdych 10 minut
+
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+
+[Install]
+WantedBy=timers.target

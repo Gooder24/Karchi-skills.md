@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Keď týždenný Claude limit prejde PRAH % (3 % zvyšok), prepne default model T3 na Codex (ChatGPT);
+po resete limitu vráti pôvodný. T3 si settings.json sleduje sám, zmena platí hneď pre nové vlákna.
+Stav: ~/.local/share/t3-claude-fallback/state.json"""
+import json, os, sys, urllib.request
+from datetime import datetime
+from pathlib import Path
+
+H = Path.home()
+PRAH = float(os.environ.get("PRAH", 97))
+SETTINGS = H / ".t3/userdata/settings.json"
+STATE = H / ".local/share/t3-claude-fallback/state.json"
+CODEX = {"instanceId": "codex", "model": os.environ.get("CODEX_MODEL", "gpt-6.1-sol"),
+         "options": [{"id": "reasoningEffort", "value": "high"}]}
+
+
+def weekly():
+    tok = json.loads((H / ".claude/.credentials.json").read_text())["claudeAiOauth"]["accessToken"]
+    req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
+        "Authorization": "Bearer " + tok, "anthropic-beta": "oauth-2025-04-20"})
+    return float((json.load(urllib.request.urlopen(req, timeout=20)).get("seven_day") or {}).get("utilization") or 0)
+
+
+def write(path, data):
+    # Na mieste, nie rename: T3 sleduje práve tento súbor.
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def main():
+    used = float(sys.argv[1]) if len(sys.argv) > 1 else weekly()  # argument = test bez API
+    s = json.loads(SETTINGS.read_text())
+    cur = s.get("defaultModelSelection") or {}
+    saved = json.loads(STATE.read_text()) if STATE.exists() else None
+    if used >= PRAH and not saved and cur.get("instanceId", "claudeAgent") == "claudeAgent":
+        write(STATE, cur)
+        s["defaultModelSelection"] = CODEX
+        write(SETTINGS, s)
+        print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {CODEX['model']}")
+    elif used < PRAH and saved:
+        if cur.get("instanceId") == "codex":  # Karchi medzitým default nezmenil
+            s["defaultModelSelection"] = saved
+            write(SETTINGS, s)
+        STATE.unlink()
+        print(f"{datetime.now():%F %T} týždeň {used:.0f} %: default späť -> {saved.get('model')}")
+
+
+if __name__ == "__main__":
+    main()
