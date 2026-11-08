@@ -26,10 +26,12 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 
 ## Babysitting a PR
 
-When Karchi says babysit or babysitting, the PR is yours until it is merged or closed, and he hears only
-about major events: merged, closed, a decision only he can make, a failure you cannot fix. The full rule is
-the "Babysitting" section of `~/.claude/AGENTS.md`.
+When Karchi says babysit or babysitting, Hermes on asus takes the PR until it is merged or closed (job "PR
+babysitting", every 20 minutes). He hears from it only about major events. The full rule is the
+"Babysitting" section of `~/.claude/AGENTS.md`.
 
-- Look only at checks and comments newer than the last push. Verify each bot finding against the
-  source, fix the real ones, dismiss false positives with a written reason.
-- Stay quiet when nothing is new. Green bots are not the end: keep watching until it is merged or closed.
+- Finish any push the PR needs.
+- Add one line to `~/.hermes/pr-babysit.list` on asus (from another machine through `ssh asus`):
+  `owner/repo#number`, then a checkout path only for his own PR checked out on asus on the PR's branch.
+  A line without a path is only watched.
+- Do not call `watch_pull_request` and do not make a scheduled task of your own. Confirm in one sentence.
