@@ -31,6 +31,9 @@ says now applies.
 
 - What he does not use should not be visible and should not even load: no wallpaper picker, no trash in
   the file manager, no status icon for a running service, no sounds he did not choose.
+- **There is no trash anywhere** ("the trash shouldn't exist in this OS", 2026-11-08, after 6 GB had piled up in
+  `~/.local/share/Trash`, partly from agents). A deletion he approved is final: use `rm`, never `gio trash`,
+  `trash-put` or a "recoverable" move; when unsure, ask before deleting instead of trashing.
 - Nothing should be created on its own without asking ("I don't want categories like documents or work
   to always get created there automatically").
 - One purpose, one way ("no other options… only this").
