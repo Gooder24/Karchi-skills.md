@@ -65,7 +65,8 @@ curl -fsSL https://raw.githubusercontent.com/Gooder24/Karchi-skills.md/main/inst
 It clones the repo to `~/.work/karchi-skills` and links every skill into `~/.claude/skills` (and
 `~/.codex/skills` if Codex is installed). Installed on x270, asus, dell, e540 and the VPS, where a
 `SessionStart` hook in `~/.claude/settings.json` runs `install.sh` again at the start of every session,
-so a pushed change reaches every machine in its next session:
+so a pushed change reaches every machine in its next session. It also puts `overenie/` in the global
+gitignore, so verification files never show in T3's changed files or in a commit:
 
 ```json
 "SessionStart": [{ "hooks": [{ "type": "command", "async": true, "timeout": 30,

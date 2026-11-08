@@ -1,0 +1,2 @@
+# install.sh puts overenie/ in the global gitignore; here it is the skill itself, so keep it.
+!overenie/

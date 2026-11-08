@@ -17,3 +17,11 @@ for d in "$R"/*/; do
     echo "ok $t/$n"
   done
 done
+# Verification files (skill overenie) stay out of every repo, so they never show in T3's changed files or in a commit.
+ign=$(git config --global --get core.excludesFile || true); ign=${ign/#\~/$HOME}
+ign=${ign:-${XDG_CONFIG_HOME:-$HOME/.config}/git/ignore}
+if ! grep -qx 'overenie/' "$ign" 2>/dev/null; then
+  mkdir -p "$(dirname "$ign")"
+  [ -s "$ign" ] && [ -n "$(tail -c1 "$ign")" ] && echo >> "$ign"
+  echo 'overenie/' >> "$ign" && echo "ok $ign: overenie/"
+fi

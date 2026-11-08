@@ -42,6 +42,11 @@ Put the checks in `overenie/` in the project, as a script or a Playwright spec, 
 run it after every later change too, so an old fix cannot break without anyone noticing (his "zase" and
 "stále").
 
+`overenie/` is in the global gitignore on every machine (`install.sh` puts it there), so none of it shows in
+T3's changed files or goes into a commit. On 8. 11. the card under a Weft reply listed 17 files, 829 of 928
+lines from `overenie/`, and he lost what the change was. The suite stays on disk, but git no longer carries
+it between machines. Never `git add -f` it and never move checks to another folder to get them into git.
+
 - UI: Playwright with the system Chromium (`/usr/bin/chromium` on dell and asus). Drive it the way he
   does: keyboard first, his window size, then a phone width when the app has one. Save a screenshot per
   check, next to the reference image when there is one, and a short video for anything that moves or
