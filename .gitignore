@@ -1,2 +1,8 @@
-# install.sh puts overenie/ in the global gitignore; here it is the skill itself, so keep it.
+# install.sh puts overenie/ in the global gitignore; here it is the skill itself, so keep it,
+# but not what verifying a change to this repo leaves in it.
 !overenie/
+overenie/checks.md
+overenie/run.sh
+overenie/verifier*
+overenie/verdikt.md
+overenie/20*/
