@@ -14,23 +14,29 @@ import time
 
 HERE=Path(__file__).parent
 CACHE=Path.home()/'.cache/prehlad/automations.json'
+MASTERS=Path.home()/'.cache/prehlad/ssh'
 HOSTS=['asus','dell','e540','x270','vps']
 lock=threading.RLock()
 refresh_lock=threading.Lock()
 state={'hosts':{},'refreshing':False}
 
 
-def remote(host, request):
-    code=(HERE/'agent.py').read_text()
+def ssh_args(host, script, master_dir):
+    # Shared SSH connections keep the 5-second live samples cheap; vps is reachable only through x270.
+    code=(HERE/script).read_text()
     command=shlex.join(['python3','-c',code])
-    ssh=['ssh','-o','BatchMode=yes','-o','ConnectTimeout=6','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2']
+    ssh=['ssh','-o','BatchMode=yes','-o','ConnectTimeout=6','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2',
+         '-o','ControlMaster=auto','-o','ControlPersist=120']
     if host=='asus':
-        args=['python3','-c',code]
-    elif host=='vps':
-        args=ssh+['x270',shlex.join(ssh+['root@81.2.239.39',command])]
-    else:
-        args=ssh+[host,command]
-    p=subprocess.run(args,input=json.dumps(request),capture_output=True,text=True,timeout=100)
+        return ['python3','-c',code]
+    if host=='vps':
+        return ssh+['-o',f'ControlPath={master_dir}/%C','x270',shlex.join(ssh+['-o','ControlPath=/tmp/prehlad-cm-%C','root@81.2.239.39',command])]
+    return ssh+['-o',f'ControlPath={master_dir}/%C',host,command]
+
+
+def remote(host, request):
+    MASTERS.mkdir(parents=True,exist_ok=True)
+    p=subprocess.run(ssh_args(host,'agent.py',MASTERS),input=json.dumps(request),capture_output=True,text=True,timeout=100)
     if p.returncode:
         raise RuntimeError('Stroj neodpovedá alebo odmietol prístup.')
     try:
@@ -73,10 +79,17 @@ def enrich(host,row):
             row['schedule']=m.when_text({'kind':'cron','when':row['schedule']})
         interval=re.fullmatch(r'every (\d+)m',row['schedule'])
         if interval: row['schedule']='každých '+interval[1]+' min'
+    if row['kind']=='systemd' and row.get('schedule','').startswith('{'):
+        # Monotonic timers: '{ OnUnitInactiveUSec=5min ; next_elapse=... }'.
+        words={'UnitInactive':'každých {} od konca behu','UnitActive':'každých {}','Boot':'{} po štarte','Startup':'{} po štarte','Active':'{} po zapnutí'}
+        parts=[words.get(k,'{}').format(re.sub(r'(\d)([a-z])',r'\1 \2',v)) for k,v in re.findall(r'On(\w+?)USec=([^ ;}]+)',row['schedule'])]
+        if parts: row['schedule']=', '.join(parts)
+    row['schedule']={'*-*-* *:00:00':'každú hodinu','*-*-* *:*:00':'každú minútu'}.get(row.get('schedule'),row.get('schedule'))
+    if row.get('schedule'): row['schedule']=re.sub(r'(\d)(min|s|h|d)\b',r'\1 \2',row['schedule'])
     hourly=re.fullmatch(r'\*-\*-\* (\d\d)\.\.(\d\d):(\d\d):00',row.get('schedule',''))
     if hourly:
         row['schedule']=f'každú hodinu od {hourly[1]}:{hourly[3]} do {hourly[2]}:{hourly[3]}'
-    for field in ['last_run','next_run']:
+    for field in ['last_run','next_run','started']:
         raw=row.get(field) or ''
         match=re.search(r'(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)',raw)
         if match:
@@ -137,6 +150,91 @@ def start():
                 pass
             time.sleep(300)
     threading.Thread(target=loop,daemon=True).start()
+    start_live()
+
+
+# Live load. Samples every LIVE_EVERY seconds while a page asks for it, otherwise every IDLE_EVERY.
+LIVE_EVERY,IDLE_EVERY,HISTORY=5,60,72
+live={'hosts':{},'viewed':0.0}
+live_lock=threading.Lock()
+sampling={}
+
+
+def sample_host(host):
+    try:
+        p=subprocess.run(ssh_args(host,'stats.py',MASTERS),capture_output=True,text=True,timeout=20)
+        if p.returncode:
+            raise RuntimeError('Stroj neodpovedá.')
+        now=json.loads(p.stdout)
+    except Exception as e:
+        with live_lock:
+            h=live['hosts'].setdefault(host,{'history':[]})
+            h.update(offline=True,error=str(e)[:120],checked=time.time())
+        return
+    with live_lock:
+        h=live['hosts'].setdefault(host,{'history':[]})
+        prev=h.get('raw')
+        if prev:
+            busy=now['cpu'][0]-prev['cpu'][0];total=now['cpu'][1]-prev['cpu'][1]
+            h['cpu']=round(100*busy/total,1) if total>0 else 0.0
+            h['history']=(h['history']+[[round(now['time']),h['cpu']]])[-HISTORY:]
+            wall=(now['time']-prev['time'])*1e6*(now['cores'] or 1)
+            h['procs']={k:{'cpu':round(100*max(0,v[0]-prev['cgroups'].get(k,[v[0]])[0])/wall,1) if wall>0 else 0.0,'mem':v[1]} for k,v in now['cgroups'].items()}
+        else:
+            h['procs']={k:{'cpu':None,'mem':v[1]} for k,v in now['cgroups'].items()}
+        h.update(raw=now,offline=False,error=None,checked=now['time'],
+                 cores=now['cores'],cpu_model=now['cpu_model'],os=now['os'],load=now['load'],uptime=now['uptime'],
+                 mem=now['mem'],disk=now['disk'],temp=now['temp'],battery=now['battery'])
+
+
+def sample_all():
+    for host in HOSTS:
+        with live_lock:
+            busy=sampling.get(host)
+            if busy:
+                continue
+            sampling[host]=True
+        def run(host=host):
+            try:
+                sample_host(host)
+            finally:
+                with live_lock:
+                    sampling[host]=False
+        threading.Thread(target=run,daemon=True).start()
+
+
+def start_live():
+    def loop():
+        last=0.0
+        while True:
+            every=LIVE_EVERY if time.time()-live['viewed']<20 else IDLE_EVERY
+            if time.time()-last>=every:
+                last=time.time();sample_all()
+            time.sleep(1)
+    threading.Thread(target=loop,daemon=True).start()
+
+
+def live_data():
+    live['viewed']=time.time()
+    with live_lock:
+        hosts=json.loads(json.dumps({k:{f:v for f,v in h.items() if f!='raw'} for k,h in live['hosts'].items()}))
+        rows=[r for d in state['hosts'].values() for r in d.get('rows',[])]
+    procs={}
+    for r in rows:
+        if r['kind']=='systemd':
+            unit=r.get('technical','')
+            unit=unit[:-6]+'.service' if unit.endswith('.timer') else unit
+            key=r.get('scope','system')+':'+unit
+        elif r['kind']=='docker':
+            key='docker-'+r['key']+'.scope'
+        else:
+            continue
+        hit=hosts.get(r['device'],{}).get('procs',{}).get(key)
+        if hit:
+            procs[r['id']]=hit
+    for h in hosts.values():
+        h.pop('procs',None)
+    return {'hosts':hosts,'procs':procs,'now':time.time()}
 
 
 def public_data():
@@ -172,6 +270,9 @@ def handle(handler,path,method):
         return True
     if method != 'GET':
         handler.send(405, '{"error":"Prehľad je iba na čítanie."}')
+        return True
+    if path == '/_automations/stats':
+        handler.send(200,json.dumps(live_data(),ensure_ascii=False))
         return True
     if path != '/_automations/data':
         handler.send(404, '{"error":"Nenájdené"}')

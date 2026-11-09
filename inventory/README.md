@@ -30,8 +30,10 @@ WantedBy=default.target
 
 ## Weft Automations
 
-`automations/agent.py` collects host schedulers without modifying them. `automations/manager.py`
-adds login-free GET `/_automations/data` (tailnet and localhost only) to the existing server; all POSTs are rejected.
+`automations/agent.py` collects host schedulers without modifying them; `automations/stats.py` reads live
+CPU, memory, disk, temperature and per-service cgroup usage from /proc and /sys. `automations/manager.py` adds
+login-free GET `/_automations/data` and `/_automations/stats` (tailnet and localhost only) to the existing server; all
+POSTs are rejected. Live samples run every 5 s while the page is open, otherwise every minute, over shared SSH connections.
 The Weft page lists every process directly for Ctrl+F. There are no deletion actions or extra controls.
 Source/frontend deployment notes: Gooder24/weft `server/automations/README.md`.
 

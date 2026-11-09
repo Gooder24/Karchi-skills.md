@@ -189,6 +189,7 @@ def systemd(scope):
         add('systemd', scope + ':' + unit, p.get('Description') or unit, definition,
             technical=unit, scope=scope, path=path, schedule=redact(p.get('TimersCalendar') or p.get('TimersMonotonic') or 'stále / podľa spúšťača'),
             next_run=next_run, last_run=last or None, last_status=last_status,
+            started=(sp.get('ExecMainStartTimestamp') or None) if running else None,
             status=status, command=display_command(sp.get('ExecStart', '')), purpose=redact(p.get('Description')), enabled=enabled,
             delete_reason=reason, delete_effect=effect,
             target={'scope': scope, 'unit': unit, 'service': service, 'path': path, 'keep_service': keep_service})
