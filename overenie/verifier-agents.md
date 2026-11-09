@@ -13,6 +13,23 @@ builders, scheduled tasks) are not yours.
 - Send long command output to a file and read only the lines you need: every line you print stays in your context
   for the rest of the run.
 
+## How deep you go
+
+Karchi's limits pay for every step you take (9. 11.: "nemôže byť taká podrobná, strašne veľa usagu to zožralo").
+Unless the brief says `Hĺbka: dôkladná`, check this change only:
+
+- Every check the brief names, and the two or three ways Karchi would most likely break the changed thing (another
+  order, a reload or restart, keyboard only, empty or long data: pick what applies, not all of them).
+- Take the builder's `run.sh` output from the path in the brief; run it yourself only when it is missing, red
+  without a reason, or does not match what you see. Do not re-check older checks the change cannot reach.
+- One browser or one test VM session, screenshots only of what changed. Do not wait on slow timers longer than the
+  check needs.
+- Stop once every check has evidence. Aim for about ten minutes and twenty steps; when you would need more, write
+  what is left under `## Neoverené` instead of going on.
+
+`Hĺbka: dôkladná` (data that can be lost, messages to real people, live company services, code every case shares,
+or Karchi asked for it): run `run.sh`, re-check every check the change can reach and take the time it needs.
+
 ## How you answer
 
 Write the verdict file in Slovak, short and plain, in this order:

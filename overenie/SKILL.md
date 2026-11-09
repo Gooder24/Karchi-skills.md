@@ -73,29 +73,22 @@ failure, or, when it is not your change (changed data, a flaky machine), name ea
 brief as unverified, so the verifier judges it instead of rediscovering it. Start the verifier once the whole change
 he asked for is finished, not after each partial step: several commits for one ask go to one round.
 
-After building, start a verifier that has not seen your work: a separate headless Claude on Opus, not a
-subagent, because subagents run on Haiku and inherit your assumptions. When Claude cannot run it (the
-5-hour limit, an expired login), use Codex, a different model with its own limits. On 5. 11. two
-verdicts were written by the builder because the verifier hit the limit; that must not happen again.
+After building, start a verifier that has not seen your work: a separate headless agent, not a subagent, because
+subagents run on Haiku and inherit your assumptions. `verify.sh` starts Codex first (it spends the ChatGPT limit, not
+Karchi's Claude limit, and in the 9. 11. pilot it found as much as Opus in half the time) and Claude Opus when Codex
+leaves no verdict. When Codex built the change, set `OVERENIE_CLAUDE_FIRST=1`. On 5. 11. two verdicts were written by
+the builder because the verifier hit the limit; that must not happen again.
 
 ```sh
-cd "$PROJECT" && rm -f overenie/verdikt.md
-export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
-V=~/.work/karchi-skills/overenie/verifier-agents.md   # how the verifier works and answers, before the brief
-claude -p "$(cat overenie/verifier.md)" --model claude-opus-5-5 --effort high --no-session-persistence \
-  --append-system-prompt "$(cat $V)" --tools Bash,Read,Write,Edit,Glob,Grep \
-  --permission-mode bypassPermissions --output-format json < /dev/null > overenie/verifier-output.json 2>&1
-python3 -I ~/.work/karchi-skills/overenie/usage.py overenie/verifier-output.json   # text + one line of usage
-# claude exits 0 even when it hit the limit or could not write, so judge by the verdict file
-[ -s overenie/verdikt.md ] || "$(command -v codex || echo ~/.local/bin/codex)" exec --skip-git-repo-check \
-  -s danger-full-access -C "$PWD" "$(cat $V overenie/verifier.md)" < /dev/null >> overenie/verifier-output.txt 2>&1
+cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
 ```
 
 Run it in the foreground or as `systemd-run --user` with a wait on `overenie/verdikt.md`: in a T3 thread a
 plain background command can end before the verifier does. The verifier needs network and SSH to reach
 the real target, hence the full-access sandbox; `verifier-agents.md` forbids it to edit anything but the verdict
-and fixes the verdict's shape. Six tools are enough for it: the default set of about a hundred costs about 27 000
-tokens on every one of its steps (measured 9. 11.).
+and fixes the verdict's shape and how deep it goes. Claude gets six tools: the default set of about a hundred costs
+about 27 000 tokens on every one of its steps (measured 9. 11.). Every run logs its usage to
+`~/.claude/overenie-usage.jsonl`.
 If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
 ends with `Overenie: neoverené – …`. A verdict written by the builder never says `prešlo` for those checks.
 
@@ -106,21 +99,27 @@ command above on asus and brings back only the verdict and `verifier-output.txt`
 the tree to asus and run the same command there over `ssh asus`. The verifier stays just as strict; only where it
 runs changes.
 
+Depth follows the risk, because a detailed round on KarchiOS or Weft ate too much of his limits (9. 11.). By default
+the verifier checks only this change: the brief's checks, the two or three likeliest ways to break it, your run.sh
+output instead of a rerun, about ten minutes. Write `Hĺbka: dôkladná` in the brief only for data that can be lost,
+messages to real people, live company services, code every case shares, or when he asks for it.
+
 `overenie/verifier.md` is short and points instead of pasting: the checks (or the path to `checks.md`), where the
 thing runs, what changed (`git show <commits>` or a diff path), the path of your run.sh output, and these rules. Earlier
-verdicts and long context go in as paths it reads when it needs them. The rules: run
-`overenie/run.sh`; read what each check really measures and flag a check that tests a proxy instead of
+verdicts and long context go in as paths it reads when it needs them, and `Hĺbka: dôkladná` when it applies. The
+rules: read what each check really measures and flag a check that tests a proxy instead of
 what he sees (the 5. 11. partsheet check measured only the line width and missed chords torn from their
-words; a run.sh that finds a number anywhere on the page instead of in its row); then try to break each item by hand (another order, a reload or restart, keyboard
-only, empty and long data, a second monitor); look at every screenshot yourself and compare it with the
+words; a run.sh that finds a number anywhere on the page instead of in its row); then try to break the change by hand the ways that apply (another order, a reload or
+restart, keyboard only, empty and long data, a second monitor); look at every screenshot yourself and compare it with the
 reference; do not edit any code; write the verdict for each check (prešlo, neprešlo, nedá sa overiť)
 with the evidence path to `overenie/verdikt.md`.
 
-Fix what it found, run `overenie/run.sh` yourself, then start a targeted round, three rounds at most. Its brief names
+Fix what it found, run `overenie/run.sh` yourself, then start a targeted round: two rounds at most, three for
+`Hĺbka: dôkladná`. Its brief names
 the findings you fixed and the fix's diff, and gives your run.sh output in place of a rerun. The verifier checks the fixed
 findings in the real UI or target, follows every path the changed code runs on (not only the one the finding named) and
 tries to break each, and reruns run.sh only when it doubts your output. When the fix touches code that every case
-shares, or the reach is unclear, it re-checks in full every check the fix can reach. It never trusts the builder's
+shares, the brief says `Hĺbka: dôkladná` and it re-checks every check the fix can reach. It never trusts the builder's
 word on a check it judges. Then report what is still failing.
 
 ## 4. Show the evidence
