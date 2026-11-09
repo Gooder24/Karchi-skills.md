@@ -48,6 +48,42 @@ def remote(host, request):
     return data
 
 
+
+def cron_next(expr, now=None):
+    """Next run of a five-field cron expression in local time, within 8 days, or None."""
+    from zoneinfo import ZoneInfo
+    fields=expr.split()
+    if len(fields)!=5:
+        return None
+    def values(field,low,high):
+        out=set()
+        for part in field.split(','):
+            step=1
+            if '/' in part:
+                part,step=part.split('/');step=int(step)
+            if part=='*':
+                a,b=low,high
+            elif '-' in part:
+                a,b=map(int,part.split('-'))
+            else:
+                a=b=int(part)
+            out.update(range(a,b+1,step))
+        return out
+    try:
+        minute,hour,dom,month,dow=(values(f,lo,hi) for f,(lo,hi) in zip(fields,[(0,59),(0,23),(1,31),(1,12),(0,7)]))
+    except ValueError:
+        return None
+    dow={d%7 for d in dow}
+    t=(now or dt.datetime.now(ZoneInfo('Europe/Bratislava'))).replace(second=0,microsecond=0)+dt.timedelta(minutes=1)
+    for _ in range(8*24*60):
+        day_ok=(t.day in dom if fields[2]!='*' else True) and (t.isoweekday()%7 in dow if fields[4]!='*' else True)
+        if fields[2]!='*' and fields[4]!='*':
+            day_ok=t.day in dom or t.isoweekday()%7 in dow
+        if t.minute in minute and t.hour in hour and t.month in month and day_ok:
+            return t.isoformat()
+        t+=dt.timedelta(minutes=1)
+    return None
+
 def enrich(host,row):
     # Reuse the established descriptions, but never infer a subscription from a process name alone.
     spec=importlib.util.spec_from_file_location('known_inventory',HERE.parent/'inventory.py')
@@ -69,6 +105,8 @@ def enrich(host,row):
     if name=='hermes-gateway':
         row.update(ai='spúšťa',purpose='Hermes: osobný asistent vo Wefte',subscription='podľa konfigurácie Hermesa')
     if row['kind']=='cron':
+        runs=[n for n in (cron_next(part) for part in row['schedule'].split('; ')) if n]
+        row['next_run']=min(runs) if runs else row.get('next_run')
         row['schedule']='; '.join(m.when_text({'kind':'cron','when':part}) for part in row['schedule'].split('; '))
     elif row['kind']=='systemd' and row['technical'].endswith('.timer'):
         row['schedule']=m.when_text({'kind':'timer','when':row['schedule']})
@@ -86,6 +124,9 @@ def enrich(host,row):
         if parts: row['schedule']=', '.join(parts)
     row['schedule']={'*-*-* *:00:00':'každú hodinu','*-*-* *:*:00':'každú minútu'}.get(row.get('schedule'),row.get('schedule'))
     if row.get('schedule'): row['schedule']=re.sub(r'(\d)(min|s|h|d)\b',r'\1 \2',row['schedule'])
+    once=re.fullmatch(r'raz (\d{4}-\d\d-\d\d \d\d:\d\d)',row.get('schedule',''))
+    if once and row['status']=='naplánované' and not row.get('next_run') and once[1]<dt.datetime.now().strftime('%Y-%m-%d %H:%M'):
+        row['status']='dokončené'
     hourly=re.fullmatch(r'\*-\*-\* (\d\d)\.\.(\d\d):(\d\d):00',row.get('schedule',''))
     if hourly:
         row['schedule']=f'každú hodinu od {hourly[1]}:{hourly[3]} do {hourly[2]}:{hourly[3]}'
