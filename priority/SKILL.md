@@ -33,7 +33,7 @@ only because he asked in this thread, and mention that Hermes keeps it.
 
 ## Moving the thread to asus
 
-CLAUDE.md („Kde beží práca“) moves a thread that does not need its machine to asus. The moved
+AGENTS.md („Kde beží práca“) moves a thread that does not need its machine to asus. The moved
 thread has to start working on its own; Karchi must never find it stopped.
 
 1. A thread whose first message starts with „Presunuté z vlákna“ has been moved already: never move
@@ -49,18 +49,3 @@ thread has to start working on its own; Karchi must never find it stopped.
    `t3_thread_send`; if it failed, say so and do the task here.
 4. Send Karchi its link and end your turn. Never `t3_thread_interrupt` the moved thread and never do
    its work here in parallel.
-
-## Night worker
-
-Paused by Karchi on 2026-11-06: every night task on asus (the worker, the briefs in `~/nocny-worker/ulohy/`,
-the weekly Partsheet CI check) is disabled, not deleted. Do not enable one or create a new scheduled task
-that runs while he sleeps unless he asks for it in that thread. „na noc“ until then: tell him the worker is
-paused and ask whether to turn it back on; tagging ` · noc` alone does nothing.
-
-A scheduled T3 task on asus (00:30, new thread per run) takes one inbox item while Karchi sleeps;
-its rules are in `worker.md` here. It only proposes (a `worker/*` branch or a patch), never changes
-anything live. „na noc“ or „nech to spraví worker“: append ` · noc` to that line, the worker takes
-tagged lines first. Its report lands in `~/inbox/worker/<date>.md` on asus.
-
-Longer night tasks (one brief each in asus `~/nocny-worker/ulohy/`, a scheduled T3 task per brief, every
-night until the brief's progress file says done) write `~/inbox/worker/<date>-<slug>.md`.

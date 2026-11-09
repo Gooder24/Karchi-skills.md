@@ -2,6 +2,9 @@
 
 Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 
+[`AGENTS.md`](AGENTS.md) holds Karchi's rules for every agent on every machine; `install.sh` links it as
+`~/.claude/CLAUDE.md`, `~/.claude/AGENTS.md` and `~/.codex/AGENTS.md`.
+
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
@@ -11,8 +14,6 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
 | [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
 | [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
-| [`priority/review.md`](priority/review.md) | Nightly inbox review: closes done items and adds unfinished work from every machine's T3 threads (`thread-digest.py`) |
-| [`priority/worker.md`](priority/worker.md) | The night worker: a scheduled T3 task on asus proposes one inbox item per night as a branch or patch |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every UI before Karchi sees it |
 

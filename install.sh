@@ -17,6 +17,31 @@ for d in "$R"/*/; do
     echo "ok $t/$n"
   done
 done
+# One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md.
+# A real file there is kept once as <name>.bak-<date>, then replaced by the link.
+for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md"; do
+  [ -d "$(dirname "$f")" ] || continue
+  [ "$(readlink "$f")" = "$R/AGENTS.md" ] && continue
+  [ -e "$f" ] && [ ! -L "$f" ] && mv "$f" "$f.bak-$(date +%F)"
+  ln -sfn "$R/AGENTS.md" "$f" && echo "ok $f -> AGENTS.md"
+done
+# Skills from claude.ai that Karchi does not want listed (2026-11-09). Only missing keys are set, so a later
+# change in /skills or settings.json stays.
+python3 -I - "$HOME/.claude/settings.json" <<'PY' || true
+import json, os, sys
+p = sys.argv[1]
+if not os.path.exists(p): sys.exit()
+s = json.load(open(p)); o = s.setdefault("skillOverrides", {}); n = len(o)
+for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspace": "off",
+             "anthropic-skills:deep-research": "off", "deep-research": "off",
+             "anthropic-skills:computer-use": "user-invocable-only",
+             "anthropic-skills:chrome-browser": "user-invocable-only",
+             "anthropic-skills:built-in-browser": "user-invocable-only"}.items():
+    o.setdefault(k, v)
+if len(o) != n:
+    json.dump(s, open(p + ".tmp", "w"), indent=2, ensure_ascii=False); os.replace(p + ".tmp", p)
+    print("ok skillOverrides")
+PY
 # Verification files (skill overenie) stay out of every repo, so they never show in T3's changed files or in a commit.
 ign=$(git config --global --get core.excludesFile || true); ign=${ign/#\~/$HOME}
 ign=${ign:-${XDG_CONFIG_HOME:-$HOME/.config}/git/ignore}
