@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -50,7 +51,7 @@ def remote(host, request):
 
 
 def cron_next(expr, now=None):
-    """Next run of a five-field cron expression in local time, within 8 days, or None."""
+    """Next run of a five-field cron expression in local time, within 32 days, or None."""
     from zoneinfo import ZoneInfo
     fields=expr.split()
     if len(fields)!=5:
@@ -75,7 +76,7 @@ def cron_next(expr, now=None):
         return None
     dow={d%7 for d in dow}
     t=(now or dt.datetime.now(ZoneInfo('Europe/Bratislava'))).replace(second=0,microsecond=0)+dt.timedelta(minutes=1)
-    for _ in range(8*24*60):
+    for _ in range(32*24*60):
         day_ok=(t.day in dom if fields[2]!='*' else True) and (t.isoweekday()%7 in dow if fields[4]!='*' else True)
         if fields[2]!='*' and fields[4]!='*':
             day_ok=t.day in dom or t.isoweekday()%7 in dow
@@ -83,6 +84,24 @@ def cron_next(expr, now=None):
             return t.isoformat()
         t+=dt.timedelta(minutes=1)
     return None
+
+
+def cron_text(expr):
+    """Readable Slovak form of a cron expression that inventory.when_text left raw, or the expression itself."""
+    f=expr.split()
+    if len(f)!=5 or not re.fullmatch(r'[\d,]+',f[0]) or not re.fullmatch(r'[\d,]+',f[1]) or f[3]!='*':
+        return expr
+    times=', '.join(f'{int(h):02d}:{int(m):02d}' for h in f[1].split(',') for m in f[0].split(','))
+    names=['nedeľa','pondelok','utorok','streda','štvrtok','piatok','sobota','nedeľa']
+    if f[2]!='*' and f[4]=='*' and re.fullmatch(r'[\d,]+',f[2]):
+        return ', '.join(d+'.' for d in f[2].split(','))+' v mesiaci '+times
+    if f[2]=='*' and re.fullmatch(r'[\d,-]+',f[4]):
+        days=[]
+        for part in f[4].split(','):
+            a,_,b=part.partition('-')
+            days.append(names[int(a)] if not b else names[int(a)]+' až '+names[int(b)])
+        return ', '.join(days)+' '+times
+    return expr
 
 def enrich(host,row):
     # Reuse the established descriptions, but never infer a subscription from a process name alone.
@@ -107,14 +126,16 @@ def enrich(host,row):
     if row['kind']=='cron':
         runs=[n for n in (cron_next(part) for part in row['schedule'].split('; ')) if n]
         row['next_run']=min(runs) if runs else row.get('next_run')
-        row['schedule']='; '.join(m.when_text({'kind':'cron','when':part}) for part in row['schedule'].split('; '))
+        row['schedule']='; '.join(cron_text(t.removeprefix('cron ')) if t.startswith('cron ') else t for t in (m.when_text({'kind':'cron','when':part}) for part in row['schedule'].split('; ')))
     elif row['kind']=='systemd' and row['technical'].endswith('.timer'):
         row['schedule']=m.when_text({'kind':'timer','when':row['schedule']})
     from zoneinfo import ZoneInfo
     import re
     if row['kind']=='hermes':
-        if re.fullmatch(r'[\d*/, -]+', row['schedule']) and len(row['schedule'].split())==5:
-            row['schedule']=m.when_text({'kind':'cron','when':row['schedule']})
+        raw=row['schedule'].removeprefix('cron ')
+        if re.fullmatch(r'[\d*/, -]+', raw) and len(raw.split())==5:
+            row['schedule']=m.when_text({'kind':'cron','when':raw})
+            if row['schedule'].startswith('cron '): row['schedule']=cron_text(raw)
         interval=re.fullmatch(r'every (\d+)m',row['schedule'])
         if interval: row['schedule']='každých '+interval[1]+' min'
     if row['kind']=='systemd' and row.get('schedule','').startswith('{'):
@@ -127,6 +148,9 @@ def enrich(host,row):
     once=re.fullmatch(r'raz (\d{4}-\d\d-\d\d \d\d:\d\d)',row.get('schedule',''))
     if once and row['status']=='naplánované' and not row.get('next_run') and once[1]<dt.datetime.now().strftime('%Y-%m-%d %H:%M'):
         row['status']='dokončené'
+    if once:
+        d=dt.datetime.fromisoformat(once[1].replace(' ','T'))
+        row['schedule']=f'raz {d.day}. {d.month}. {d.year} {d:%H:%M}'
     hourly=re.fullmatch(r'\*-\*-\* (\d\d)\.\.(\d\d):(\d\d):00',row.get('schedule',''))
     if hourly:
         row['schedule']=f'každú hodinu od {hourly[1]}:{hourly[3]} do {hourly[2]}:{hourly[3]}'
