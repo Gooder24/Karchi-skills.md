@@ -7,6 +7,7 @@ only; Caddy puts it at /prehlad. Every 30 minutes it reruns ../inventory.py, eve
 ~/.config/prehlad/farby.json, which the page edits through POST api/farby.
 """
 import datetime as dt
+import importlib.util
 import json
 import os
 import re
@@ -27,6 +28,9 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js",
           "/style.css": ("style.css", "text/css; charset=utf-8"),
           "/DepartureMono-Regular.woff2": ("DepartureMono-Regular.woff2", "font/woff2")}
 lock = threading.Lock()
+_spec = importlib.util.spec_from_file_location("automations_manager", os.path.join(ROOT, "automations", "manager.py"))
+automations = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(automations)
 
 
 def cached(script):
@@ -39,7 +43,11 @@ def cached(script):
 
 def refresh_loop(script):
     while True:
-        out = subprocess.run([sys.executable, os.path.join(ROOT, script)], capture_output=True, text=True, timeout=900).stdout
+        try:
+            out = subprocess.run([sys.executable, os.path.join(ROOT, script)], capture_output=True, text=True, timeout=900).stdout
+        except (subprocess.TimeoutExpired, OSError):
+            time.sleep(REFRESH[script])
+            continue
         try:
             json.loads(out)
             os.makedirs(CACHE, exist_ok=True)
@@ -143,6 +151,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?")[0]
+        if automations.handle(self, path, "GET"):
+            return
         if path == "/api/data":
             return self.send(200, json.dumps(data(), ensure_ascii=False))
         if path in STATIC:
@@ -152,6 +162,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, '{"chyba": "nenájdené"}')
 
     def do_POST(self):
+        if automations.handle(self, self.path.split("?")[0], "POST"):
+            return
         # The custom header forces a CORS preflight, so another site cannot post here from a browser.
         if self.path != "/api/farby" or self.headers.get("X-Prehlad") != "1":
             return self.send(403, '{"chyba": "zakázané"}')
@@ -175,6 +187,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 3460
+    automations.start()
     for script in REFRESH:
         threading.Thread(target=refresh_loop, args=(script,), daemon=True).start()
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
