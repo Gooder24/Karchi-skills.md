@@ -225,6 +225,33 @@ live_lock=threading.Lock()
 sampling={}
 
 
+def cpu_watts(now, prev):
+    """Average package watts from µJ over boot time, never inferred from CPU utilisation."""
+    if not prev or not now.get('boot_id') or now['boot_id'] != prev.get('boot_id'):
+        return None
+    elapsed = now['uptime'] - prev['uptime']
+    current = now.get('power', {}).get('packages', {})
+    before = prev.get('power', {}).get('packages', {})
+    if not 0 < elapsed <= 120 or not current or current.keys() != before.keys():
+        return None
+    watts = 0
+    for key, (energy, maximum) in current.items():
+        old, old_maximum = before[key]
+        if maximum != old_maximum or not 0 <= energy < maximum or not 0 <= old < maximum:
+            return None
+        delta = energy - old
+        if delta < 0:
+            # A wrap is plausible only at the ends of the counter's range; other decreases are resets.
+            if old < .9 * maximum or energy > .1 * maximum:
+                return None
+            delta += maximum
+        package_w = delta / 1e6 / elapsed
+        if package_w > 1000:
+            return None
+        watts += package_w
+    return round(watts, 2)
+
+
 def sample_host(host):
     try:
         p=subprocess.run(ssh_args(host,'stats.py',MASTERS),capture_output=True,text=True,timeout=20)
@@ -247,6 +274,10 @@ def sample_host(host):
             h['procs']={k:{'cpu':round(100*max(0,v[0]-prev['cgroups'].get(k,[v[0]])[0])/wall,1) if wall>0 else 0.0,'mem':v[1]} for k,v in now['cgroups'].items()}
         else:
             h['procs']={k:{'cpu':None,'mem':v[1]} for k,v in now['cgroups'].items()}
+        watts = cpu_watts(now, prev)
+        h['power'] = {'cpu_w': watts, 'battery_w': now.get('power', {}).get('battery_w'),
+                      'interval_s': round(now['uptime'] - prev['uptime'], 1) if watts is not None else None,
+                      'cpu_state': 'ok' if watts is not None else 'sampling' if now.get('power', {}).get('packages') else 'unavailable'}
         h.update(raw=now,offline=False,error=None,checked=now['time'],
                  cores=now['cores'],cpu_model=now['cpu_model'],os=now['os'],load=now['load'],uptime=now['uptime'],
                  mem=now['mem'],disk=now['disk'],temp=now['temp'],battery=now['battery'])

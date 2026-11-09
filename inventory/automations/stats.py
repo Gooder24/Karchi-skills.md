@@ -1,11 +1,13 @@
 """Read a host's live load: CPU counters, memory, disk, temperature and per-service cgroup usage.
 
-Sent over SSH like agent.py. Only reads /proc and /sys; it starts no other program.
+Sent over SSH like agent.py. Only reads /proc and /sys. Protected RAPL counters
+are read with one non-interactive sudo cat; no permissions or settings change.
 The caller turns two counter readings into percentages.
 """
 import json
 import os
 from pathlib import Path
+import subprocess
 import time
 
 
@@ -63,6 +65,63 @@ def battery():
     return None
 
 
+def battery_watts():
+    # A battery on AC can report zero while the laptop still draws power from its adapter.
+    supplies = Path('/sys/class/power_supply')
+    if any(read(p / 'type').strip() in ('Mains', 'USB', 'USB_C', 'USB_PD') and
+           read(p / 'online').strip() == '1' for p in supplies.glob('*')):
+        return None
+    total, discharging = 0, False
+    for bat in supplies.glob('BAT*'):
+        if read(bat / 'present').strip() == '0':
+            continue
+        status = read(bat / 'status').strip()
+        if status in ('Not charging', 'Full'):
+            continue
+        if status != 'Discharging':
+            return None
+        discharging = True
+        try:
+            raw = read(bat / 'power_now').strip()
+            watts = int(raw) / 1e6 if raw else int(read(bat / 'current_now')) * int(read(bat / 'voltage_now')) / 1e12
+        except ValueError:
+            return None
+        if watts < 0:
+            return None
+        total += watts
+    return round(total, 2) if discharging else None
+
+
+def package_energy():
+    # Package includes its child domains: summing cores/uncore or the MMIO mirror counts twice.
+    packages, protected, expected = {}, [], set()
+    for zone in sorted(Path('/sys/class/powercap').glob('intel-rapl:*')):
+        if not read(zone / 'name').strip().startswith('package-'):
+            continue
+        expected.add(zone.name)
+        try:
+            maximum = int(read(zone / 'max_energy_range_uj'))
+            try:
+                energy = int((zone / 'energy_uj').read_text())
+            except PermissionError:
+                protected.append((zone, maximum))
+                continue
+            packages[zone.name] = [energy, maximum]
+        except (OSError, ValueError):
+            continue
+    if protected:
+        try:
+            result = subprocess.run(['sudo', '-n', 'cat', '--', *[str(p / 'energy_uj') for p, _ in protected]],
+                                    capture_output=True, text=True, timeout=2)
+            values = result.stdout.splitlines()
+            if result.returncode == 0 and len(values) == len(protected):
+                packages.update({p.name: [int(value), maximum] for (p, maximum), value in zip(protected, values)})
+        except (OSError, ValueError, subprocess.TimeoutExpired):
+            pass
+    # A partial multi-socket reading would understate total CPU power.
+    return packages if packages.keys() == expected else {}
+
+
 def cgroups():
     # Services and containers by cgroup leaf: CPU time in microseconds and current memory in bytes.
     out = {}
@@ -104,10 +163,12 @@ def main():
         'os': release.get('PRETTY_NAME', '').strip('"'),
         'load': [float(v) for v in read('/proc/loadavg').split()[:3]],
         'uptime': float(read('/proc/uptime', '0').split()[0]),
+        'boot_id': read('/proc/sys/kernel/random/boot_id').strip(),
         'mem': [used, total],
         'disk': [(disk.f_blocks - disk.f_bfree) * disk.f_frsize, (disk.f_blocks - disk.f_bfree + disk.f_bavail) * disk.f_frsize],
         'temp': temperature(),
         'battery': battery(),
+        'power': {'packages': package_energy(), 'battery_w': battery_watts()},
         'cgroups': cgroups(),
     }))
 
