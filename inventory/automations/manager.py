@@ -1,4 +1,4 @@
-"""Authenticated Weft automation endpoints, hosted by the existing Prehľad process."""
+"""Read-only Weft automation endpoint, hosted by the existing Prehľad process."""
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime as dt
 import hashlib
@@ -11,7 +11,6 @@ import subprocess
 import sys
 import threading
 import time
-import urllib.request
 
 HERE=Path(__file__).parent
 CACHE=Path.home()/'.cache/prehlad/automations.json'
@@ -140,21 +139,6 @@ def start():
     threading.Thread(target=loop,daemon=True).start()
 
 
-def auth(handler):
-    authorization=handler.headers.get('Authorization','')
-    if not authorization.startswith('Bearer ') or len(authorization)>8000:
-        raise PermissionError('Prihlás sa do Weftu.')
-    req=urllib.request.Request('http://127.0.0.1:8008/_matrix/client/v3/account/whoami',headers={'Authorization':authorization})
-    try:
-        with urllib.request.urlopen(req,timeout=6) as r:
-            who=json.load(r)
-    except Exception:
-        raise PermissionError('Prihlásenie sa nepodarilo overiť. Otvor Weft a prihlás sa.')
-    if who.get('user_id')!='@karchi:asus-vivobook-x1504v.taila3702d.ts.net':
-        raise PermissionError('Tento prehľad patrí Karchimu.')
-    return hashlib.sha256(authorization.encode()).hexdigest()
-
-
 def public_data():
     with lock:
         hosts=json.loads(json.dumps(state['hosts']))
@@ -192,9 +176,6 @@ def handle(handler,path,method):
     if path != '/_automations/data':
         handler.send(404, '{"error":"Nenájdené"}')
         return True
-    try:
-        auth(handler)
-        handler.send(200,json.dumps(public_data(),ensure_ascii=False))
-    except PermissionError as e:
-        handler.send(403,json.dumps({'error':str(e)},ensure_ascii=False))
+    # Caddy serves this only on the tailnet address and localhost, so a read needs no login.
+    handler.send(200,json.dumps(public_data(),ensure_ascii=False))
     return True

@@ -31,7 +31,7 @@ WantedBy=default.target
 ## Weft Automations
 
 `automations/agent.py` collects host schedulers without modifying them. `automations/manager.py`
-adds authenticated GET `/_automations/data` to the existing server; all POSTs are rejected.
+adds login-free GET `/_automations/data` (tailnet and localhost only) to the existing server; all POSTs are rejected.
 The Weft page lists every process directly for Ctrl+F. There are no deletion actions or extra controls.
 Source/frontend deployment notes: Gooder24/weft `server/automations/README.md`.
 
