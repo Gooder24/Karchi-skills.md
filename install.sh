@@ -27,13 +27,16 @@ for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENT
   [ -e "$f" ] && [ ! -L "$f" ] && mv "$f" "$f.bak-$(date +%F)"
   ln -sfn "$R/AGENTS.md" "$f" && echo "ok $f -> AGENTS.md"
 done
-# Skills from claude.ai that Karchi does not want listed (2026-11-09). Only missing keys are set, so a later
-# change in /skills or settings.json stays.
+# Claude defaults and skills from claude.ai that Karchi does not want listed (2026-11-09).
+# Skill overrides only fill missing keys, so a later change in /skills stays.
 python3 -I - "$HOME/.claude/settings.json" <<'PY' || true
 import json, os, sys
 p = sys.argv[1]
 if not os.path.exists(p): sys.exit()
 s = json.load(open(p)); o = s.setdefault("skillOverrides", {}); n = len(o)
+# Earlier compaction reduces growing history. /autocompact or --autocompact can override per model/session.
+compact_changed = s.get("autoCompactWindow") != 200000
+s["autoCompactWindow"] = 200000
 for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspace": "off",
              "anthropic-skills:deep-research": "off", "deep-research": "off",
              "anthropic-skills:computer-use": "user-invocable-only",
@@ -52,9 +55,9 @@ for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspa
 # The Cowork plugin from claude.ai: its skills ignore skillOverrides, so the whole plugin goes off.
 e = s.setdefault("enabledPlugins", {}); new_plugin = "cowork-plugin-management@synced" not in e
 e.setdefault("cowork-plugin-management@synced", False)
-if len(o) != n or new_plugin:
+if len(o) != n or new_plugin or compact_changed:
     json.dump(s, open(p + ".tmp", "w"), indent=2, ensure_ascii=False); os.replace(p + ".tmp", p)
-    print("ok skillOverrides")
+    print("ok Claude settings: auto-compact 200k, skillOverrides")
 PY
 # Verification files (skill overenie) stay out of every repo, so they never show in T3's changed files or in a commit.
 ign=$(git config --global --get core.excludesFile || true); ign=${ign/#\~/$HOME}
