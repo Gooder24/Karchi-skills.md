@@ -6,6 +6,8 @@ set -e
 R="$HOME/.work/karchi-skills"
 if [ -d "$R/.git" ]; then git -C "$R" pull -q --ff-only
 else mkdir -p "$HOME/.work" && git clone -q https://github.com/Gooder24/Karchi-skills.md.git "$R"; fi
+# A pull that changed this script: run the new version, not the rest of the old one bash already reads.
+[ -z "${KS_FRESH:-}" ] && KS_FRESH=1 exec bash "$R/install.sh"
 for d in "$R"/*/; do
   [ -f "$d/SKILL.md" ] || continue
   n=$(basename "$d")
