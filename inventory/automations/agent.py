@@ -53,16 +53,19 @@ def display_command(raw):
     text = match[1].strip() if match else raw
     try:
         words = shlex.split(text)
+        while words and re.match(r'^[A-Za-z_][\w]*=', words[0]):
+            words.pop(0)
         if not words:
             return ''
         program = words[0]
         shown = [program]
         if re.fullmatch(r'(?:python[\d.]*|bash|sh|node|ruby|perl)', Path(program).name):
             for word in words[1:]:
-                if word in ('-c', '-e', '-m'):
-                    break
                 if word.startswith('-'):
-                    continue
+                    if Path(program).name.startswith('python') and word in ('-I', '-B', '-E', '-s', '-S', '-u', '-q'):
+                        continue
+                    # Unknown options may consume a secret value or contain inline shell code.
+                    break
                 if re.fullmatch(r'[\w/$~.{}-]+', word):
                     shown.append(word)
                 break
@@ -215,9 +218,8 @@ def parse_cron(text, location, system=False, user=''):
             existing['revision'] = digest(existing['target'])
             continue
         try:
-            words = shlex.split(cmd)
-            program = next((w for w in words[1:] if not w.startswith('-')), words[0]) if words and re.fullmatch(r'(?:python[\d.]*|bash|sh)', Path(words[0]).name) else words[0]
-            name = Path(program).name
+            words = shlex.split(display_command(cmd).split(' [ostatné argumenty skryté]')[0])
+            name = Path(words[-1]).name
         except (ValueError, IndexError):
             name = 'cron'
         target = dict(location=location, lines=[line], owner=owner)
