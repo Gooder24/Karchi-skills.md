@@ -118,7 +118,7 @@ Fix what it found, run `overenie/run.sh` yourself, then start a targeted round: 
 `Hĺbka: dôkladná`. Its brief names
 the findings you fixed and the fix's diff, and gives your run.sh output in place of a rerun. The verifier checks the fixed
 findings in the real UI or target, follows every path the changed code runs on (not only the one the finding named) and
-tries to break each, and reruns run.sh only when it doubts your output. When the fix touches code that every case
+tries to break each, and reruns run.sh only when it doubts your output or the brief says `Hĺbka: dôkladná`. When the fix touches code that every case
 shares, the brief says `Hĺbka: dôkladná` and it re-checks every check the fix can reach. It never trusts the builder's
 word on a check it judges. Then report what is still failing.
 
