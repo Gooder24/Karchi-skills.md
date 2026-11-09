@@ -81,17 +81,21 @@ verdicts were written by the builder because the verifier hit the limit; that mu
 ```sh
 cd "$PROJECT" && rm -f overenie/verdikt.md
 export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
+V=~/.work/karchi-skills/overenie/verifier-agents.md   # how the verifier works and answers, before the brief
 claude -p "$(cat overenie/verifier.md)" --model claude-opus-5-5 --effort high --no-session-persistence \
+  --append-system-prompt "$(cat $V)" --tools Bash,Read,Write,Edit,Glob,Grep \
   --permission-mode bypassPermissions --output-format json < /dev/null > overenie/verifier-output.json 2>&1
 python3 -I ~/.work/karchi-skills/overenie/usage.py overenie/verifier-output.json   # text + one line of usage
 # claude exits 0 even when it hit the limit or could not write, so judge by the verdict file
 [ -s overenie/verdikt.md ] || "$(command -v codex || echo ~/.local/bin/codex)" exec --skip-git-repo-check \
-  -s danger-full-access -C "$PWD" "$(cat overenie/verifier.md)" < /dev/null >> overenie/verifier-output.txt 2>&1
+  -s danger-full-access -C "$PWD" "$(cat $V overenie/verifier.md)" < /dev/null >> overenie/verifier-output.txt 2>&1
 ```
 
 Run it in the foreground or as `systemd-run --user` with a wait on `overenie/verdikt.md`: in a T3 thread a
 plain background command can end before the verifier does. The verifier needs network and SSH to reach
-the real target, hence the full-access sandbox; `verifier.md` forbids it to edit anything but the verdict.
+the real target, hence the full-access sandbox; `verifier-agents.md` forbids it to edit anything but the verdict
+and fixes the verdict's shape. Six tools are enough for it: the default set of about a hundred costs about 27 000
+tokens on every one of its steps (measured 9. 11.).
 If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
 ends with `Overenie: neoverené – …`. A verdict written by the builder never says `prešlo` for those checks.
 

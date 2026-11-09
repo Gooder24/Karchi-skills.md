@@ -6,3 +6,4 @@ overenie/run.sh
 overenie/verifier*
 overenie/verdikt.md
 overenie/20*/
+!overenie/verifier-agents.md
