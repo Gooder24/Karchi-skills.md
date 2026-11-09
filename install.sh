@@ -38,9 +38,21 @@ for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspa
              "anthropic-skills:deep-research": "off", "deep-research": "off",
              "anthropic-skills:computer-use": "user-invocable-only",
              "anthropic-skills:chrome-browser": "user-invocable-only",
-             "anthropic-skills:built-in-browser": "user-invocable-only"}.items():
+             "anthropic-skills:built-in-browser": "user-invocable-only",
+             # Only when he types /name: the agent never needs them on its own.
+             "retro": "user-invocable-only", "code-review": "user-invocable-only",
+             "simplify": "user-invocable-only", "run": "user-invocable-only",
+             "workflow-authoring": "user-invocable-only", "loop": "user-invocable-only",
+             "schedule": "user-invocable-only", "anthropic-skills:skill-creator": "user-invocable-only",
+             "anthropic-skills:xlsx": "user-invocable-only",
+             # Not used: they overlap his own skills or tools he does not have.
+             "anthropic-skills:brand-partner": "off", "anthropic-skills:import-memory": "off",
+             "fewer-permission-prompts": "off", "plugin-authoring": "off"}.items():
     o.setdefault(k, v)
-if len(o) != n:
+# The Cowork plugin from claude.ai: its skills ignore skillOverrides, so the whole plugin goes off.
+e = s.setdefault("enabledPlugins", {}); new_plugin = "cowork-plugin-management@synced" not in e
+e.setdefault("cowork-plugin-management@synced", False)
+if len(o) != n or new_plugin:
     json.dump(s, open(p + ".tmp", "w"), indent=2, ensure_ascii=False); os.replace(p + ".tmp", p)
     print("ok skillOverrides")
 PY
