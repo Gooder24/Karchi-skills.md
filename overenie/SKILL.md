@@ -68,6 +68,11 @@ it between machines. Never `git add -f` it and never move checks to another fold
 
 ## 3. Verify with fresh eyes
 
+First run `overenie/run.sh` yourself. A verifier is the expensive step: never start one on a red run. Fix the
+failure, or, when it is not your change (changed data, a flaky machine), name each failing check and your guess in the
+brief as unverified, so the verifier judges it instead of rediscovering it. Start the verifier once the whole change
+he asked for is finished, not after each partial step: several commits for one ask go to one round.
+
 After building, start a verifier that has not seen your work: a separate headless Claude on Opus, not a
 subagent, because subagents run on Haiku and inherit your assumptions. When Claude cannot run it (the
 5-hour limit, an expired login), use Codex, a different model with its own limits. On 5. 11. two
@@ -77,7 +82,8 @@ verdicts were written by the builder because the verifier hit the limit; that mu
 cd "$PROJECT" && rm -f overenie/verdikt.md
 export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
 claude -p "$(cat overenie/verifier.md)" --model claude-opus-5-5 --effort high --no-session-persistence \
-  --permission-mode bypassPermissions < /dev/null > overenie/verifier-output.txt 2>&1
+  --permission-mode bypassPermissions --output-format json < /dev/null > overenie/verifier-output.json 2>&1
+python3 -I ~/.work/karchi-skills/overenie/usage.py overenie/verifier-output.json   # text + one line of usage
 # claude exits 0 even when it hit the limit or could not write, so judge by the verdict file
 [ -s overenie/verdikt.md ] || "$(command -v codex || echo ~/.local/bin/codex)" exec --skip-git-repo-check \
   -s danger-full-access -C "$PWD" "$(cat overenie/verifier.md)" < /dev/null >> overenie/verifier-output.txt 2>&1
@@ -96,14 +102,22 @@ command above on asus and brings back only the verdict and `verifier-output.txt`
 the tree to asus and run the same command there over `ssh asus`. The verifier stays just as strict; only where it
 runs changes.
 
-`overenie/verifier.md` gives it only the checks, where the thing runs, and these rules: run
+`overenie/verifier.md` is short and points instead of pasting: the checks (or the path to `checks.md`), where the
+thing runs, what changed (`git show <commits>` or a diff path), the path of your run.sh output, and these rules. Earlier
+verdicts and long context go in as paths it reads when it needs them. The rules: run
 `overenie/run.sh`; read what each check really measures and flag a check that tests a proxy instead of
 what he sees (the 5. 11. partsheet check measured only the line width and missed chords torn from their
 words; a run.sh that finds a number anywhere on the page instead of in its row); then try to break each item by hand (another order, a reload or restart, keyboard
 only, empty and long data, a second monitor); look at every screenshot yourself and compare it with the
 reference; do not edit any code; write the verdict for each check (prešlo, neprešlo, nedá sa overiť)
-with the evidence path to `overenie/verdikt.md`. Fix what it found and run it again, three rounds at
-most. Then report what is still failing.
+with the evidence path to `overenie/verdikt.md`.
+
+Fix what it found, run `overenie/run.sh` yourself, then start a targeted round, three rounds at most. Its brief names
+the findings you fixed and the fix's diff, and gives your run.sh output in place of a rerun. The verifier checks the fixed
+findings in the real UI or target, follows every path the changed code runs on (not only the one the finding named) and
+tries to break each, and reruns run.sh only when it doubts your output. When the fix touches code that every case
+shares, or the reach is unclear, it re-checks in full every check the fix can reach. It never trusts the builder's
+word on a check it judges. Then report what is still failing.
 
 ## 4. Show the evidence
 
