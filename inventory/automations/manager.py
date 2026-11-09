@@ -6,7 +6,6 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import secrets
 import shlex
 import subprocess
 import sys
@@ -19,7 +18,6 @@ CACHE=Path.home()/'.cache/prehlad/automations.json'
 HOSTS=['asus','dell','e540','x270','vps']
 lock=threading.RLock()
 refresh_lock=threading.Lock()
-tickets={}
 state={'hosts':{},'refreshing':False}
 
 
@@ -173,21 +171,13 @@ def public_data():
             stale=True
         summary.append({'device':host,'collected_at':collected,'offline':d.get('offline',False),'stale':stale,'error':d.get('error'), 'errors':d.get('errors',[])})
         for row in d.get('rows',[]):
-            row.pop('target',None)
+            for private in ['target','revision','delete_reason','delete_effect']:
+                row.pop(private,None)
             row['collected_at']=collected
             row['stale']=stale or d.get('offline',False)
             rows.append(row)
     return {'rows':rows,'hosts':summary,'refreshing':refreshing}
 
-
-def resolve(payload):
-    ident=payload.get('id')
-    with lock:
-        for host,d in state['hosts'].items():
-            for row in d.get('rows',[]):
-                if row['id']==ident:
-                    return host,dict(row)
-    raise ValueError('Položka už nie je v zozname. Obnov prehľad.')
 
 
 def handle(handler,path,method):
@@ -196,62 +186,15 @@ def handle(handler,path,method):
     if handler.headers.get('X-Weft-Route') != '1':
         handler.send(404, '{"error":"Nenájdené"}')
         return True
-    def send(code,data):
-        handler.send(code,json.dumps(data,ensure_ascii=False))
+    if method != 'GET':
+        handler.send(405, '{"error":"Prehľad je iba na čítanie."}')
+        return True
+    if path != '/_automations/data':
+        handler.send(404, '{"error":"Nenájdené"}')
+        return True
     try:
-        subject=auth(handler)
-        if method=='GET' and path=='/_automations/data':
-            send(200,public_data());return True
-        if method!='POST' or handler.headers.get('X-Weft-Automations')!='1':
-            raise PermissionError('Požiadavka neprišla z prehľadu Weftu.')
-        # Custom header + no CORS response enforce same-origin browser requests.
-        origin=handler.headers.get('Origin')
-        if origin and origin not in ['https://100.110.180.15:8443','http://127.0.0.1:8080','http://127.0.0.1:18080']:
-            raise PermissionError('Nepovolený pôvod požiadavky.')
-        size=int(handler.headers.get('Content-Length','0'))
-        if not 0<size<=4096:
-            raise ValueError('Neplatná veľkosť požiadavky.')
-        payload=json.loads(handler.rfile.read(size))
-        if path=='/_automations/refresh':
-            threading.Thread(target=refresh,daemon=True).start()
-            send(202,{'ok':True});return True
-        if path not in ['/_automations/preview','/_automations/delete']:
-            send(404,{'error':'Nenájdené'});return True
-        host,row=resolve(payload)
-        if row['revision']!=payload.get('revision'):
-            raise ValueError('Položka sa zmenila. Obnov zoznam.')
-        if row.get('delete_reason'):
-            raise ValueError(row['delete_reason'])
-        if path=='/_automations/preview':
-            # Refresh the selected host before issuing the confirmation ticket.
-            fresh=collect_host(host)
-            current=next((r for r in fresh['rows'] if r['id']==row['id']),None)
-            if not current or current['revision']!=row['revision']:
-                raise ValueError('Definícia sa zmenila. Obnov zoznam.')
-            if current.get('delete_reason'):
-                raise ValueError(current['delete_reason'])
-            nonce=secrets.token_urlsafe(24)
-            with lock:
-                for k in list(tickets):
-                    if tickets[k]['expires']<time.time(): del tickets[k]
-                tickets[nonce]={'subject':subject,'id':row['id'],'revision':row['revision'],'expires':time.time()+120}
-            send(200,{'ticket':nonce,'name':row['name'],'device':host,'effect':row['delete_effect']});return True
-        with lock:
-            ticket=tickets.pop(payload.get('ticket',''),None)
-        if not ticket or ticket['expires']<time.time() or any(ticket[k]!=v for k,v in [('subject',subject),('id',row['id']),('revision',row['revision'])]):
-            raise ValueError('Potvrdenie vypršalo. Otvor mazanie znova.')
-        # Serialize against scans, so an older scan cannot resurrect a deleted row.
-        with refresh_lock:
-            remote(host,{'action':'delete','kind':row['kind'],'key':row['key'],'revision':row['revision']})
-            with lock:
-                d=state['hosts'].get(host,{})
-                d['rows']=[r for r in d.get('rows',[]) if r['id']!=row['id']]
-        threading.Thread(target=refresh,daemon=True).start()
-        send(200,{'ok':True})
+        auth(handler)
+        handler.send(200,json.dumps(public_data(),ensure_ascii=False))
     except PermissionError as e:
-        send(403,{'error':str(e)})
-    except (ValueError,RuntimeError,subprocess.TimeoutExpired) as e:
-        send(409,{'error':str(e) if not isinstance(e,subprocess.TimeoutExpired) else 'Stroj neodpovedal včas. Stav odstránenia je neznámy; obnov prehľad.'})
-    except Exception:
-        send(500,{'error':'Operácia zlyhala. Obnov zoznam a skús znova.'})
+        handler.send(403,json.dumps({'error':str(e)},ensure_ascii=False))
     return True

@@ -30,15 +30,11 @@ WantedBy=default.target
 
 ## Weft Automations
 
-`automations/agent.py` is a stateless host collector and exact-target deletion adapter;
-`automations/manager.py` adds authenticated `/_automations/*` endpoints to the existing server.
-The Weft frontend and Caddy deployment instructions live in `Gooder24/weft`,
-`app/automatizacie/` and `server/automations/README.md`. The new page covers systemd,
-cron (grouped by command), Docker, T3 and Hermes; it shows host/source failures,
-unknown results, and the last collection time. Its own collection never reads the inbox.
+`automations/agent.py` collects host schedulers without modifying them. `automations/manager.py`
+adds authenticated GET `/_automations/data` to the existing server; all POSTs are rejected.
+The Weft page lists every process directly for Ctrl+F. There are no deletion actions or extra controls.
+Source/frontend deployment notes: Gooder24/weft `server/automations/README.md`.
 
-Every 5 minutes the existing process refreshes a separate 0600 per-host cache; failures
-retain the previous host data. User-confirmed deletion uses a single-use, login-bound ticket
-and revalidates the definition on the target machine. No script or volume is deleted by
-removing a cron/systemd/T3 entry; Hermes' native removal also deletes that job's saved outputs.
-This does not enable disabled jobs or add scheduled AI work.
+Every five minutes the existing process refreshes a 0600 per-host cache; failures retain the previous
+host data with an offline marker. Cron results without existing logs stay unknown. The integration does
+not read the inbox or enable scheduled jobs. Previous mutation APIs and agent deletion code were removed.

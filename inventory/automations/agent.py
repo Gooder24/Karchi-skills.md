@@ -1,4 +1,4 @@
-"""Read a host's own schedulers; delete only an exact, freshly fingerprinted definition.
+"""Read a host's own schedulers without modifying them.
 
 Transmitted over SSH, with a JSON request on stdin. No shell commands come from the client.
 """
@@ -12,7 +12,6 @@ import shlex
 import sqlite3
 import subprocess
 import sys
-import urllib.request
 
 HOME = Path.home()
 ERRORS = []
@@ -353,150 +352,12 @@ def collect():
     return {'rows':ROWS,'errors':ERRORS,'collected_at':dt.datetime.now(dt.timezone.utc).isoformat()}
 
 
-def t3_rpc(method, payload):
-    # The supported websocket RPC accepts a short-lived, scoped owner session.
-    # MCP clients have a separate runtime ceiling and are unsuitable for deleting older tasks.
-    import base64, glob, socket, struct
-    candidates = sorted(glob.glob(str(HOME/'.t3/runtime/versions/*/t3')),key=os.path.getmtime,reverse=True)
-    if not candidates:
-        raise RuntimeError('T3 CLI nie je dostupné')
-    token = run([candidates[0], 'auth','session','issue','--scope','orchestration:read','--scope','orchestration:operate','--ttl','1m','--label','Weft automations','--token-only']).strip()
-    runtime=json.loads((HOME/'.t3/userdata/server-runtime.json').read_text())
-    port=runtime['port']
-    nonce=base64.b64encode(os.urandom(16)).decode()
-    with socket.create_connection(('127.0.0.1',port),timeout=15) as sock:
-        sock.sendall((f'GET /ws?orchestrationProtocol=2 HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {nonce}\r\nSec-WebSocket-Version: 13\r\nAuthorization: Bearer {token}\r\n\r\n').encode())
-        stream=sock.makefile('rb')
-        status=stream.readline()
-        headers={}
-        while True:
-            line=stream.readline()
-            if line==b'\r\n' or not line:
-                break
-            k,v=line.decode().split(':',1);headers[k.lower()]=v.strip()
-        expected=base64.b64encode(hashlib.sha1((nonce+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
-        if b' 101 ' not in status or headers.get('sec-websocket-accept')!=expected:
-            raise RuntimeError('T3 odmietlo pripojenie k rozhraniu úloh.')
-        def send_frame(data,opcode=1):
-            mask=os.urandom(4)
-            header=bytes([0x80|opcode,0x80|len(data)]) if len(data)<126 else bytes([0x80|opcode,0x80|126])+struct.pack('!H',len(data))
-            sock.sendall(header+mask+bytes(v^mask[i%4] for i,v in enumerate(data)))
-        request_id='weft-automation'
-        send_frame(json.dumps({'_tag':'Request','id':request_id,'tag':method,'payload':payload,'headers':[]}).encode())
-        content=b''
-        while True:
-            head=stream.read(2)
-            if len(head)!=2:
-                raise RuntimeError('T3 ukončilo spojenie bez výsledku.')
-            opcode=head[0]&15;size=head[1]&127
-            if size==126:size=struct.unpack('!H',stream.read(2))[0]
-            if size==127:size=struct.unpack('!Q',stream.read(8))[0]
-            if size>4*1024*1024:raise RuntimeError('Neplatná odpoveď T3.')
-            mask=stream.read(4) if head[1]&128 else None
-            body=stream.read(size)
-            if mask:body=bytes(v^mask[i%4] for i,v in enumerate(body))
-            if opcode==9:
-                send_frame(body,10);continue
-            if opcode==8:raise RuntimeError('T3 ukončilo spojenie.')
-            if opcode not in (0,1):continue
-            content+=body
-            if not head[0]&128:continue
-            result=json.loads(content);content=b''
-            if result.get('requestId')!=request_id:continue
-            if result.get('_tag')=='Exit':
-                if result.get('exit',{}).get('_tag')!='Success':
-                    raise RuntimeError('T3 operáciu odmietlo.')
-                send_frame(b'',8)
-                return result['exit'].get('value')
-
-
-def t3_delete(ident):
-    t3_rpc('scheduledTasks.delete', {'id':ident})
-
-
-def delete(request):
-    d = collect()
-    row = next((r for r in d['rows'] if r['kind']==request.get('kind') and r['key']==request.get('key')),None)
-    if not row or row['revision'] != request.get('revision'):
-        raise ValueError('Úloha sa zmenila alebo už neexistuje. Obnov zoznam.')
-    if row['delete_reason']:
-        raise ValueError(row['delete_reason'])
-    t=row['target']
-    if row['kind']=='cron':
-        loc=t['location']
-        prefix = ['sudo','-n'] if loc=='root' else []
-        if loc in ['root','user']:
-            old=run(prefix+['crontab','-l'])
-        else:
-            old=Path(loc).read_text()
-        # Exact full lines only; refuse changed occurrences, retain every other byte.
-        new=old
-        for line in t['lines']:
-            lines=new.splitlines(keepends=True)
-            index=next((i for i,l in enumerate(lines) if l.rstrip('\r\n')==line),None)
-            if index is None:
-                raise ValueError('Cron sa zmenil.')
-            del lines[index]
-            new=''.join(lines)
-        if loc in ['root','user']:
-            run(prefix+['crontab','-'],new)
-        else:
-            # Refuse symlinks. A root-owned source is updated using sudo tee, not shell interpolation.
-            if Path(loc).is_symlink() or not loc.startswith('/etc/cron'):
-                raise ValueError('Nepodporovaný cron súbor')
-            run(['sudo','-n','tee',loc],new)
-    elif row['kind']=='systemd':
-        scope, unit = t['scope'],t['unit']
-        prefix=['systemctl']+(['--user'] if scope=='user' else [])
-        elevated=[] if scope=='user' or os.getuid()==0 else ['sudo','-n']
-        targets=[unit]
-        service=t.get('service')
-        if service and service!=unit and not t.get('keep_service'):
-            sp=props(scope,service)
-            targets.append(service)
-        run(elevated+prefix+['disable','--now',unit])
-        if service and service!=unit and not t.get('keep_service'):
-            run(elevated+prefix+['disable','--now',service])
-        paths=[t['path']]
-        if service and service!=unit and not t.get('keep_service'):
-            sp=props(scope,service)
-            sf=sp.get('FragmentPath','')
-            triggers=sp.get('TriggeredBy','').split()
-            if sf and own_unit(sf) and not Path(sf).is_symlink() and all(x==unit for x in triggers):
-                paths.append(sf)
-        for path in paths:
-            if not own_unit(path) or Path(path).is_symlink():
-                raise ValueError('Definícia už nie je vlastná jednotka')
-            run(elevated+['rm','--',path])
-            directory = Path(path + '.d')
-            if directory.is_symlink():
-                run(elevated + ['rm', '--', str(directory)])
-            elif directory.is_dir():
-                # Only this unit's .conf overrides, never another file or a shared directory.
-                for override in directory.glob('*.conf'):
-                    run(elevated + ['rm', '--', str(override)])
-                run(elevated + ['rmdir', '--', str(directory)], ok=(0, 1))
-        run(elevated+prefix+['daemon-reload'])
-    elif row['kind']=='hermes':
-        root=HOME/'.hermes/hermes-agent'
-        # Use Hermes' own locked removal routine, in its installed Python with its dependency path.
-        interpreters=sorted((HOME/'.hermes/tools').glob('python*/bin/python3'))
-        interpreter=str(interpreters[-1]) if interpreters else sys.executable
-        code='import sys; sys.path.insert(0,'+repr(str(root))+'); import hermes_bootstrap; from cron.jobs import remove_job; assert remove_job(sys.argv[1]), "job missing"'
-        run([interpreter,'-c',code,t['id']],timeout=25)
-    elif row['kind']=='t3':
-        t3_delete(t['id'])
-    elif row['kind']=='docker':
-        run(t['prefix']+['rm','-f',t['id']],timeout=25)
-    else:
-        raise ValueError('Nepodporovaný zdroj')
-    return {'ok':True}
-
-
 def main():
     try:
         request=json.load(sys.stdin)
-        result=delete(request) if request.get('action')=='delete' else collect()
+        if request.get('action', 'collect') != 'collect':
+            raise ValueError('Prehľad je iba na čítanie.')
+        result=collect()
     except Exception as e:
         result={'error':redact(str(e)), 'type':type(e).__name__}
     print(json.dumps(result,ensure_ascii=False))
