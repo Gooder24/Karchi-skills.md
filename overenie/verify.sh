@@ -12,12 +12,20 @@ D=$(dirname "$(readlink -f "$0")"); V=$D/verifier-agents.md
 export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
 mkdir -p overenie "$(dirname "$verdict")"; rm -f "$verdict"
 
+# Codex logins: T3 keeps its accounts in ~/.codex-t3code/<account> (the ones Karchi logs in and T3 refreshes);
+# ~/.codex is only a fallback, its login went stale on 10. 11. Each logged-in account is tried until one writes the
+# verdict, so a used-up limit on one account moves to the next.
 codex_run() {
-  local c; c=$(command -v codex || echo ~/.local/bin/codex); [ -x "$c" ] || return 0
-  local t=$(date +%s)
-  timeout 3600 "$c" exec --skip-git-repo-check -s danger-full-access -C "$PWD" -c model_reasoning_effort=high \
-    --json "$(cat "$V" "$brief")" < /dev/null > overenie/verifier-codex.jsonl 2> overenie/verifier-stderr.txt
-  python3 -I "$D/usage.py" overenie/verifier-codex.jsonl "$t"
+  local c h t; c=$(command -v codex || echo ~/.local/bin/codex); [ -x "$c" ] || return 0
+  for h in ${CODEX_HOME:+"$CODEX_HOME"} ~/.codex-t3code/*/ ~/.codex; do
+    [ -f "$h/auth.json" ] && CODEX_HOME=$h "$c" login status >/dev/null 2>&1 || continue
+    t=$(date +%s)
+    CODEX_HOME=$h timeout 3600 "$c" exec --skip-git-repo-check -s danger-full-access -C "$PWD" \
+      -c model_reasoning_effort=high --json "$(cat "$V" "$brief")" < /dev/null \
+      > overenie/verifier-codex.jsonl 2> overenie/verifier-stderr.txt
+    OVERENIE_ACCOUNT=$(basename "$h") python3 -I "$D/usage.py" overenie/verifier-codex.jsonl "$t"
+    [ -s "$verdict" ] && return 0
+  done
 }
 claude_run() {
   local t=$(date +%s)

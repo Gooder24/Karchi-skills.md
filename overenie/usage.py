@@ -49,6 +49,8 @@ else:                                                               # claude -p 
                 input=u.get("input_tokens"), cache_write=u.get("cache_creation_input_tokens"),
                 cache_read=u.get("cache_read_input_tokens"), output=u.get("output_tokens"),
                 api_cost_usd=r.get("total_cost_usd"))
+if os.environ.get("OVERENIE_ACCOUNT"):
+    line["account"] = os.environ["OVERENIE_ACCOUNT"]
 if start:
     line["duration_s"] = round(time.time() - start)
 with open(os.path.expanduser("~/.claude/overenie-usage.jsonl"), "a") as f:
