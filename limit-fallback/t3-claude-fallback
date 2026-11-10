@@ -28,7 +28,7 @@ def retry_delay(value, now):
 
 
 def valid_usage(value):
-    return math.isfinite(value) and 0 <= value <= 100
+    return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 100
 
 
 def weekly():
@@ -51,7 +51,7 @@ def weekly():
             req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
                 "Authorization": "Bearer " + tok, "anthropic-beta": "oauth-2025-04-20"})
             with urllib.request.urlopen(req, timeout=20) as response:
-                value = float(json.load(response)['seven_day']['utilization'])
+                value = json.load(response)['seven_day']['utilization']
             if not valid_usage(value):
                 raise ValueError('invalid usage')
         except urllib.error.HTTPError as error:
@@ -90,11 +90,13 @@ def main():
         write(SETTINGS, s)
         print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {CODEX['model']}")
     elif used < PRAH and saved:
-        if cur.get("instanceId") == "codex":  # Karchi medzitým default nezmenil
+        if cur == CODEX:  # Restore only the exact selection this automation installed.
             s["defaultModelSelection"] = saved
             write(SETTINGS, s)
+            print(f"{datetime.now():%F %T} týždeň {used:.0f} %: default späť -> {saved.get('model')}")
+        else:
+            print('Claude limit reset; manual model selection preserved')
         STATE.unlink()
-        print(f"{datetime.now():%F %T} týždeň {used:.0f} %: default späť -> {saved.get('model')}")
 
 
 if __name__ == "__main__":
