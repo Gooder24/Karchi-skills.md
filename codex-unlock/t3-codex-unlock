@@ -4,21 +4,26 @@
 T3 runs one `codex app-server` per Codex account (provider instance), and all accounts share the
 conversations in ~/.codex. After a turn fails (usually "Usage limit reached"), that app-server keeps
 the conversation's writer lock, so switching the thread to another account fails with "This
-conversation is open in another Codex client". This loop stops such an app-server once every
-thread it holds is idle and at least one of them ended in a failed run. T3 starts it again on the
-next turn for that account.
+conversation is open in another Codex client". This loop sends SIGTERM to such an app-server when
+  - every conversation it locks belongs to a T3 thread whose latest run ended, one of them failed,
+  - no run of its account (or, when the account is unknown, of any Codex account) is still active,
+and both hold on two checks in a row and again right before the signal. Only the app-server and its
+codex-code-mode-host get the signal; commands its turns left running in the background keep running.
+T3 starts the app-server again on the next turn for that account.
 
   t3-codex-unlock            loop (systemd user unit t3-codex-unlock.service)
-  t3-codex-unlock --once     two checks, stops what was stale in both, then exits
-  t3-codex-unlock --dry-run  one check, print what it would stop
+  t3-codex-unlock --once     two checks, signals what was stale in both, then exits
+  t3-codex-unlock --dry-run  one check, prints what it would signal
 Log: journalctl --user -u t3-codex-unlock"""
-import json, os, signal, sqlite3, subprocess, sys, time
+import json, os, signal, sqlite3, sys, time
 from pathlib import Path
 
 H = Path.home()
 DB = H / ".t3/userdata/statev2.sqlite"
+SETTINGS = H / ".t3/userdata/settings.json"
 INTERVAL = 3
 TERMINAL = {"completed", "interrupted", "failed", "cancelled", "rolled_back"}
+MAX_TRIES = 3
 
 
 def lock_dirs():
@@ -29,22 +34,23 @@ def lock_dirs():
 
 def held_locks():
     """{pid: [native thread id]} for FLOCK write locks on Codex thread-writer lock files."""
-    by_key = {}
+    by_ino = {}
     for d in lock_dirs():
         for f in d.glob("*.lock"):
             try:
-                st = f.stat()
+                by_ino.setdefault(f.stat().st_ino, []).append(f)
             except OSError:
                 continue
-            by_key[st.st_ino] = f  # btrfs: /proc/locks shows the filesystem's device, not the subvolume's
     held = {}
     for line in Path("/proc/locks").read_text().splitlines():
         parts = line.split()
         if len(parts) < 6 or parts[1] != "FLOCK" or parts[3] != "WRITE":
             continue
-        f = by_key.get(int(parts[5].rsplit(":", 1)[1]))
-        if f and holds_open(parts[4], f):
-            held.setdefault(int(parts[4]), []).append(f.stem)
+        # btrfs: /proc/locks names the filesystem's device, not the subvolume's, so match the inode
+        # and then the holder's open file.
+        for f in by_ino.get(int(parts[5].rsplit(":", 1)[1]), []):
+            if holds_open(parts[4], f):
+                held.setdefault(int(parts[4]), []).append(f.stem)
     return held
 
 
@@ -56,7 +62,7 @@ def holds_open(pid, f):
 
 
 def t3_app_server(pid):
-    """(scope or None, CODEX_HOME) when pid is a codex app-server started by T3, else None."""
+    """CODEX_HOME when pid is a codex app-server started by T3, else None."""
     try:
         cmd = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
         env = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
@@ -67,69 +73,110 @@ def t3_app_server(pid):
         return None
     if not (len(cmd) > 1 and cmd[0].endswith(b"codex") and cmd[1] == b"app-server"):
         return None
-    scope = next((p for p in cgroup.strip().split("/") if p.startswith("t3code-codex-")), None)
-    started_by_t3 = scope or (parent and parent[0].endswith(b"t3") and b"serve" in parent)
-    if not started_by_t3:
+    if "/t3code-codex-" not in cgroup and not (parent[0].endswith(b"t3") and b"serve" in parent):
         return None
-    home = next((e[11:].decode() for e in env if e.startswith(b"CODEX_HOME=")), "~/.codex")
-    return scope, home
+    return next((e[11:].decode() for e in env if e.startswith(b"CODEX_HOME=")), str(H / ".codex"))
 
 
-def thread_states(native_ids):
-    """{native id: (T3 thread id, title, latest run status)}; unknown ids are left out."""
+def instance_of(home):
+    """T3 provider instance id whose Codex home is `home`, or None."""
+    try:
+        instances = json.loads(SETTINGS.read_text()).get("providerInstances", {})
+    except (OSError, ValueError):
+        return None
+    for iid, inst in instances.items():
+        cfg = inst.get("config") or {}
+        if inst.get("driver") == "codex" and (cfg.get("shadowHomePath") or cfg.get("homePath")) == home:
+            return iid
+    return None
+
+
+def verdict(db, nids, instance):
+    """(stale, description). Unknown conversations and active runs of the account make it not stale."""
+    threads = []
+    for nid in nids:
+        row = db.execute(
+            "select json_extract(payload_json, '$.appThreadId') from orchestration_v2_projection_provider_threads"
+            " where json_extract(payload_json, '$.nativeThreadRef.nativeId') = ? limit 1", (nid,)).fetchone()
+        if not row:
+            return False, f"holds {nid}, unknown to T3"
+        run = db.execute("select status from orchestration_v2_projection_runs where thread_id = ?"
+                         " order by ordinal desc limit 1", (row[0],)).fetchone()
+        title = db.execute("select json_extract(payload_json, '$.title') from orchestration_v2_projection_threads"
+                           " where thread_id = ?", (row[0],)).fetchone()
+        threads.append((row[0], title[0] if title else "?", run[0] if run else "none"))
+    text = ", ".join(f"{title} [{tid[:8]}]" for tid, title, _ in threads)
+    if not threads or any(s not in TERMINAL for _, _, s in threads) or all(s != "failed" for _, _, s in threads):
+        return False, text
+    if instance:
+        busy = db.execute("select count(*) from orchestration_v2_projection_runs where provider_instance_id = ?"
+                          f" and status not in ({','.join('?' * len(TERMINAL))})", (instance, *TERMINAL)).fetchone()[0]
+    else:
+        busy = db.execute("select count(*) from orchestration_v2_projection_runs where provider_instance_id like 'codex%'"
+                          f" and status not in ({','.join('?' * len(TERMINAL))})", tuple(TERMINAL)).fetchone()[0]
+    return busy == 0, text
+
+
+def stale_holders():
+    """[(pid, home, description)] of T3 Codex app-servers that only hold failed, idle conversations."""
     db = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, timeout=2)
     try:
-        out = {}
-        for nid in native_ids:
-            row = db.execute(
-                "select json_extract(payload_json, '$.appThreadId') from orchestration_v2_projection_provider_threads"
-                " where json_extract(payload_json, '$.nativeThreadRef.nativeId') = ? limit 1", (nid,)).fetchone()
-            if not row:
-                continue
-            tid = row[0]
-            run = db.execute("select status from orchestration_v2_projection_runs where thread_id = ?"
-                             " order by ordinal desc limit 1", (tid,)).fetchone()
-            title = db.execute("select json_extract(payload_json, '$.title') from orchestration_v2_projection_threads"
-                               " where thread_id = ?", (tid,)).fetchone()
-            out[nid] = (tid, title[0] if title else "?", run[0] if run else "none")
-        return out
+        found = []
+        for pid, nids in held_locks().items():
+            home = t3_app_server(pid)
+            if home:
+                stale, text = verdict(db, nids, instance_of(home))
+                if stale:
+                    found.append((pid, home, text))
+        return found
     finally:
         db.close()
 
 
-def stale_holders():
-    found = []
-    for pid, nids in held_locks().items():
-        server = t3_app_server(pid)
-        if not server:
+def stop(pid):
+    """SIGTERM to the app-server and its codex-code-mode-host; True once the app-server has exited."""
+    helpers = []
+    for child in Path("/proc").glob("[0-9]*"):
+        try:
+            if (child / "stat").read_text().rsplit(")", 1)[1].split()[1] == str(pid) and \
+                    (child / "cmdline").read_bytes().split(b"\0")[0].endswith(b"codex-code-mode-host"):
+                helpers.append(int(child.name))
+        except OSError:
             continue
-        states = thread_states(nids)
-        statuses = [s for _, _, s in states.values()]
-        if statuses and all(s in TERMINAL for s in statuses) and "failed" in statuses:
-            found.append((pid, server, states))
-    return found
+    for p in [pid, *helpers]:
+        try:
+            os.kill(p, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    for _ in range(50):
+        try:
+            if Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                return True  # exited, T3 has not reaped it yet
+        except OSError:
+            return True
+        time.sleep(0.1)
+    return False
 
 
-def stop(pid, scope):
-    if scope:
-        subprocess.run(["systemctl", "--user", "stop", scope], check=False, timeout=30)
-    else:
-        os.kill(pid, signal.SIGTERM)
-
-
-def check(dry_run, seen):
-    """Stops a holder only when it was stale on two checks in a row, so a queued turn can start first."""
-    now = {}
-    for pid, (scope, home), states in stale_holders():
-        key = (pid, tuple(sorted(states)))
-        now[key] = True
-        threads = ", ".join(f"{title} [{tid[:8]}]" for tid, title, _ in states.values())
+def check(dry_run, seen, tries):
+    """Signals a holder only when it was stale on two checks in a row and still is right before."""
+    now = set()
+    for pid, home, text in stale_holders():
+        who = f"pid {pid} ({Path(home).name})"
         if dry_run:
-            print(f"would stop pid {pid} ({scope or 'no scope'}, {Path(home).name}): {threads}")
-        elif key in seen:
-            print(f"{time.strftime('%F %T')} stopped pid {pid} ({scope or 'no scope'}, {Path(home).name}),"
-                  f" it held: {threads}", flush=True)
-            stop(pid, scope)
+            print(f"would stop {who}: {text}")
+            continue
+        now.add(pid)
+        if pid not in seen or tries.get(pid, 0) >= MAX_TRIES:
+            continue
+        if pid not in {p for p, _, _ in stale_holders()}:
+            continue
+        tries[pid] = tries.get(pid, 0) + 1
+        if stop(pid):
+            print(f"{time.strftime('%F %T')} stopped {who}, it held: {text}", flush=True)
+        else:
+            print(f"{time.strftime('%F %T')} {who} did not exit after SIGTERM (try {tries[pid]}/{MAX_TRIES})"
+                  f", it holds: {text}", flush=True)
     return now
 
 
@@ -137,15 +184,15 @@ def main():
     if not DB.exists():
         sys.exit(f"{DB} not found: T3 does not run on this machine")
     if "--dry-run" in sys.argv:
-        check(True, {})
+        check(True, set(), {})
         return
-    seen, rounds = {}, 2 if "--once" in sys.argv else -1
+    seen, tries, rounds = set(), {}, 2 if "--once" in sys.argv else -1
     while rounds:
         try:
-            seen = check(False, seen)
-        except (OSError, sqlite3.Error, subprocess.SubprocessError) as error:
+            seen = check(False, seen, tries)
+        except (OSError, sqlite3.Error) as error:
             print(f"check failed: {error}", flush=True)
-            seen = {}
+            seen = set()
         rounds -= 1
         if rounds:
             time.sleep(INTERVAL)
