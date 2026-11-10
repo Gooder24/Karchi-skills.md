@@ -220,12 +220,13 @@ def decide(event):
         f"overenie-gate: this turn changed something ({change[:80]}), but {why}. Karchi has been burned "
         "many times by 'hotové' from the agent that built the change, so every reply after a change "
         "ends with one line he can trust at a glance. Add exactly one, truthfully:\n"
-        "- `Overenie: <full path to …/overenie/verdikt.md or …/overenie/<date>/index.html>` only after you checked it "
-        "the way he will use it and ran the independent verifier (skill overenie) in this turn;\n"
+        "- `Overenie: <full path to …/overenie/verdikt.md>` only after the independent verifier (skill overenie, "
+        "verify.sh) wrote it in this turn;\n"
         "- `Overenie: neoverené – <what he should try and what he should then see>` when you did not "
         "or could not (then do not call it hotové or funguje anywhere in the reply);\n"
         "- `Overenie: netreba – <why, in a few words>` only when the change is nothing he will see or use;\n"
-        "- `Overenie: prebieha – <what still runs>` when you are waiting on background work.\n"
+        "- `Overenie: prebieha – <what still runs>` only for work outside this thread, never for the verifier: "
+        "wait for its verdict in this turn.\n"
         "Do not touch an overenie file just to pass this check."
     )}
 

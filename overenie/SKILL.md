@@ -16,12 +16,13 @@ see in ten seconds, and every miss becomes a new check.
 
 Every reply after a turn that changed something ends with one line he can trust at a glance:
 
-- `Overenie: <full path to …/overenie/verdikt.md or …/overenie/<date>/index.html>`, written in this
-  turn after the checks below and the independent verifier;
+- `Overenie: <full path to …/overenie/verdikt.md>`, written in this turn by the independent verifier;
 - `Overenie: neoverené – <what he should try and what he should then see>`; then the reply calls
   nothing hotové or funguje;
 - `Overenie: netreba – <why>`, only for a change he will not see or use;
-- `Overenie: prebieha – <what still runs>`.
+- `Overenie: prebieha – <what still runs>`, only for work that outlives this thread's wait (another thread, a
+  build of hours) and never for the verifier: a turn that ends puts the thread in Done, and on 10. 11. he saw
+  unfinished work there while its verifier still ran.
 
 The Stop hook `hooks/overenie-gate.py` (asus, x270, dell, e540) sends a turn back once when the line is
 missing, names no such fresh, non-empty file, or says neoverené while the opening says hotové. Write the line truthfully from the start; never touch
@@ -86,8 +87,10 @@ the verifier hit the limit; that must not happen again.
 cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
 ```
 
-Run it in the foreground or as `systemd-run --user` with a wait on `overenie/verdikt.md`: in a T3 thread a
-plain background command can end before the verifier does. The verifier needs network and SSH to reach
+The turn waits for the verdict, so the thread stays in Working until the work is really done. Codex: run it in the
+foreground with a timeout of an hour. Claude: run it in the background and call `t3_background_wait` with its task
+ID, then read the verdict in the same thread before you reply. Never end the turn with `Overenie: prebieha` while the
+verifier runs. The verifier needs network and SSH to reach
 the real target, hence the full-access sandbox; `verifier-agents.md` forbids it to edit anything but the verdict
 and fixes the verdict's shape and how deep it goes. Claude gets six tools: the default set of about a hundred costs
 about 27 000 tokens on every one of its steps (measured 9. 11.). Every run logs its usage to
@@ -125,14 +128,11 @@ tries to break each, and reruns run.sh only when it doubts your output or the br
 shares, the brief says `Hĺbka: dôkladná` and it re-checks every check the fix can reach. It never trusts the builder's
 word on a check it judges. Then report what is still failing.
 
-## 4. Show the evidence
+## 4. Report
 
-Generate `overenie/<YYYY-MM-DD>/index.html` from the results, not from your own summary: one row per
-check with its status, the screenshot or video, and the command that reruns it. Put its full path (or that of
-`verdikt.md`) on the reply's `Overenie:` line, which is what the Stop hook checks, and show it with
-`html_render` in T3 when it has screenshots.
-The reply lists every check that failed or could not be verified, then the `zadanie` footer (Commit,
-Beží, Tvoj krok).
+No report page: he does not read one (10. 11.). The reply names in a sentence or two only what failed or could not be
+verified, then the `zadanie` footer when there is one (Commit, Beží, Tvoj krok), and the `Overenie:` line with the
+path of `verdikt.md`.
 
 ## 5. Every miss becomes a check
 
