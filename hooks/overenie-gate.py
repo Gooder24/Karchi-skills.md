@@ -63,7 +63,9 @@ STATUS_LINE = re.compile(r"^[ \t>*_`#-]*overenie[ \t*]*[:\u2013\u2014-][ \t*]*([
 # netreba needs a reason after a dash: "Overenie: netreba – len poznámky pre mňa"
 STATUS_WORD = re.compile(r"^[`*_ ]*(neoveren\w*|prebieha|netreba(?=\s*[\u2013\u2014:-]\s*\S+\s+\S+\s+\S+))")
 FENCE = re.compile(r"```.*?(```|$)", re.S)
-FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit)")
+FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit)")
+# The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
+FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
 EVIDENCE_NAMES = {"verdikt.md", "index.html"}
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
@@ -194,7 +196,7 @@ def decide(event):
     if status:
         ev = evidence(status, t0, event.get("cwd"))
         if ev and FAILED_IN_VERDICT.search(norm(open(ev, errors="replace").read(200000))) \
-                and not FAILED_IN_VERDICT.search(norm(text)):
+                and not FAILED_IN_REPLY.search(norm(text)):
             problem = (f"{ev} records checks that failed or could not be verified, and the reply does not "
                        "say which (write neprešlo / nedá sa overiť for each in the reply)")
         elif ev:

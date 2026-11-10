@@ -96,7 +96,7 @@ and fixes the verdict's shape and how deep it goes. Claude gets six tools: the d
 about 27 000 tokens on every one of its steps (measured 9. 11.). Every run logs its usage to
 `~/.claude/overenie-usage.jsonl`.
 If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
-ends with `Overenie: neoverené – …`. A verdict written by the builder never says `prešlo` for those checks.
+ends with `Overenie: neoverené – …`. A verdict written by the builder never says `passed` for those checks.
 
 On dell and e540 (3.7 GB) do not run the verifier locally: an Opus verifier with its browser took an hour
 there and froze dell for every other thread (7. 11.). Run it on asus (15 GB). Weft has a runner,
@@ -117,8 +117,8 @@ rules: read what each check really measures and flag a check that tests a proxy 
 what he sees (the 5. 11. partsheet check measured only the line width and missed chords torn from their
 words; a run.sh that finds a number anywhere on the page instead of in its row); then try to break the change by hand the ways that apply (another order, a reload or
 restart, keyboard only, empty and long data, a second monitor); look at every screenshot yourself and compare it with the
-reference; do not edit any code; write the verdict for each check (prešlo, neprešlo, nedá sa overiť)
-with the evidence path to `overenie/verdikt.md`.
+reference; do not edit any code; write the verdict for each check (passed, failed, unverifiable)
+with its evidence to `overenie/verdikt.md`, in the terse shape `verifier-agents.md` fixes: only the builder reads it.
 
 Fix what it found, run `overenie/run.sh` yourself, then start a targeted round: two rounds at most, three for
 `Hĺbka: dôkladná`. Its brief names
