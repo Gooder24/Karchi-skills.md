@@ -25,6 +25,41 @@ def cpu():
     return sum(fields[:8]) - idle, sum(fields[:8])
 
 
+def cpu_topology(info):
+    records = []
+    for block in info.split('\n\n'):
+        fields = {key.strip(): value.strip() for line in block.splitlines()
+                  if ':' in line for key, value in [line.split(':', 1)]}
+        if 'processor' in fields:
+            records.append(fields)
+    threads = len(records) or os.cpu_count()
+    virtualized = bool(read('/sys/hypervisor/type').strip()) or any(
+        'hypervisor' in r.get('flags', '').split() for r in records)
+    cores = None
+    if records and not virtualized:
+        try:
+            pairs = {(int(r['physical id']), int(r['core id'])) for r in records}
+            if all(socket >= 0 and core >= 0 for socket, core in pairs):
+                cores = len(pairs)
+        except (KeyError, ValueError):
+            pass
+    return cores, threads, virtualized
+
+
+def graphics():
+    devices = []
+    for device in sorted(Path('/sys/bus/pci/devices').glob('*')):
+        if not read(device / 'class').strip().startswith('0x03'):
+            continue
+        try:
+            devices.append({'address': device.name,
+                            'vendor': f"{int(read(device / 'vendor'), 16):04x}",
+                            'device': f"{int(read(device / 'device'), 16):04x}"})
+        except ValueError:
+            continue
+    return devices
+
+
 def memory():
     info = {}
     for line in read('/proc/meminfo').splitlines():
@@ -154,12 +189,17 @@ def main():
     disk = os.statvfs('/')
     busy, all_ = cpu()
     release = dict(line.split('=', 1) for line in read('/etc/os-release').splitlines() if '=' in line)
-    model = next((l.split(':', 1)[1].strip() for l in read('/proc/cpuinfo').splitlines() if l.startswith('model name')), '')
+    info = read('/proc/cpuinfo')
+    model = next((l.split(':', 1)[1].strip() for l in info.splitlines() if l.startswith('model name')), '')
+    cores, threads, virtualized = cpu_topology(info)
     print(json.dumps({
         'time': time.time(),
         'cpu': [busy, all_],
-        'cores': os.cpu_count(),
+        'cores': cores,
+        'threads': threads,
+        'virtualized': virtualized,
         'cpu_model': model,
+        'gpus': graphics(),
         'os': release.get('PRETTY_NAME', '').strip('"'),
         'load': [float(v) for v in read('/proc/loadavg').split()[:3]],
         'uptime': float(read('/proc/uptime', '0').split()[0]),

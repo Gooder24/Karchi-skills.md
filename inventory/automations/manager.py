@@ -1,5 +1,6 @@
 """Read-only Weft automation endpoint, hosted by the existing Prehľad process."""
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 import datetime as dt
 import hashlib
 import importlib.util
@@ -225,6 +226,30 @@ live_lock=threading.Lock()
 sampling={}
 
 
+@lru_cache(maxsize=64)
+def gpu_name(vendor, device):
+    # Resolve the remote PCI IDs once on the collector, without starting lspci on every host/sample.
+    for filename in ['/usr/share/misc/pci.ids', '/usr/share/hwdata/pci.ids']:
+        try:
+            with open(filename) as database:
+                name = None
+                for line in database:
+                    if not line.strip() or line.startswith('#'):
+                        continue
+                    if line.startswith('\t'):
+                        if name and not line.startswith('\t\t') and line[1:5] == device:
+                            model = line[5:].strip()
+                            short = re.search(r'\[([^\]]+)\]$', model)
+                            return name + ' ' + (short[1] if short else model)
+                    elif name:
+                        break
+                    elif line[:4] == vendor and len(line) > 4 and line[4].isspace():
+                        name = line[4:].strip().removesuffix(' Corporation').removesuffix(', Inc.')
+        except OSError:
+            continue
+    return f'PCI {vendor}:{device}'
+
+
 def cpu_watts(now, prev):
     """Average package watts from µJ over boot time, never inferred from CPU utilisation."""
     if not prev or not now.get('boot_id') or now['boot_id'] != prev.get('boot_id'):
@@ -270,7 +295,7 @@ def sample_host(host):
             busy=now['cpu'][0]-prev['cpu'][0];total=now['cpu'][1]-prev['cpu'][1]
             h['cpu']=round(100*busy/total,1) if total>0 else 0.0
             h['history']=(h['history']+[[round(now['time']),h['cpu']]])[-HISTORY:]
-            wall=(now['time']-prev['time'])*1e6*(now['cores'] or 1)
+            wall=(now['time']-prev['time'])*1e6*(now['threads'] or 1)
             h['procs']={k:{'cpu':round(100*max(0,v[0]-prev['cgroups'].get(k,[v[0]])[0])/wall,1) if wall>0 else 0.0,'mem':v[1]} for k,v in now['cgroups'].items()}
         else:
             h['procs']={k:{'cpu':None,'mem':v[1]} for k,v in now['cgroups'].items()}
@@ -279,7 +304,9 @@ def sample_host(host):
                       'interval_s': round(now['uptime'] - prev['uptime'], 1) if watts is not None else None,
                       'cpu_state': 'ok' if watts is not None else 'sampling' if now.get('power', {}).get('packages') else 'unavailable'}
         h.update(raw=now,offline=False,error=None,checked=now['time'],
-                 cores=now['cores'],cpu_model=now['cpu_model'],os=now['os'],load=now['load'],uptime=now['uptime'],
+                 cores=now['cores'],threads=now['threads'],virtualized=now['virtualized'],
+                 cpu_model=now['cpu_model'],gpus=[gpu_name(g['vendor'],g['device']) for g in now.get('gpus',[])],
+                 os=now['os'],load=now['load'],uptime=now['uptime'],
                  mem=now['mem'],disk=now['disk'],temp=now['temp'],battery=now['battery'])
 
 

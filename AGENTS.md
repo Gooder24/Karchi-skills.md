@@ -11,12 +11,12 @@ Karchi ti píše cez T3 Code. Každý stroj nižšie je samostatný T3 environme
 
 | Alias | Stroj | Login | Úloha |
 |---|---|---|---|
-| `x270` | ThinkPad X270, Arch + Hyprland | `karchi@100.96.23.116` | Karchiho notebook s T3 appkou; živý desktop, často spí |
-| `asus` | ASUS Vivobook X1504V, 12 jadier, 15 GB | `asus-vivobook-x1504v@100.110.180.15` | headless Debian 13, ťažké buildy |
-| `dell` | Dell Latitude E5440, 4 jadrá, 3,7 GB | `dell-latitude-e5440@100.75.99.86` | headless Debian 13, repo KarchiOS |
-| `e540` | ThinkPad E540, 4 jadrá, 3,7 GB | `thinkpad-e540@100.86.221.66` | headless Debian 13 |
+| `x270` | ThinkPad X270, 2 jadrá / 4 vlákna, Arch + Hyprland | `karchi@100.96.23.116` | Karchiho notebook s T3 appkou; živý desktop, často spí |
+| `asus` | ASUS Vivobook X1504V, 10 jadier / 12 vlákien, 15 GB | `asus-vivobook-x1504v@100.110.180.15` | headless Debian 13, ťažké buildy |
+| `dell` | Dell Latitude E5440, 2 jadrá / 4 vlákna, 3,7 GB | `dell-latitude-e5440@100.75.99.86` | headless Debian 13, repo KarchiOS |
+| `e540` | ThinkPad E540, 2 jadrá / 4 vlákna, 3,7 GB | `thinkpad-e540@100.86.221.66` | headless Debian 13 |
 | `rodinnypcl` | rodinný PC, Windows 10 | `lupta@100.89.80.45` | Codex; T3 (nightly) na porte 3773 spúšťa Plánovač úloh „T3 Code server“, nie systemd; SSH len kľúčom z asusu |
-| `vps` | VPS „Hermes“, 4 jadrá, 7,8 GB | `root@81.2.239.39` | Ubuntu 24.04, firemný pilot eSYST s ostrými službami |
+| `vps` | VPS „Hermes“, 4 vCPU, 7,8 GB | `root@81.2.239.39` | Ubuntu 24.04, firemný pilot eSYST s ostrými službami |
 
 Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodinnypcl` cez OpenSSH len z asusu, Tailscale SSH na Windowse nie je). `vps` dosiahneš len z `x270`. Na inom stroji konaj iba na Karchiho pokyn; keď neodpovedá, povedz to.
 
