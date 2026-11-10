@@ -2,23 +2,71 @@
 """Keď týždenný Claude limit prejde PRAH % (3 % zvyšok), prepne default model T3 na Codex (ChatGPT);
 po resete limitu vráti pôvodný. T3 si settings.json sleduje sám, zmena platí hneď pre nové vlákna.
 Stav: ~/.local/share/t3-claude-fallback/state.json"""
-import json, os, sys, urllib.request
+import fcntl, json, math, os, sys, time, urllib.error, urllib.request
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 H = Path.home()
 PRAH = float(os.environ.get("PRAH", 97))
 SETTINGS = H / ".t3/userdata/settings.json"
 STATE = H / ".local/share/t3-claude-fallback/state.json"
+USAGE = H / ".local/share/t3-claude-fallback/usage.json"
 CODEX = {"instanceId": "codex", "model": os.environ.get("CODEX_MODEL", "gpt-6.1-sol"),
          "options": [{"id": "reasoningEffort", "value": "high"}]}
 
 
+def retry_delay(value, now):
+    try:
+        delay = float(value)
+        return max(0, delay) if math.isfinite(delay) else 0
+    except (TypeError, ValueError):
+        try:
+            return max(0, parsedate_to_datetime(value).timestamp() - now)
+        except (TypeError, ValueError, OverflowError):
+            return 0
+
+
+def valid_usage(value):
+    return math.isfinite(value) and 0 <= value <= 100
+
+
 def weekly():
-    tok = json.loads((H / ".claude/.credentials.json").read_text())["claudeAiOauth"]["accessToken"]
-    req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
-        "Authorization": "Bearer " + tok, "anthropic-beta": "oauth-2025-04-20"})
-    return float((json.load(urllib.request.urlopen(req, timeout=20)).get("seven_day") or {}).get("utilization") or 0)
+    # Failed usage reads never mean a reset; only this private cache changes on errors.
+    USAGE.parent.mkdir(parents=True, exist_ok=True)
+    with USAGE.with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            cached = json.loads(USAGE.read_text())
+            if not isinstance(cached, dict):
+                cached = {}
+        except (OSError, ValueError):
+            cached = {}
+        now = time.time()
+        if now < cached.get('next_check', 0):
+            return None
+        retry_after = 0
+        try:
+            tok = json.loads((H / ".claude/.credentials.json").read_text())["claudeAiOauth"]["accessToken"]
+            req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
+                "Authorization": "Bearer " + tok, "anthropic-beta": "oauth-2025-04-20"})
+            with urllib.request.urlopen(req, timeout=20) as response:
+                value = float(json.load(response)['seven_day']['utilization'])
+            if not valid_usage(value):
+                raise ValueError('invalid usage')
+        except urllib.error.HTTPError as error:
+            retry_after = retry_delay(error.headers.get('Retry-After'), now) if error.headers else 0
+            reason = f'HTTP {error.code}'
+        except (OSError, ValueError, KeyError, TypeError):
+            reason = 'usage unavailable'
+        else:
+            write(USAGE, {'next_check': time.time() + 1800, 'failures': 0})
+            return value
+        failures = min(cached.get('failures', 0) + 1, 5)
+        delay = max(retry_after, min(1800 * 2 ** (failures - 1), 21600))
+        write(USAGE, {'next_check': time.time() + delay, 'failures': failures})
+        print(f'Claude limit: {reason}; retry in {math.ceil(delay / 60)} min; model unchanged')
+        return None
 
 
 def write(path, data):
@@ -29,6 +77,10 @@ def write(path, data):
 
 def main():
     used = float(sys.argv[1]) if len(sys.argv) > 1 else weekly()  # argument = test bez API
+    if used is None:
+        return
+    if not valid_usage(used):
+        raise ValueError("Usage must be between 0 and 100")
     s = json.loads(SETTINGS.read_text())
     cur = s.get("defaultModelSelection") or {}
     saved = json.loads(STATE.read_text()) if STATE.exists() else None
