@@ -1,0 +1,10 @@
+[Unit]
+Description=T3: uvolni Codex konverzaciu, ktoru drzi ucet po zlyhanom tahu
+
+[Service]
+ExecStart=%h/.local/bin/t3-codex-unlock
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -76,3 +76,12 @@ if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
     systemctl --user daemon-reload && systemctl --user enable --now t3-claude-fallback.timer && echo "ok t3-claude-fallback.timer"
   fi
 fi
+# codex-unlock: po zlyhanom Codex ťahu (limit) pustí konverzáciu, aby išla prepnúť na iný Codex účet.
+if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
+  mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
+  ln -sfn "$R/codex-unlock/t3-codex-unlock" "$HOME/.local/bin/t3-codex-unlock"
+  if ! cmp -s "$R/codex-unlock/t3-codex-unlock.service" "$HOME/.config/systemd/user/t3-codex-unlock.service"; then
+    cp "$R/codex-unlock/t3-codex-unlock.service" "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload && systemctl --user enable --now t3-codex-unlock.service && echo "ok t3-codex-unlock.service"
+  fi
+fi

@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Releases Codex conversations that a T3 Codex app-server keeps locked after a failed turn.
+
+T3 runs one `codex app-server` per Codex account (provider instance), and all accounts share the
+conversations in ~/.codex. After a turn fails (usually "Usage limit reached"), that app-server keeps
+the conversation's writer lock, so switching the thread to another account fails with "This
+conversation is open in another Codex client". This loop stops such an app-server once every
+thread it holds is idle and at least one of them ended in a failed run. T3 starts it again on the
+next turn for that account.
+
+  t3-codex-unlock            loop (systemd user unit t3-codex-unlock.service)
+  t3-codex-unlock --once     two checks, stops what was stale in both, then exits
+  t3-codex-unlock --dry-run  one check, print what it would stop
+Log: journalctl --user -u t3-codex-unlock"""
+import json, os, signal, sqlite3, subprocess, sys, time
+from pathlib import Path
+
+H = Path.home()
+DB = H / ".t3/userdata/statev2.sqlite"
+INTERVAL = 3
+TERMINAL = {"completed", "interrupted", "failed", "cancelled", "rolled_back"}
+
+
+def lock_dirs():
+    dirs = {(H / ".codex/thread-writer-locks").resolve()}
+    dirs |= {p.resolve() for p in H.glob(".codex-t3code/*/thread-writer-locks")}
+    return [d for d in dirs if d.is_dir()]
+
+
+def held_locks():
+    """{pid: [native thread id]} for FLOCK write locks on Codex thread-writer lock files."""
+    by_key = {}
+    for d in lock_dirs():
+        for f in d.glob("*.lock"):
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+            by_key[st.st_ino] = f  # btrfs: /proc/locks shows the filesystem's device, not the subvolume's
+    held = {}
+    for line in Path("/proc/locks").read_text().splitlines():
+        parts = line.split()
+        if len(parts) < 6 or parts[1] != "FLOCK" or parts[3] != "WRITE":
+            continue
+        f = by_key.get(int(parts[5].rsplit(":", 1)[1]))
+        if f and holds_open(parts[4], f):
+            held.setdefault(int(parts[4]), []).append(f.stem)
+    return held
+
+
+def holds_open(pid, f):
+    try:
+        return any(Path(fd).resolve() == f.resolve() for fd in Path(f"/proc/{pid}/fd").iterdir())
+    except OSError:
+        return False
+
+
+def t3_app_server(pid):
+    """(scope or None, CODEX_HOME) when pid is a codex app-server started by T3, else None."""
+    try:
+        cmd = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+        env = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+        cgroup = Path(f"/proc/{pid}/cgroup").read_text()
+        ppid = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[1]
+        parent = Path(f"/proc/{ppid}/cmdline").read_bytes().split(b"\0")
+    except OSError:
+        return None
+    if not (len(cmd) > 1 and cmd[0].endswith(b"codex") and cmd[1] == b"app-server"):
+        return None
+    scope = next((p for p in cgroup.strip().split("/") if p.startswith("t3code-codex-")), None)
+    started_by_t3 = scope or (parent and parent[0].endswith(b"t3") and b"serve" in parent)
+    if not started_by_t3:
+        return None
+    home = next((e[11:].decode() for e in env if e.startswith(b"CODEX_HOME=")), "~/.codex")
+    return scope, home
+
+
+def thread_states(native_ids):
+    """{native id: (T3 thread id, title, latest run status)}; unknown ids are left out."""
+    db = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, timeout=2)
+    try:
+        out = {}
+        for nid in native_ids:
+            row = db.execute(
+                "select json_extract(payload_json, '$.appThreadId') from orchestration_v2_projection_provider_threads"
+                " where json_extract(payload_json, '$.nativeThreadRef.nativeId') = ? limit 1", (nid,)).fetchone()
+            if not row:
+                continue
+            tid = row[0]
+            run = db.execute("select status from orchestration_v2_projection_runs where thread_id = ?"
+                             " order by ordinal desc limit 1", (tid,)).fetchone()
+            title = db.execute("select json_extract(payload_json, '$.title') from orchestration_v2_projection_threads"
+                               " where thread_id = ?", (tid,)).fetchone()
+            out[nid] = (tid, title[0] if title else "?", run[0] if run else "none")
+        return out
+    finally:
+        db.close()
+
+
+def stale_holders():
+    found = []
+    for pid, nids in held_locks().items():
+        server = t3_app_server(pid)
+        if not server:
+            continue
+        states = thread_states(nids)
+        statuses = [s for _, _, s in states.values()]
+        if statuses and all(s in TERMINAL for s in statuses) and "failed" in statuses:
+            found.append((pid, server, states))
+    return found
+
+
+def stop(pid, scope):
+    if scope:
+        subprocess.run(["systemctl", "--user", "stop", scope], check=False, timeout=30)
+    else:
+        os.kill(pid, signal.SIGTERM)
+
+
+def check(dry_run, seen):
+    """Stops a holder only when it was stale on two checks in a row, so a queued turn can start first."""
+    now = {}
+    for pid, (scope, home), states in stale_holders():
+        key = (pid, tuple(sorted(states)))
+        now[key] = True
+        threads = ", ".join(f"{title} [{tid[:8]}]" for tid, title, _ in states.values())
+        if dry_run:
+            print(f"would stop pid {pid} ({scope or 'no scope'}, {Path(home).name}): {threads}")
+        elif key in seen:
+            print(f"{time.strftime('%F %T')} stopped pid {pid} ({scope or 'no scope'}, {Path(home).name}),"
+                  f" it held: {threads}", flush=True)
+            stop(pid, scope)
+    return now
+
+
+def main():
+    if not DB.exists():
+        sys.exit(f"{DB} not found: T3 does not run on this machine")
+    if "--dry-run" in sys.argv:
+        check(True, {})
+        return
+    seen, rounds = {}, 2 if "--once" in sys.argv else -1
+    while rounds:
+        try:
+            seen = check(False, seen)
+        except (OSError, sqlite3.Error, subprocess.SubprocessError) as error:
+            print(f"check failed: {error}", flush=True)
+            seen = {}
+        rounds -= 1
+        if rounds:
+            time.sleep(INTERVAL)
+
+
+if __name__ == "__main__":
+    main()

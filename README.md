@@ -36,6 +36,15 @@ Wiring:
   "command": "python3 -I ~/.work/karchi-skills/hooks/overenie-gate.py", "timeout": 10 }] }]
 ```
 
+## Services
+
+`install.sh` installs these as systemd user units on every machine that runs T3.
+
+| Service | What it does |
+|---------|---------|
+| [`limit-fallback`](limit-fallback/t3-claude-fallback) | Every 10 min: at 3 % of the weekly Claude limit left, switches T3's default model to Codex, and back after the reset |
+| [`codex-unlock`](codex-unlock/t3-codex-unlock) | Every 3 s: when a Codex turn fails (usually the usage limit), stops that account's idle app-server so the thread can switch to another Codex account without "open in another Codex client". `journalctl --user -u t3-codex-unlock` shows each stop; `t3-codex-unlock --dry-run` shows what it would stop |
+
 ## Third-party skills
 
 `frontend-design` is `skills/frontend-design` from [anthropics/skills](https://github.com/anthropics/skills)
