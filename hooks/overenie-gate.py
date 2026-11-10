@@ -213,7 +213,7 @@ def decide(event):
         log("pass-after-block", event, status=status[:200], change=change)
         return None
     log("block", event, status=status[:200], change=change, opening=text[:200])
-    why = problem or ("its 'Overenie:' line neither names an overenie/…/verdikt.md or index.html written "
+    why = problem or ("its 'Overenie:' line neither names an overenie/…/verdikt.md written "
                       "in this turn nor starts with neoverené, netreba or prebieha" if status
                       else "it has no 'Overenie:' line")
     return {"decision": "block", "reason": (

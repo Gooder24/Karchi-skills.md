@@ -33,8 +33,8 @@ an evidence file or pick `netreba` only to get past the hook.
 Write the checks into the goal file (`zadanie`, section „Hotové keď“), or into
 `overenie/checks.md` in the project for a smaller change. Each check states what he would do
 ("otvorím DM", "stlačím Super+N") and what he should then see. Once work has started, do not weaken a
-check. If a check turns out to be wrong, change it with a line `zmenené: <prečo>`, so he sees it in the
-report.
+check. If a check turns out to be wrong, change it with a line `zmenené: <prečo>` and name the change in the
+reply.
 
 ## 2. Make every check runnable
 
