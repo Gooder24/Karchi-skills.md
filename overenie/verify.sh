@@ -2,8 +2,8 @@
 # Usage: verify.sh <brief.md> [verdict, default overenie/verdikt.md]    (run it in the project root)
 # The independent verifier of skill overenie. Codex goes first: it spends the ChatGPT limit, not Karchi's Claude
 # limit, and in the 9. 11. pilot it found as much as Opus in half the time. When Codex leaves no verdict (its limit,
-# a crash, not installed), Claude Opus runs. OVERENIE_CLAUDE_FIRST=1 swaps the order: use it when Codex built the
-# change, so the verifier is never the builder's own model. How deep it goes is in the brief (verifier-agents.md).
+# a crash, not installed), Claude Opus runs. OVERENIE_CLAUDE_FIRST=1 swaps the order: use it only for
+# `Hĺbka: dôkladná` on a change Codex built, so a different model checks it. How deep it goes is in the brief (verifier-agents.md).
 # Every run logs its usage to ~/.claude/overenie-usage.jsonl. Exits 1 when no verdict was written.
 set -u
 brief=$1 verdict=${2:-overenie/verdikt.md}

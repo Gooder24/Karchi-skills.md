@@ -73,11 +73,14 @@ failure, or, when it is not your change (changed data, a flaky machine), name ea
 brief as unverified, so the verifier judges it instead of rediscovering it. Start the verifier once the whole change
 he asked for is finished, not after each partial step: several commits for one ask go to one round.
 
-After building, start a verifier that has not seen your work: a separate headless agent, not a subagent, because
-subagents run on Haiku and inherit your assumptions. `verify.sh` starts Codex first (it spends the ChatGPT limit, not
-Karchi's Claude limit, and in the 9. 11. pilot it found as much as Opus in half the time) and Claude Opus when Codex
-leaves no verdict. When Codex built the change, set `OVERENIE_CLAUDE_FIRST=1`. On 5. 11. two verdicts were written by
-the builder because the verifier hit the limit; that must not happen again.
+After building, start a verifier that has not seen your work, always through `verify.sh` (Weft: `tools/verify-on-asus`),
+never as a subagent, a T3 `delegate_task` or a new thread: those inherit your assumptions or load a whole agent with
+every tool, and on 10. 11. a Codex builder's `delegate_task` to Claude Opus spent his Claude limit on a routine check.
+`verify.sh` starts Codex first (it spends the ChatGPT limit, not Karchi's Claude limit, and in the 9. 11. pilot it found
+as much as Opus in half the time) and Claude Opus when Codex leaves no verdict. This holds when Codex built the change
+too: a fresh Codex has not seen your work. Only for `Hĺbka: dôkladná` on a change Codex built, set
+`OVERENIE_CLAUDE_FIRST=1`, so a different model checks it. On 5. 11. two verdicts were written by the builder because
+the verifier hit the limit; that must not happen again.
 
 ```sh
 cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
