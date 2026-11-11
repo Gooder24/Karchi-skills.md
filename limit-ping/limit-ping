@@ -1,0 +1,201 @@
+#!/usr/bin/env python3
+"""Keeps Karchi's 5-hour usage windows (Claude and each Codex account) back to back at planned
+times, with one tiny request per window (Haiku 5.5 or gpt-6-luna, about $0.001).
+
+  lane            window starts               resets
+  claude          01:00 06:02 11:02 16:02     06, 11, 16, 21 h
+  codex-moj       04:45 09:45 14:45 19:45     3/4 into each Claude window
+  codex-infowork  03:30 08:30 13:30 18:30     1/2 into each Claude window
+
+A timer runs this every minute; a lane does something only when it is due. When a ping lands in
+a window that is already running (Karchi's own use, another machine) or could not be made at
+its time (machine off or asleep, error), the lane pings again as soon as it can: when that
+window ends, or right away. Such catch-up pings stop 5 h before the lane's first window of the
+day, so the night gap brings every lane back to its plan. Claude's 01:00 window only lines up
+06:00, so it is never caught up later than 01:09 (Claude counts windows from 10-minute marks).
+
+  limit-ping          run due lanes (the timer)
+  limit-ping status   next ping of each lane
+State: ~/.local/state/limit-ping/<lane>.json, log: ~/.local/state/limit-ping/log
+"""
+import glob, json, os, re, subprocess, sys, time
+from datetime import datetime, timedelta
+
+H = os.path.expanduser("~")
+DIR = f"{H}/.local/state/limit-ping"
+WINDOW = 5 * 3600
+RETRY = 10 * 60  # after a failed ping
+
+
+def hm(s):
+    h, m = s.split(":")
+    return int(h) * 60 + int(m)
+
+
+# catchup: time of day during which a late or chained ping is still worth making.
+# round: windows start at this many seconds' marks (Claude 10 minutes, Codex the request itself).
+LANES = {
+    "claude": {"slots": ["01:00", "06:02", "11:02", "16:02"], "catchup": ("06:00", "20:00"),
+               "grace": 9 * 60, "round": 600},
+    "codex-moj": {"slots": ["04:45", "09:45", "14:45", "19:45"], "catchup": ("04:45", "23:45"),
+                  "home": f"{H}/.codex-t3code/moj", "round": 1},
+    "codex-infowork": {"slots": ["03:30", "08:30", "13:30", "18:30"], "catchup": ("03:30", "22:30"),
+                       "home": f"{H}/.codex-t3code/infowork", "round": 1},
+}
+
+
+def clock(t):
+    return datetime.fromtimestamp(t).strftime("%H:%M")
+
+
+def log(lane, msg):
+    with open(f"{DIR}/log", "a") as f:
+        f.write(f"{datetime.now().astimezone().isoformat(timespec='seconds')} {lane} {msg}\n")
+
+
+def next_slot(lane, after):
+    """First planned window start strictly after `after` (epoch seconds)."""
+    day = datetime.fromtimestamp(after).replace(hour=0, minute=0, second=0, microsecond=0)
+    for d in range(3):
+        for s in sorted(LANES[lane]["slots"], key=hm):
+            t = (day + timedelta(days=d, minutes=hm(s))).timestamp()
+            if t > after:
+                return t
+
+
+def catching_up_ok(lane, t):
+    a, b = (hm(x) for x in LANES[lane]["catchup"])
+    m = datetime.fromtimestamp(t)
+    m = m.hour * 60 + m.minute
+    return a <= m < b if a < b else m >= a or m < b
+
+
+def prev_slot(lane, now):
+    t = next_slot(lane, now - 86400)
+    while (n := next_slot(lane, t)) <= now:
+        t = n
+    return t
+
+
+def chain_after(lane, now, reset):
+    """Next due time when the window running now ends at `reset`."""
+    chain = max(reset + 60, now + 120)
+    if catching_up_ok(lane, chain):
+        return chain, f"window already running until {clock(reset)}, next ping {clock(chain)}"
+    return next_slot(lane, reset), f"window already running until {clock(reset)}, back on plan"
+
+
+def after_ping(lane, now, reset):
+    """Next due time after a successful ping that reported the window ends at `reset`."""
+    r = LANES[lane]["round"]
+    if reset is None or reset >= now - now % r + WINDOW - 60:  # this ping opened the window
+        return next_slot(lane, now), None
+    return chain_after(lane, now, reset)
+
+
+def ping_claude():
+    out = subprocess.run(
+        [f"{H}/.local/bin/claude", "-p", "Reply with the single word: ok", "--model", "claude-haiku-5-5",
+         "--effort", "low", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
+         "--no-session-persistence", "--setting-sources", "local", "--output-format", "stream-json",
+         "--verbose"], cwd=DIR, capture_output=True, text=True, timeout=300).stdout
+    m = re.search(r'"five_hour":\{"utilization":([0-9.]+),"resetsAt":([0-9]+)', out)
+    return '"is_error":false' in out, (float(m[1]) * 100, int(m[2])) if m else (None, None), out
+
+
+def ping_codex(home):
+    env = dict(os.environ, CODEX_HOME=home)
+    out = subprocess.run(
+        [f"{H}/.local/bin/codex", "exec", "--json", "--skip-git-repo-check", "--ignore-rules", "-s",
+         "read-only", "-m", "gpt-6-luna", "-c", 'model_reasoning_effort="low"',
+         "Reply with the single word: ok"], cwd=DIR, env=env, stdin=subprocess.DEVNULL,
+        capture_output=True, text=True, timeout=300).stdout
+    m = re.search(r'"thread_id":"([^"]+)"', out)
+    win = (None, None)
+    if m:
+        # The rate limits come only in the session file; delete it so it stays out of the threads.
+        for f in glob.glob(f"{home}/sessions/*/*/*/*{m[1]}.jsonl"):
+            lim = re.findall(r'"primary":\{"used_percent":([0-9.]+),"window_minutes":300,"resets_at":([0-9]+)',
+                             open(f).read())
+            if lim:
+                win = (float(lim[-1][0]), int(lim[-1][1]))
+        subprocess.run([f"{H}/.local/bin/codex", "delete", "--force", m[1]], env=env, capture_output=True,
+                       timeout=60)
+    return '"type":"turn.completed"' in out, win, out
+
+
+def said_reset(out, now):
+    """Reset time from a used-up limit message: Codex "try again at 9:41 PM", Claude "resets 2am"."""
+    m = re.search(r"(?:try again at|resets) (\d{1,2})(?::(\d{2}))? ?([AaPp][Mm])", out)
+    if not m:
+        return None
+    h = int(m[1]) % 12 + (12 if m[3].lower() == "pm" else 0)
+    t = datetime.fromtimestamp(now).replace(hour=h, minute=int(m[2] or 0), second=0, microsecond=0)
+    return (t if t.timestamp() > now else t + timedelta(days=1)).timestamp()
+
+
+def save(lane, nxt):
+    json.dump({"next": nxt}, open(f"{DIR}/{lane}.json", "w"))
+
+
+def retry_at(lane, now):
+    t = now + RETRY
+    return t if catching_up_ok(lane, t) else next_slot(lane, now)
+
+
+def run(lane, now):
+    try:
+        due = float(json.load(open(f"{DIR}/{lane}.json"))["next"])
+    except (OSError, ValueError, KeyError, TypeError):  # first run or lost state: catch up the last slot
+        due = prev_slot(lane, now)
+    if now < due:
+        return
+    if not catching_up_ok(lane, now) and now - due > LANES[lane].get("grace", 0):
+        nxt = next_slot(lane, now)
+        log(lane, f"missed {clock(due)}, too late to catch up, next ping {clock(nxt)}")
+        return save(lane, nxt)
+    cfg = LANES[lane]
+    ok, (used, reset), out = ping_codex(cfg["home"]) if "home" in cfg else ping_claude()
+    now = time.time()
+    if not ok and not (reset and reset > now):
+        reset = said_reset(out, now)
+    if ok:
+        nxt, note = after_ping(lane, now, reset)
+        info = f"used={used or 0:g}% resets={clock(reset)}" if reset else "(no window info)"
+        log(lane, f"ok {info}" + (f"; {note}" if note else ""))
+    elif reset and reset > now:  # limit used up: ping again when it resets
+        # Longer than a window means the weekly limit: wait for the first slot after it.
+        nxt, note = chain_after(lane, now, reset) if reset - now <= WINDOW else (next_slot(lane, reset), None)
+        log(lane, f"FAIL limit used up until {clock(reset)}; {note or 'next ping ' + clock(nxt)}")
+    else:
+        nxt = retry_at(lane, now)
+        log(lane, f"FAIL, next try {clock(nxt)}: " + " ".join(out[-300:].split()))
+    save(lane, nxt)
+
+
+def main():
+    os.makedirs(DIR, exist_ok=True)
+    if sys.argv[1:] == ["status"]:
+        for lane in LANES:
+            try:
+                print(f"{lane:15} next ping {datetime.fromtimestamp(json.load(open(f'{DIR}/{lane}.json'))['next']):%a %H:%M}")
+            except (OSError, ValueError, KeyError):
+                print(f"{lane:15} not started yet")
+        return
+    import fcntl
+    lock = open(f"{DIR}/.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return  # a ping from the previous minute is still running
+    for lane in LANES:
+        try:
+            run(lane, time.time())
+        except Exception as e:  # one broken lane must not stop the others
+            nxt = retry_at(lane, time.time())
+            log(lane, f"FAIL {type(e).__name__}: {e}, next try {clock(nxt)}")
+            save(lane, nxt)
+
+
+if __name__ == "__main__":
+    main()

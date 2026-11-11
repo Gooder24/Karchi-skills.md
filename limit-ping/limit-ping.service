@@ -1,0 +1,9 @@
+[Unit]
+Description=Claude and Codex 5-hour windows back to back at planned times
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/limit-ping
+# Runs every minute; keep systemd's start and stop lines out of the journal.
+LogLevelMax=notice
+TimeoutStartSec=15min

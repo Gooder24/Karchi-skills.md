@@ -78,6 +78,16 @@ if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
     systemctl --user daemon-reload && systemctl --user enable --now t3-claude-fallback.timer && echo "ok t3-claude-fallback.timer"
   fi
 fi
+# limit-ping: len na asuse drží 5-hodinové okná Claude a Codex účtov za sebou v plánovaných časoch.
+if [ "$(uname -n)" = asus-vivobook-x1504v ] && command -v systemctl >/dev/null; then
+  mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
+  ln -sfn "$R/limit-ping/limit-ping" "$HOME/.local/bin/limit-ping"
+  if ! cmp -s "$R/limit-ping/limit-ping.service" "$HOME/.config/systemd/user/limit-ping.service" ||
+     ! cmp -s "$R/limit-ping/limit-ping.timer" "$HOME/.config/systemd/user/limit-ping.timer"; then
+    cp "$R"/limit-ping/limit-ping.{service,timer} "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload && systemctl --user enable --now limit-ping.timer && echo "ok limit-ping.timer"
+  fi
+fi
 # codex-unlock: po zlyhanom Codex ťahu (limit) pustí konverzáciu, aby išla prepnúť na iný Codex účet.
 if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
   mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
