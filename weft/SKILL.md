@@ -1,6 +1,6 @@
 ---
 name: weft
-description: Karchi's messages and calendar through Weft (Messenger, Instagram, WhatsApp, Discord, EduPage, Gmail in one inbox on asus), with the `weft` command on every machine. Use when he asks what someone wrote, what is unread, to find a message, to reply or write to someone (draft or send), or to see, add or change a calendar event.
+description: Karchi's messages and calendar through Weft (Messenger, Instagram, WhatsApp, Discord, EduPage, Gmail in one inbox on asus), with the `weft` command on every machine. Use when he asks what someone wrote, what is unread, to find a message, to reply or write to someone (draft or send, also through Weft, with files), to message a teacher on EduPage, to send an email from his Gmail, or to see, add or change a calendar event.
 ---
 
 # Weft for agents
@@ -15,7 +15,12 @@ weft read CHAT [-n 30]               the chat, oldest first (older pages come fr
 weft search WORDS [--chat CHAT]      homeserver and archive, newest first
 weft draft CHAT TEXT|-               a draft in that chat's message box in Weft; he sends it himself
 weft drafts [--clear CHAT]           drafts he has not sent yet
-weft send CHAT TEXT|- --yes          sends as Karchi (without --yes it only shows where it would go)
+weft send CHAT [TEXT|-] [--file PATH]... [--reply ID] --yes
+                                     sends as Karchi (without --yes it only shows what would go where)
+weft send EduPage TEXT --to TEACHER [--file PATH]... --yes      a new EduPage message to one teacher
+weft send EduPage TEXT --reply ID [--file PATH]... --yes        an answer in an EduPage conversation
+weft mail TO [TEXT|-] [--subject S] [--cc CC] [--from ACCOUNT] [--file PATH]... --yes
+                                     a new mail from his Gmail (first connected account unless --from)
 weft cals | weft cal [--from YYYY-MM-DD] [--days 7] [--cal NAME]
 weft cal-add TITLE --start "YYYY-MM-DD HH:MM" [--end ...|--minutes 60] [--cal NAME] [--location ..] [--notes ..]
 weft cal-edit UID [--title|--start|--end|--location|--notes|--cal ...]   weft cal-del UID
@@ -23,6 +28,11 @@ weft cal-edit UID [--title|--start|--end|--location|--notes|--cal ...]   weft ca
 
 CHAT is part of the chat's name (diacritics and case do not matter) or its room id; a name that fits more
 chats is refused with the list, then use the room id. `TEXT` `-` reads stdin (for longer or multi-line text).
+ID is a message's `id` from `weft --json read CHAT`. `--file` takes a local path on any machine (the
+wrapper copies it to asus); 25 MB a file, a mail's files 18 MB together. EduPage is one chat: every message
+needs `--to` (teacher's name, any current teacher, also one he never wrote to) or `--reply`; school notices
+take no answer, and if EduPage refuses, the bridge says so in that chat a few seconds later (`weft read
+EduPage -n 3`). Drafts are text only; for files use `send` once he said to send.
 Times are Europe/Bratislava; `--start 2026-11-12` alone is an all-day event.
 
 ## Rules

@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
 # weft: Karchi's Weft inbox (messages, drafts, calendar) for agents on any of his machines.
 # The tool lives on asus (~/matrix-spike/cli/weft.py, source: github.com/Gooder24/weft server/cli/weft.py);
-# elsewhere this runs it there over ssh. Standard input goes along, so `weft draft CHAT -` works everywhere.
+# elsewhere this runs it there over ssh. Standard input goes along, so `weft draft CHAT -` works everywhere, and
+# `--file PATH` files are copied to a temporary folder on asus first (removed afterwards).
 W="$HOME/matrix-spike/cli/weft.py"
 [ -f "$W" ] && exec env WEFT_BY="${WEFT_BY:-$(uname -n)}" python3 "$W" "$@"
-exec ssh -o BatchMode=yes asus "WEFT_BY=$(uname -n) python3 ~/matrix-spike/cli/weft.py $(printf '%q ' "$@")"
+SSH=(ssh -o BatchMode=yes asus)
+args=() dir=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    --file|--file=*)
+      if [ "$1" = --file ]; then f=$2; shift; else f=${1#--file=}; fi
+      [ -f "$f" ] || { echo "weft: súbor $f neexistuje" >&2; exit 1; }
+      if [ -z "$dir" ]; then
+        dir=$("${SSH[@]}" 'mktemp -d /tmp/weft-files.XXXXXX') || { echo "weft: asus neodpovedá" >&2; exit 1; }
+        trap '"${SSH[@]}" "rm -rf $dir" </dev/null' EXIT
+      fi
+      # Each file in its own folder: the name stays as it is, and two files with one name do not collide.
+      to="$dir/${#args[@]}/$(basename -- "$f")"
+      "${SSH[@]}" "mkdir -p $(printf '%q' "${to%/*}") && cat > $(printf '%q' "$to")" < "$f" || { echo "weft: $f sa nepodarilo skopírovať na asus" >&2; exit 1; }
+      args+=(--file "$to") ;;
+    *) args+=("$1") ;;
+  esac
+  shift
+done
+"${SSH[@]}" "WEFT_BY=$(uname -n) python3 ~/matrix-spike/cli/weft.py $(printf '%q ' "${args[@]}")"
