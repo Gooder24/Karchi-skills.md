@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Links Karchi's T3 environments to each other over Tailscale HTTPS, or renews the links: T3 links
+# expire after 30 days and are not renewed by T3. Run from any of the machines:
+#   one-off/t3-link-all/t3-link-all
+# Needs on every machine: Tailscale Serve for T3 (T3CODE_TAILSCALE_SERVE=true in ~/.t3/service.env,
+# on x270 Settings → Connections → Tailscale HTTPS) and the Tailscale operator set to the user.
+# Pairing codes stay inside this script. See the links: `t3 environment list`, or Settings → Connections.
+set -u
+declare -A URL=(
+  [dell]=https://dell-latitude-e5440.taila3702d.ts.net [asus]=https://asus-vivobook-x1504v.taila3702d.ts.net
+  [e540]=https://thinkpad-e540.taila3702d.ts.net [x270]=https://karchi-1.taila3702d.ts.net)
+declare -A NODE=([dell]=dell-latitude-e5440 [asus]=asus-vivobook-x1504v [e540]=thinkpad-e540 [x270]=karchi)
+# x270 is Karchi's live desktop: agents elsewhere need his approval there.
+access() { [ "$1" = x270 ] && echo approval-required || echo full-access; }
+on() { # host command: run there, locally when it is this machine
+  if [ "${NODE[$1]}" = "$(uname -n)" ]; then bash -c "$2"; else ssh -o ConnectTimeout=10 "$1" "$2"; fi
+}
+# The t3 CLI of the version the server runs, so the CLI never migrates a database under an older server.
+CLI='if [ -x ~/.t3/bin/t3 ]; then echo ~/.t3/bin/t3; else echo ~/.t3/runtime/versions/$(python3 -c "import json,os;print(json.load(open(os.path.expanduser(\"~/.t3/userdata/server-runtime.json\")))[\"serverVersion\"])")/t3; fi'
+declare -A T3
+for h in "${!URL[@]}"; do T3[$h]=$(on "$h" "$CLI" 2>/dev/null) || echo "$h: does not answer"; done
+for s in "${!T3[@]}"; do for t in "${!T3[@]}"; do
+  [ "$s" = "$t" ] && continue
+  code=$(on "$t" "${T3[$t]} pair --ttl 5m --label $s 2>/dev/null | sed -n 's/^Token: //p'")
+  [ -z "$code" ] && { echo "$s -> $t: no pairing code from $t"; continue; }
+  out=$(on "$s" "${T3[$s]} environment link ${URL[$t]} --pairing-code $code --access $(access "$t") 2>&1" |
+    grep -E "Linked|PeerLinkError" | tail -1)
+  echo "$s -> $t: ${out//$code/<code>}"
+done; done
