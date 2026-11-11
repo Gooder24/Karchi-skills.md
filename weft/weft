@@ -13,7 +13,7 @@ while [ $# -gt 0 ]; do
       if [ "$1" = --file ]; then f=$2; shift; else f=${1#--file=}; fi
       [ -f "$f" ] || { echo "weft: súbor $f neexistuje" >&2; exit 1; }
       if [ -z "$dir" ]; then
-        dir=$("${SSH[@]}" 'mktemp -d /tmp/weft-files.XXXXXX') || { echo "weft: asus neodpovedá" >&2; exit 1; }
+        dir=$("${SSH[@]}" 'mktemp -d /tmp/weft-files.XXXXXX' </dev/null) || { echo "weft: asus neodpovedá" >&2; exit 1; }
         trap '"${SSH[@]}" "rm -rf $dir" </dev/null' EXIT
       fi
       # Each file in its own folder: the name stays as it is, and two files with one name do not collide.
