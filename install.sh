@@ -19,6 +19,8 @@ for d in "$R"/*/; do
     echo "ok $t/$n"
   done
 done
+# weft: Karchi's Weft inbox for agents, on every machine (runs on asus, elsewhere over ssh; see weft/SKILL.md).
+mkdir -p "$HOME/.local/bin" && ln -sfn "$R/weft/weft" "$HOME/.local/bin/weft"
 # One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md.
 # A real file there is kept once as <name>.bak-<date>, then replaced by the link.
 for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md"; do

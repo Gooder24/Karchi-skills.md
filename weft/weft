@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# weft: Karchi's Weft inbox (messages, drafts, calendar) for agents on any of his machines.
+# The tool lives on asus (~/matrix-spike/cli/weft.py, source: github.com/Gooder24/weft server/cli/weft.py);
+# elsewhere this runs it there over ssh. Standard input goes along, so `weft draft CHAT -` works everywhere.
+W="$HOME/matrix-spike/cli/weft.py"
+[ -f "$W" ] && exec env WEFT_BY="${WEFT_BY:-$(uname -n)}" python3 "$W" "$@"
+exec ssh -o BatchMode=yes asus "WEFT_BY=$(uname -n) python3 ~/matrix-spike/cli/weft.py $(printf '%q ' "$@")"
