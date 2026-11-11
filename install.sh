@@ -36,9 +36,10 @@ import json, os, sys
 p = sys.argv[1]
 if not os.path.exists(p): sys.exit()
 s = json.load(open(p)); o = s.setdefault("skillOverrides", {}); n = len(o)
-# Earlier compaction reduces growing history. /autocompact or --autocompact can override per model/session.
-compact_changed = s.get("autoCompactWindow") != 200000
-s["autoCompactWindow"] = 200000
+# Compaction at 350k on every machine (Karchi, 2026-11-11). /autocompact or --autocompact can override
+# per model/session.
+compact_changed = s.get("autoCompactWindow") != 350000
+s["autoCompactWindow"] = 350000
 for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspace": "off",
              "anthropic-skills:deep-research": "off", "deep-research": "off",
              "anthropic-skills:computer-use": "user-invocable-only",
@@ -59,8 +60,21 @@ e = s.setdefault("enabledPlugins", {}); new_plugin = "cowork-plugin-management@s
 e.setdefault("cowork-plugin-management@synced", False)
 if len(o) != n or new_plugin or compact_changed:
     json.dump(s, open(p + ".tmp", "w"), indent=2, ensure_ascii=False); os.replace(p + ".tmp", p)
-    print("ok Claude settings: auto-compact 200k, skillOverrides")
+    print("ok Claude settings: auto-compact 350k, skillOverrides")
 PY
+# Codex compacts at 350k too (T3's Codex accounts link their config.toml to this one).
+if [ -d "$HOME/.codex" ]; then
+  python3 -I - "$HOME/.codex/config.toml" <<'PY' || true
+import os, re, sys
+p = os.path.realpath(sys.argv[1]); line = "model_auto_compact_token_limit = 350000\n"
+old = open(p).read() if os.path.exists(p) else ""
+rest = [l for l in old.splitlines(True) if not re.match(r"model_auto_compact_token_limit\s*=", l)]
+new = line + "".join(rest)
+if new != old:
+    open(p, "w").write(new)  # in place, so links to it stay
+    print("ok Codex config: auto-compact 350k")
+PY
+fi
 # Verification files (skill overenie) stay out of every repo, so they never show in T3's changed files or in a commit.
 ign=$(git config --global --get core.excludesFile || true); ign=${ign/#\~/$HOME}
 ign=${ign:-${XDG_CONFIG_HOME:-$HOME/.config}/git/ignore}
