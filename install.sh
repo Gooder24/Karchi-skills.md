@@ -111,3 +111,10 @@ if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
     systemctl --user daemon-reload && systemctl --user enable --now t3-codex-unlock.service && echo "ok t3-codex-unlock.service"
   fi
 fi
+
+# Anna PDF automation: Hermes owns the daytime job; these are its maintained skill and monitor.
+if [ "$(uname -n)" = asus-vivobook-x1504v ]; then
+  mkdir -p "$HOME/.hermes/scripts" "$HOME/.hermes/skills/productivity"
+  cp "$R/anna-pdf/watch.py" "$HOME/.hermes/scripts/anna-pdf.py"
+  ln -sfn "$R/anna-pdf" "$HOME/.hermes/skills/productivity/anna-pdf"
+fi
