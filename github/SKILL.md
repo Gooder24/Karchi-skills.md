@@ -54,7 +54,7 @@ The body (use the repo's template; without one, these headings):
 - End with the model and harness that did the work.
 - Upload images to GitHub (PR body or comment); never commit assets that only the PR needs.
 
-After opening:
+After opening (in work projects, ask before each push, as above):
 
 - Read every bot finding (CodeRabbit, Macroscope), including the security and risk sections. Fix real
   ones with a push and a short reply, dismiss false ones with a reason. Never close your own PR to
