@@ -47,6 +47,9 @@ The change:
 - The smallest complete fix. Before opening, check what reviewers and bots will ask: an older client
   or server, concurrent runs, stale state (a reused PID, a leftover file), interruption halfway.
 - A test that fails on `main` and passes with the fix, in the module's existing test file.
+- A test of formatted dates, times or numbers takes its expected text from `Intl` in the host locale
+  (`new Intl.DateTimeFormat(undefined, { …, hour12 })`), not English literals, and passes under
+  `LC_ALL` sk_SK, de_DE, ja_JP and ar_EG (#37314: three review rounds went to an en-US-only assertion).
 - The repo's own checks green on the changed files (T3 Code: `vp run check:changed`).
 
 The body (use the repo's template; without one, these headings):
