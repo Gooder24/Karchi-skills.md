@@ -33,6 +33,12 @@ Before writing code:
   not PRs), do not open the PR and tell Karchi why. Never argue in the PR that a feature is a fix.
 - Search open PRs and issues first. If one covers the problem, do not open another: test it and tell
   Karchi, and comment what you saw only when he agrees.
+- When an open PR on the same defect lists your problem as left out ("Not in this change") and the
+  missing piece is small, the cheapest fix is a comment on that PR or its issue with the diagnosis and a
+  short diff, which the maintainers' pipeline finishes. Offer Karchi that comment first; open your own PR
+  only when he picks it (#37314, 15. 11.: a 15-line fix #34957 had listed as left out took a whole PR).
+- A PR you do open names every related open PR in its body: what each fixes, what yours takes off its
+  list, and that they merge cleanly (`git merge-tree --write-tree <your branch> <their head>`).
 - One problem per PR, but everything that fix needs (contracts, server, clients, tests, docs).
   Cleanup and a second fix go elsewhere.
 
