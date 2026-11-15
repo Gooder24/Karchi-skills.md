@@ -32,6 +32,8 @@ Karchiho inbox (asus `~/inbox/inbox.md`) číta a udržiava len Hermes (Hermes A
 
 Karchi nemá byť úzke hrdlo. Keď povie „takto to rob vždy“ alebo sa tá istá robota opakuje, najprv postav systém (skill v karchi-skills, hook, služba alebo plánovaná úloha) a až potom ručné riešenie; skill zapíš a pushni podľa skillu github. Čo vieš dokončiť bez jeho rozhodnutia, dokonči; rozhodnutia mu daj ako položky do inboxu, nie ako otázky, ktoré blokujú. Keď zmena mení jeho spôsob práce, spýtaj sa ho najprv, kam má smerovať.
 
+Snooze (Karchi, 2026-11-15): „snoozni tento thread do <čas>“ je `t3_thread_organize` s `action: "snooze"` a `snoozedUntil`; samotná `schedule_task` vlákno nesnoozne. Keď má vlákno v ten čas aj pracovať, sprav oboje.
+
 Nočný worker je zrušený (Karchi, 2026-11-09): žiadne plánované úlohy, ktoré bežia, kým spí. „na noc“ alebo „cez noc“ znamená skill `zadanie`.
 
 # Overenie (Karchi, 2026-11-07)
