@@ -9,7 +9,7 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 
 - Karchi's personal projects (karchi-os, karchi-skills) are committed straight to `main` and pushed.
   No branches or pull requests.
-- Work projects do not have an agreed workflow yet. Ask before creating a branch or a PR.
+- Work projects (eSYST) do not have an agreed workflow yet. Ask before a commit, push, branch or PR.
 - Never open a pull request unless Karchi explicitly asks. One request is one PR.
 - A repo with `scripts/land.sh` (Partsheet) lands PRs only through it, never with `gh pr merge` or the
   merge button: it merges only when CI passed on the PR's current head. On a private repo without
@@ -31,8 +31,8 @@ Before writing code:
 - Read the repo's CONTRIBUTING and PR template and follow them literally. If the repo does not accept
   something (T3 Code takes only bug fixes from outside the team: features go to Ideas discussions,
   not PRs), do not open the PR and tell Karchi why. Never argue in the PR that a feature is a fix.
-- Search open PRs and issues first. If one covers the problem, test it and comment what you saw
-  instead of opening another.
+- Search open PRs and issues first. If one covers the problem, do not open another: test it and tell
+  Karchi, and comment what you saw only when he agrees.
 - One problem per PR, but everything that fix needs (contracts, server, clients, tests, docs).
   Cleanup and a second fix go elsewhere.
 
@@ -48,8 +48,8 @@ The body (use the repo's template; without one, these headings):
 - **Problem**: one or two sentences, with a repro. A table of input / today / expected works well.
 - **Change**: what changed and why that fixes it. No narration of every file.
 - **Scope**: one sentence, `Fixes #N` or "small fix of an obvious bug". No lobbying paragraph.
-- **Verification**: the test output on `main` vs the branch, plus a real run (a transcript or
-  before/after screenshots; a short video for motion or timing). "Tests pass" is not evidence.
+- **Verification**: the test output on `main` vs the branch, plus a real run (a transcript; for a UI
+  change before/after screenshots, and a short video for motion or timing). "Tests pass" is not evidence.
   End with **Not checked:** and what you could not run.
 - End with the model and harness that did the work.
 - Upload images to GitHub (PR body or comment); never commit assets that only the PR needs.
@@ -66,8 +66,8 @@ After opening:
 - One problem per issue: what happened, a diagnosis naming files and functions, deterministic steps
   to reproduce, version and environment, logs, related issues, the workaround.
 - Attach evidence when filing; do not promise a screenshot "to follow".
-- If you can fix it, open the PR with `Fixes #N` right away instead of offering one; otherwise
-  someone else writes it.
+- When you have a fix, tell Karchi in the same reply and, once he asks for the PR, open it with
+  `Fixes #N`; an issue that only offers a fix gets fixed by someone else.
 
 ## Babysitting a PR
 
