@@ -66,7 +66,8 @@ The body (use the repo's template; without one, these headings):
 T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node <skill>/capture.mjs …`
 from the PR checkout starts an isolated dev server, captures this branch, swaps in `origin/main`'s copies
 of the changed files, captures again, and restores them. The header of each file says how to seed data
-and which options exist (`--setup`, `--hover`, `--text`, `--clip`).
+and which options exist (`--setup`, `--hover`, `--text`, `--clip`). Run `vp run check:changed` where you
+work; only when it cannot run there at all (lint or knip crash for lack of memory), run it over `ssh asus`.
 
 After opening (in work projects, ask before each push, as above):
 
