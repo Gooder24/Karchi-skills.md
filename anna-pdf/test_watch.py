@@ -3,6 +3,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -58,4 +59,55 @@ with tempfile.TemporaryDirectory() as tmp:
         raise AssertionError("missing anchor must fail")
     except RuntimeError as error:
         assert "cursor missing" in str(error)
-print("PASS: pairing, baseline, incremental reads, dedupe, persisted send guard, cursor gap")
+# --watch: one warning per pair, only after 30 minutes, never for a done pair, never outside the job hours
+from datetime import datetime
+day = datetime(2026, 11, 15, 12, 0).timestamp()
+src = [dict(msg("t"), ts=day * 1000), dict(msg("w", role="Worksheet"), ts=day * 1000 + 5000)]
+state = {"sources": src, "delivery": {}}
+assert watch.stale(state, day + 29 * 60) == []
+assert len(watch.stale(state, day + 31 * 60)) == 1
+state["delivery"][watch.pairs(src)[0]["key"]] = "sending"
+assert len(watch.stale(state, day + 31 * 60)) == 1
+state["delivery"][watch.pairs(src)[0]["key"]] = "done"
+assert watch.stale(state, day + 31 * 60) == []
+state["delivery"] = {}
+state["alerts"] = {watch.pairs(src)[0]["key"]: "x"}
+assert watch.stale(state, day + 31 * 60) == []
+night = datetime(2026, 11, 15, 23, 30).timestamp()
+state = {"sources": [dict(m, ts=(night - 3600) * 1000) for m in src], "delivery": {}}
+assert watch.stale(state, night) == []
+morning = datetime(2026, 11, 16, 7, 20).timestamp()
+assert watch.stale(state, morning) == []
+assert len(watch.stale(state, datetime(2026, 11, 16, 7, 31).timestamp())) == 1
+with tempfile.TemporaryDirectory() as tmp:
+    watch.STATE = Path(tmp) / "state.json"
+    sent = []
+    watch.save({"anchor": "w", "sources": [dict(m, ts=day * 1000) for m in src], "delivery": {}})
+    history = [msg("t"), msg("w", role="Worksheet")]
+    with patch.object(sys, "argv", ["watch.py", "--watch"]), patch.object(watch.time, "time", return_value=day + 40 * 60), \
+         patch.object(watch.subprocess, "check_output", return_value=json.dumps({"room": watch.ROOM, "messages": history})), \
+         patch.object(watch.subprocess, "run", side_effect=lambda *a, **k: sent.append(a[0])):
+        watch.main(); watch.main()
+    assert len(sent) == 1 and sent[0][:3] == ["hermes", "send", "-t"] and "Zážitok 3" in sent[0][-1]
+# the watchdog must still warn when the chat cannot be read, and one failed warning must not hide the next pair
+with tempfile.TemporaryDirectory() as tmp:
+    watch.STATE = Path(tmp) / "state.json"
+    two = src + [dict(msg("t2", 5), ts=day * 1000), dict(msg("w2", 5, "Worksheet"), ts=day * 1000)]
+    watch.save({"anchor": "w", "sources": two, "delivery": {}})
+    sent = []
+    def flaky(args, **kw):
+        if "Zážitok 3" in args[-1]:
+            raise subprocess.CalledProcessError(1, args)
+        sent.append(args)
+    def down(*a, **k):
+        raise subprocess.CalledProcessError(1, "weft")
+    with patch.object(sys, "argv", ["watch.py", "--watch"]), patch.object(watch.time, "time", return_value=day + 40 * 60), \
+         patch.object(watch.subprocess, "check_output", side_effect=down), patch.object(watch.subprocess, "run", side_effect=flaky):
+        try:
+            watch.main()
+            raise RuntimeError("a failed read or warning must fail the unit")
+        except subprocess.CalledProcessError:
+            pass
+    assert len(sent) == 1 and "Zážitok 5" in sent[0][-1]
+    assert list(json.loads(watch.STATE.read_text())["alerts"]) == [watch.pairs(two)[1]["key"]]
+print("PASS: pairing, baseline, incremental reads, dedupe, persisted send guard, cursor gap, stale warning, chat down, failed warning")

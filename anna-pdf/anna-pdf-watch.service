@@ -1,0 +1,8 @@
+[Unit]
+Description=Anna PDF: warn Karchi when a translation is still missing 30 minutes after it arrived
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 %h/.hermes/scripts/anna-pdf.py --watch
+TimeoutStartSec=3min

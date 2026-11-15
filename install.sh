@@ -117,4 +117,15 @@ if [ "$(uname -n)" = asus-vivobook-x1504v ]; then
   mkdir -p "$HOME/.hermes/scripts" "$HOME/.hermes/skills/productivity"
   cp "$R/anna-pdf/watch.py" "$HOME/.hermes/scripts/anna-pdf.py"
   ln -sfn "$R/anna-pdf" "$HOME/.hermes/skills/productivity/anna-pdf"
+  # anna-pdf-watch: bez modelu, nezávisle od Hermes cronu; po 30 minútach bez doručenia napíše do Hermes miestnosti.
+  if command -v systemctl >/dev/null; then
+    mkdir -p "$HOME/.config/systemd/user"
+    if ! cmp -s "$R/anna-pdf/anna-pdf-watch.service" "$HOME/.config/systemd/user/anna-pdf-watch.service" ||
+       ! cmp -s "$R/anna-pdf/anna-pdf-watch.timer" "$HOME/.config/systemd/user/anna-pdf-watch.timer"; then
+      cp "$R"/anna-pdf/anna-pdf-watch.{service,timer} "$HOME/.config/systemd/user/"
+      systemctl --user daemon-reload
+    fi
+    systemctl --user is-enabled --quiet anna-pdf-watch.timer 2>/dev/null ||
+      { systemctl --user enable --now anna-pdf-watch.timer && echo "ok anna-pdf-watch.timer"; }
+  fi
 fi
