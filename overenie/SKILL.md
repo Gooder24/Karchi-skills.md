@@ -110,6 +110,11 @@ the verifier checks only this change: the brief's checks, the two or three likel
 output instead of a rerun, about ten minutes. Write `Hĺbka: dôkladná` in the brief only for data that can be lost,
 messages to real people, live company services, code every case shares, or when he asks for it.
 
+A pull request to someone else's repo (T3 Code upstream) gets one round: its CI, CodeRabbit, Macroscope and the
+maintainers' pipeline check it again. Fix what that round found, rerun run.sh and the repo's checks yourself, and name
+in the reply each finding only you re-checked (#37314, 15. 11.: the second round found only a test-locale issue that
+CodeRabbit flagged anyway).
+
 `overenie/verifier.md` is short and points instead of pasting: the checks (or the path to `checks.md`), where the
 thing runs, what changed (`git show <commits>` or a diff path), the path of your run.sh output, and these rules. Earlier
 verdicts and long context go in as paths it reads when it needs them, and `Hĺbka: dôkladná` when it applies. The
