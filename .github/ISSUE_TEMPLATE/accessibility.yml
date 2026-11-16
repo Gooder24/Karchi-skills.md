@@ -1,0 +1,41 @@
+name: Accessibility barrier
+description: Something in this repository is hard or impossible to read, follow or use with assistive technology
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. You do not need to say whether you have a disability.
+        Severity levels are defined in [ACCESSIBILITY.md](https://github.com/Gooder24/Karchi-skills.md/blob/main/ACCESSIBILITY.md#severity).
+  - type: textarea
+    id: task
+    attributes:
+      label: What were you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What went wrong?
+      description: Describe the barrier. Quote the text if you can.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Where?
+      description: File path and line, or the github.com page address.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - Serious
+        - Moderate
+        - Minor
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: Browser or terminal, operating system, and assistive technology with its version.

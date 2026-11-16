@@ -1,0 +1,18 @@
+name: accessibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: Documentation accessibility check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Markdown against the baseline
+        run: python3 .github/scripts/check-docs.py
