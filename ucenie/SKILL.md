@@ -1,6 +1,6 @@
 ---
 name: ucenie
-description: Karchi's planned learning app for KarchiOS (maturita reading quiz, Anki flashcards and a "learn harness" in one app) and the snoozed e540 thread that holds its plan. Use whenever he talks about a learning or study system, Anki, flashcards, kartičky, opakovanie, spaced repetition, a daily quiz, maturita practice, the maturita Telegram bot or a learn harness, before you propose or build anything for it.
+description: Karchi's planned learning system, one KarchiOS app for maturita practice, flashcards and a "learn harness", whose plan waits in a snoozed e540 thread. Use only when Karchi himself talks about that system: building, choosing or changing a learning or study app or system, putting his flashcards and quizzes in one place, a learn harness, new cards or quizzes for a school subject, or the maturita quiz and its Telegram bot. Never for work on one existing deck or project that merely uses Anki, such as the Katolický atlas rosary deck.
 ---
 
 # Learning app: the plan already exists
@@ -12,12 +12,17 @@ he talks about a learning system again. That thread holds the plan and all the w
 [zober z x270 všetky stiahnuté maturity (ak tu nie ...](t3-thread://v2/93bab4d1-e3e8-41f6-a853-20b3b844f477/d48da998-18e1-4ae9-bf76-5d96673c0255)
 on e540, T3 environment `93bab4d1-e3e8-41f6-a853-20b3b844f477`, thread `d48da998-18e1-4ae9-bf76-5d96673c0255`.
 
-## When it comes up
+## When it applies
+
+Only when Karchi's own message is about the learning system itself (see the description). A thread that
+works on one deck or app and merely uses Anki is not that: on 16. 11. the Katolický atlas thread, asked to
+redo the rosary cards, woke the snoozed plan ten minutes after he snoozed it. Then do nothing: no
+sentence, no wake.
 
 1. Start your reply with one sentence saying the plan exists, with the thread link above.
-2. Wake that thread: `t3_thread_organize` with `action: "unsnooze"`, its `threadId` and the
-   `environmentId` above, then the same call with `action: "mark_unread"`. Outside T3, or when the call
-   fails, say once that the thread is on e540 and go on.
+2. Wake that thread once: `t3_thread_organize` with `action: "unsnooze"`, its `threadId` and the
+   `environmentId` above, then the same call with `action: "mark_unread"`. Skip this when the thread is
+   not snoozed any more. Outside T3, or when the call fails, say once that the thread is on e540 and go on.
 3. Build on the plan below. When his new ask changes it, say what changes; never start a second plan
    beside it.
 
