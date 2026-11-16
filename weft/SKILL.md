@@ -13,8 +13,10 @@ for machine-readable output.
 weft chats [TEXT] [--unread] [--net messenger|instagram|whatsapp|discord|edupage|gmail] [-n 30] [--all]
 weft read CHAT [-n 30]               the chat, oldest first (older pages come from the archive, never from Meta)
 weft search WORDS [--chat CHAT]      homeserver and archive, newest first
-weft draft CHAT TEXT|-               a draft in that chat's message box in Weft; he sends it himself
+weft draft CHAT [TEXT|-] [--file P]  a draft (text, files) in that chat's message box in Weft; he sends it himself
 weft drafts [--clear CHAT]           drafts he has not sent yet
+weft relay CHAT --to FRIEND [--note] when CHAT answers him, a picture of the answer lands as a draft in FRIEND's chat
+weft relays [--cancel ID]            what waits for an answer, and what came of it
 weft send CHAT [TEXT|-] [--file PATH]... [--reply ID] --yes
                                      sends as Karchi (without --yes it only shows what would go where)
 weft send EduPage TEXT --to TEACHER [--file PATH]... --yes      a new EduPage message to one teacher
