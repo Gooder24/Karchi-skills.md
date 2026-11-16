@@ -24,8 +24,10 @@ weft send EduPage TEXT --reply ID [--file PATH]... --yes        an answer in an 
 weft mail TO [TEXT|-] [--subject S] [--cc CC] [--from ACCOUNT] [--file PATH]... --yes
                                      a new mail from his Gmail (first connected account unless --from)
 weft cals | weft cal [--from YYYY-MM-DD] [--days 7] [--cal NAME]
-weft cal-add TITLE --start "YYYY-MM-DD HH:MM" [--end ...|--minutes 60] [--cal NAME] [--location ..] [--notes ..]
-weft cal-edit UID [--title|--start|--end|--location|--notes|--cal ...]   weft cal-del UID
+weft cal-add TITLE --start "YYYY-MM-DD HH:MM" [--end ...|--minutes 60] [--cal NAME] [--location ..] [--notes ..] [REPEAT] [--alarm 15]
+weft cal-edit UID [--title|--start|--end|--location|--notes|--cal ...] [REPEAT] [--alarm MIN|nie]
+weft cal-del UID [--on YYYY-MM-DD]
+  REPEAT: --repeat nie|denne|pracovne|tyzdenne|mesacne|rocne [--every N] [--days po,st | 3st | -1pi] [--count N | --until YYYY-MM-DD]
 ```
 
 CHAT is part of the chat's name (diacritics and case do not matter) or its room id; a name that fits more
@@ -48,5 +50,7 @@ Times are Europe/Bratislava; `--start 2026-11-12` alone is an all-day event.
 - Reading changes nothing in Weft: no read receipts, nothing marked seen. Keep reads small (`-n`), no
   bulk export of his chats, and do not paste his messages into anything outside his machines.
 - Calendar: events of the EduPage timetable (calendar `lifeos-edupage`, uid ending `@lifeos`) belong to a
-  sync program and are refused. `cal-del` on a repeating event deletes the whole series.
+  sync program and are refused. `cal-del` on a repeating event deletes the whole series, with `--on DAY` only
+  that day's occurrence; `cal-edit` changes a series as a whole (Weft itself also offers "only this one" and
+  "this and the following").
 - If `weft` says asus does not answer, say so; do not work around it.
