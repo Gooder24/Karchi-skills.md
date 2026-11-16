@@ -40,9 +40,10 @@ disabled or out of limit, use the other.
    `target.environmentId`. That child has no copy of this checkout: put the
    diff or the documents in `task`, or the pushed branch and repo URL it should
    clone read-only.
-3. No T3 tools (plain Claude Code or Codex CLI, e.g. on rodinnypcl): run the
-   member as a CLI on a Linux machine over ssh, the brief in the prompt and the
-   material as a file:
+3. No T3 tools (plain Claude Code or Codex CLI on a Linux machine): run the
+   member as a CLI on asus over ssh, the brief in the prompt and the material
+   as a file. rodinnypcl cannot reach the other machines: report the members
+   it cannot run there.
 
    ```bash
    git diff <base> > /tmp/council.diff && scp /tmp/council.diff asus:/tmp/
