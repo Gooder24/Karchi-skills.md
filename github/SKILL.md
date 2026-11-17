@@ -1,6 +1,6 @@
 ---
 name: github
-description: How to write on GitHub for Karchi - commit messages, branches, pull requests, issues and comments. Use before any git commit or push, any gh pr or gh issue command, and before writing a PR description or a reply to a review.
+description: How to write on GitHub for Karchi - commit messages, branches, pull requests, issues and comments. Use before any git commit or push, any gh pr or gh issue command, before writing a PR description or a reply to a review, and before writing to another project's bug tracker by mail (Debian BTS).
 ---
 
 # Writing on GitHub
@@ -84,6 +84,18 @@ After opening (in work projects, ask before each push, as above):
 - Attach evidence when filing; do not promise a screenshot "to follow".
 - When you have a fix, tell Karchi in the same reply and, once he asks for the PR, open it with
   `Fixes #N`; an issue that only offers a fix gets fixed by someone else.
+
+## Bug trackers by mail (Debian BTS and similar)
+
+- The first line of the body (after a `Control:` line, if any) says that an AI assistant did the reproduction
+  and the analysis. Never at the end.
+- At most about 15 lines: what is wrong and where, the fix, one or two numbers that show it was tested, the
+  ask. The root-cause walk-through, tables per release, scripts and logs go into attachments or wait until
+  someone asks. Side findings are separate reports, not paragraphs.
+- Evidence (2026-11-17): Debian #1144467 got a 150-line reply with the disclosure as its last paragraph. The
+  maintainer's answer: "Next time please disclose this *before* the wall of mega-verbose text."
+- Send it with `weft mail` only when Karchi says so. Hermes watches a Debian bug that has a line in
+  `~/.hermes/debian-bugs.list` on asus (job "Debian bugs").
 
 ## Babysitting a PR
 
