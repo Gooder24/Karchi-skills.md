@@ -27,7 +27,9 @@ The [Claude Code](#claude-code) section says what it does.
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
-| [`prezentacie`](prezentacie/SKILL.md) | School PowerPoints with real images and a reusable GitHub Primer adaptation |
+| [`prezentacie`](prezentacie/SKILL.md) | Entry point for every presentation: outline, three style previews he picks from, checks before showing |
+| [`frontend-slides`](frontend-slides/SKILL.md) | The look of his presentations: style presets, 34 bold templates, single-file HTML decks, PDF export |
+| [`academic-pptx`](academic-pptx/SKILL.md) | The content of his presentations: narrative spine, action titles, one job per slide, sources |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus: only Hermes reads it, every chat only writes to it; moving threads to asus |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
@@ -73,7 +75,13 @@ Wiring:
 `frontend-design` is `skills/frontend-design` from [anthropics/skills](https://github.com/anthropics/skills)
 (commit ca45fc4, 2026-10-28, Apache-2.0, `LICENSE.txt` kept). `avoid-ai-design` is
 [funboy322/avoid-ai-design](https://github.com/funboy322/avoid-ai-design) without its README, docs and
-examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). To update one, copy the same files from upstream
+examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). `frontend-slides` is
+[zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) without its README, plugin
+copy, `scripts/deploy.sh` and the templates' `template.html` (commit 9906a34, 2026-06-23, MIT, `LICENSE`
+kept). `academic-pptx` is [Gabberflast/academic-pptx-skill](https://github.com/Gabberflast/academic-pptx-skill)
+without its README and PDF (commit 9f2b703, 2026-07-14, MIT, `LICENSE` kept; the `license` line of its
+frontmatter said Proprietary and is corrected). In both, the `description` starts with a pointer to
+`prezentacie`. To update one, copy the same files from upstream
 again. The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).
 
 ## One-off skills

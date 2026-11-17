@@ -44,6 +44,10 @@ Nočný worker je zrušený (Karchi, 2026-11-09): žiadne plánované úlohy, kt
 
 Karchi sa nesmie spoliehať na „hotové“ od agenta, ktorý zmenu robil. Každá odpoveď po ťahu, ktorý niečo zmenil, končí jedným riadkom: `Overenie: <cesta k …/overenie/verdikt.md z tohto ťahu>` (skill overenie, nezávislý verifikátor; spúšťaj ho len cez `overenie/verify.sh`, nikdy ako subagenta ani `delegate_task`, aby nemíňal Claude limit), alebo `Overenie: neoverené – <čo má skúsiť a čo má vidieť>`, alebo `Overenie: netreba – <prečo>`, alebo `Overenie: prebieha – <čo beží>` (len pre prácu mimo tohto vlákna, nikdy pre overovateľa: na ten ťah počká, aby vlákno neskočilo do Done nedokončené). Pri `neoverené` nikde nepíš hotové ani funguje. V Claude Code stop hook `overenie-gate.py` ťah bez tohto riadku raz vráti. Súbory overenia patria do `overenie/` v projekte: ten je v globálnom gitignore na každom stroji, takže sa neukážu v zozname zmien v T3 ani v commite; nikdy ich nedávaj do gitu (`git add -f`). Overovať v prehliadači smieš vždy (skill overenie), len nikdy nie na Karchiho živej obrazovke.
 
+# Prezentácie (Karchi, 2026-11-17)
+
+Každá prezentácia (slajdy, deck, Claude Slides, PowerPoint, HTML, PDF), školská aj pracovná, nová aj upravovaná, sa začína skillom `prezentacie`. Vzhľad a obsah určujú skilly z GitHubu `frontend-slides` a `academic-pptx`; štýl si Karchi vyberá z troch ukážok. Bez neho prezentáciu nestavaj ani neprerábaj, ani keď ju vyrába iný skill alebo typ artefaktu.
+
 # Subagenti (Claude Code)
 
 Karchi chce každého subagenta na Haiku 5.5 s effort xhigh, na všetkých strojoch (od 2026-10-15). `~/.claude/settings.json` vynucuje model (`CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-5-5`, `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`). Effort taký setting nemá: každému volaniu Agent daj `effort: "xhigh"`.

@@ -1,72 +1,100 @@
 ---
 name: prezentacie
-description: Create or revise Karchi's school presentations in editable PowerPoint with real images and a reusable, simple Primer-based style. Use whenever he asks for a presentation, slides, or presentation materials; preserve an explicitly requested different theme.
+description: The entry point for EVERY presentation Karchi asks for, in any form (prezentácia, slajdy, deck, slides, Claude Slides artifact, PowerPoint, HTML, PDF), for school, SOČ, eSYST or himself, new or revised. Read it before any other slide skill or artifact type, and before writing the first slide. It says which GitHub skills design and structure the deck and how he chooses the look.
 ---
 
 # Karchi's presentations
 
-On 2026-11-05 Karchi asked for pictures and a simple but comprehensive design language from GitHub,
-remembered for future presentations. The working default is **GitHub Primer adapted for PowerPoint**,
-not a claim that his older decks used Primer. Older files have several styles; the shared anchors are
-plain readable type, short text, real pictures and the school identity. A new reference from him wins.
+Karchi asked several times for presentation skills from GitHub that are used for every deck. On
+2026-11-05 an agent misread "cez github" as GitHub's Primer design system and built a Primer theme; on
+2026-11-17 he rejected the eSYST workflow deck made with it as "extrémne AI, nezaujímavý a strašne
+stručný" and repeated the request. The answer is the two third-party skills below, vendored in this
+repo. Use them for every presentation, whatever the output format, also when an artifact type
+(Claude Slides) or another skill (`pptx`, `soc`) builds the file.
 
-## Style
+| Half | Skill | What it decides |
+| --- | --- | --- |
+| Look | [`frontend-slides`](../frontend-slides/SKILL.md) (zarazhangrui, MIT) | Style, type, colour, layout system, motion; three previews he chooses from |
+| Content | [`academic-pptx`](../academic-pptx/SKILL.md) (Gabberflast, MIT) | The argument: narrative spine, action titles, one job per slide, sources |
 
-Use the reusable [primer.js](primer.js) rather than inventing new colours and components for each deck.
-Its colours follow [primer/primitives](https://github.com/primer/primitives); the PowerPoint layout and
-components are our adaptation, not an official GitHub presentation template.
+## Order of work
 
-- 16:9, 10 × 5.625 inches, 0.5-inch outside margins; align titles and body content left.
-- White content slides (`FFFFFF`), dark text (`1F2328`), secondary text (`59636E`), subtle panels
-  (`F6F8FA`), borders (`D1D9E0`), blue accent (`0969DA`). Green is a semantic success/status colour.
-- Dark title and closing slide (`0D1117`, text `F0F6FC`). No gradients, decorative grids or shadows.
-- Arial for title and body, Courier New only for identifiers such as patent numbers. Scale in points:
-  display 48, title 26, subtitle 18, lead 14, body 12, small 11, label 10, footer 9. These are for the
-  10-inch canvas; scale with slide size. Prefer larger body text when there is room. Shorten content
-  instead of shrinking it to fit, especially when it will be projected in class.
-- Thin borders, mildly rounded panels, consistent spacing. The theme supports labels, state badges,
-  lists, facts and a timeline; use only the components that serve this presentation. A patent panel
-  belongs to Inventors, not to every future topic. Do not turn every slide into the same three cards.
-- Use genuine topic images with preserved proportions. A portrait can sit beside a short text block;
-  use a drawing or photograph of the object when no reliable portrait exists. Do not fabricate a
-  historical portrait. Give a caption and an original source link; check the licence.
-- Use OATA's logo for school work only when it is present in his supplied material. Read current
-  name/class from that material; do not hard-code III.A into future years.
-- Normal structure: title, contents if useful, topic slides, conclusion, thanks, public bibliography.
-  The topic decides the number of slides, not this example's 15.
+1. **Read both skills** (their `SKILL.md`; from `academic-pptx` also `content_guidelines.md`).
+2. **Outline first.** One line per slide: an action title (a full sentence with the takeaway) and what
+   the slide shows. The titles read in order must tell the whole argument (ghost deck test). Put the
+   outline in the thread with the previews; do not ask about it separately.
+3. **Three style previews**, as `frontend-slides` Phase 2 says: one safe preset, one bold template, one
+   wildcard. Each preview is the real title slide plus one real content slide of this deck, so he sees
+   the density too. Render them to PNG and show them in the thread. Skip the previews only when he
+   named the style, or when the deck continues one whose style he already picked (list below).
+4. **He picks, then build the whole deck** in that style: read that template's `design.md`, follow
+   `frontend-slides` Phase 3.
+5. **Check before showing** (below), then deliver.
 
-## His files and school constraint
+Do not ask the Phase 1 questions of `frontend-slides`; take purpose, length and content from the
+thread. Density: a deck he or someone else reads alone is reading-first (high density); a deck he
+presents out loud is speaker-led.
+
+## What his feedback rules out
+
+- **Thin slides.** A title over three small cards with one line each, on a slide that is half empty.
+  The content of a slide fills at least about 70 % of the area under the title. A reading deck carries
+  the real substance: numbers, names of steps, the example, the reason, what happens when it fails.
+- **The same layout again and again.** No more than two slides in a row with the same structure, and
+  not every slide a row of cards.
+- **Default looks**: a dark cover with white content slides and one blue accent, system fonts,
+  everything in rounded grey panels. `frontend-slides` lists more under "DO NOT USE".
+- **Topic-label titles** ("Náklady", "Riziká"). The title says what the slide shows.
+- Where the two skills disagree, `frontend-slides` wins on the look and `academic-pptx` on the content:
+  its Step 3 (white background, navy, Arial, no palette) and its limit of 40 words per slide apply only
+  to a deck that is presented out loud to a committee, and even there the style is one he picked.
+
+## Pictures and facts
+
+Use genuine pictures of the subject (a photo, a screenshot of the real system, a real diagram of the
+real thing) with preserved proportions, a caption and the original source link; check the licence. Do
+not fabricate a historical portrait. A deck about software shows the software. Numbers and claims need
+a source on the slide or in a closing sources slide; never invent one.
+
+## Output format
+
+- **HTML** (default for work and for sharing a link): the single file `frontend-slides` produces. Give
+  him a link he can open: publish it as a private artifact, or the file path. Never deploy to Vercel or
+  any other outside host (its `deploy.sh` is not vendored); PDF with `frontend-slides/scripts/export-pdf.sh`.
+- **Claude Slides artifact**: the artifact type is only the container. The style and content still come
+  from the two skills; all look lives in the deck's own CSS.
+- **PowerPoint** (school asks for an editable `.pptx`; it must open in OnlyOffice on x270): build the
+  chosen style with the `pptx` skill and pptxgenjs. [primer.js](primer.js),
+  [scripts/apply_theme.js](scripts/apply_theme.js) and [assets/starter.js](assets/starter.js) remain as
+  helpers for masters, footer, slide numbers, `P.photo()` (fits an image without stretching) and the
+  editable theme palette; replace their Primer colours and Arial with the chosen style's. Render through
+  LibreOffice to PDF and inspect every slide image; keep text editable.
+
+## Check before showing
+
+- Render every slide to PNG at 1920×1080 and look at each: no overflow, no overlap, no slide left half
+  empty, text readable.
+- Run `node ~/.work/karchi-skills/avoid-ai-design/scripts/detect.mjs <files>` and fix every P0 and P1; a
+  deliberate part of the chosen template is kept with `avoid-ai-design-ignore: <ID>`.
+- Ghost deck test on the final titles. Slovak text with full diacritics; check that the chosen fonts
+  have ľ, š, č, ť, ž, ý, á, í, é, ú, ä, ô, ň, ď, ŕ, ĺ.
+- Show him the rendered slides in the thread, not only a link.
+
+## Styles he has picked
+
+None yet. When he picks a style for a kind of deck (eSYST, school, SOČ), write it here with the date,
+so the next deck of that kind starts in it without new previews.
+
+## School
 
 Read `~/school/CLAUDE.md` on x270 before preparing a school submission. The rule known on 2026-11-05:
 no private presenter script, timings, internal suggestions, TODOs, comments or speaker notes in the
-submitted file. Those belong in chat. A public bibliography/image attribution is audience content,
-not private research notes. Source-by-source fact checking stays outside the submission.
+submitted file; those belong in chat. A public bibliography and image attribution is audience content.
+Use OATA's logo only when it is in his supplied material; read the current name and class from that
+material. His school files are on x270 under `~/school/`; inspect the actual assignment for language
+and length. `~/work/inventors/` on asus holds the first deck made with the old Primer theme, its photos
+and PDF.
 
-His school files are on x270 under `~/school/`; OKA's reference was
-`OKA/13 SCIENCE AND TECHNOLOGY.pptx` (English). This does not make every future deck English: inspect
-the actual assignment. Earlier examples included Teplička nad Váhom, Hypertext, Schoolinfo and Riskuj.
-Build work can run on asus; `~/work/inventors/` contains the first deck using this style, its photos
-and rendered PDF. Do not depend on its node_modules symlink for a new project.
-
-## Build and delivery
-
-Copy `primer.js`, [scripts/apply_theme.js](scripts/apply_theme.js), and
-[assets/starter.js](assets/starter.js) into the new build directory. Install `pptxgenjs@4.0.1` there
-if no suitable project dependency exists. The starter shows the actual API:
-
-```sh
-node starter.js Example.pptx
-```
-
-`P.setup()` adds LIGHT/DARK masters, footer and slide numbering. `P.photo()` contains an image in its
-box without stretching; pass `{url: originalSource}` for attribution. After `writeFile`, call
-`applyTheme(output, P.THEME)` so the editable PowerPoint palette also says Primer.
-
-Render through LibreOffice to PDF, then inspect every slide image. Check wrapping, captions, photo
-proportions and alignment; a PPTX XML validator alone cannot prove the layout. Inspect the actual
-final exported file, not a previous build. Preserve editable text; don't flatten slides into pictures.
-
-Deliver linked PPTX and PDF in the working thread. If the current request includes x270 delivery,
-copy to its `~/Downloads` (keep an existing differing version as a backup) and compare checksums.
-Do not claim that a file reached x270 if it is offline. Do not embed private verification notes in the
-presentation. Avoid making the user run a build or copy command you can run yourself.
+Deliver linked files in the working thread. If the request includes x270 delivery, copy to its
+`~/Downloads` (keep an existing differing version as a backup) and compare checksums; do not claim a
+file reached x270 if it is offline. Do not make him run a build or copy command you can run yourself.

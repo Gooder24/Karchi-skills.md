@@ -18,14 +18,17 @@ says now applies.
   kalendarix built right into the calendar I have in the widget, not next to it as an icon").
 - **A polished presentation.** A functional but bare listing is not enough ("nicer… not just so primitive").
 
-## School presentations
+## Presentations
 
-- Use the `prezentacie` skill and its reusable **GitHub Primer** adaptation for new presentations,
-  unless Karchi supplies another reference. Real pictures, plain readable type, short text, white
-  content slides and dark opening/closing slides. This is the new default, not a claim that all his
-  older decks had the same style (2026-11-05: „daj tam aspoň fotku… ak si ho nenašiel tak nájdi nový
-  napíš si ho teda vždy keď vytváraš prezentácie tak nech ho použiješ… cez github… celkom simple
-  dizajn language“). Full rules and reusable PowerPoint components: `prezentacie/SKILL.md`.
+- Every presentation, in any format and for any audience, starts at the `prezentacie` skill. It uses two
+  skills from GitHub: `frontend-slides` for the look (three style previews, he picks) and `academic-pptx`
+  for the argument (2026-11-05: „daj tam aspoň fotku… ak si ho nenašiel tak nájdi nový napíš si ho teda
+  vždy keď vytváraš prezentácie tak nech ho použiješ… cez github“; 2026-11-17, after an agent had built
+  a GitHub Primer theme instead: „nájsť po Xtý krát ako som ti vravel na githube skills ktoré budeš
+  používať na každú prezentáciu ktorú kedy vytvoríš“).
+- He rejects a deck that looks generated and says little („extrémne AI a nezaujímavý a proste strašne
+  stručný“, 2026-11-17, about a dark cover, white slides, one blue accent and three small cards per
+  slide). Slides carry real substance and real pictures of the subject.
 
 ## Less is more
 
