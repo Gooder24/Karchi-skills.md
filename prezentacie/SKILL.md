@@ -95,8 +95,17 @@ a source on the slide or in a closing sources slide; never invent one.
 
 ## Styles he has picked
 
-None yet. When he picks a style for a kind of deck (eSYST, school, SOČ), write it here with the date,
-so the next deck of that kind starts in it without new previews.
+When he picks a style for a kind of deck (eSYST, school, SOČ), write it here with the date, so the next
+deck of that kind starts in it without new previews.
+
+- **eSYST (work decks), 2026-11-17: Swiss.** White, black and one red (#ff3300), Archivo 800 for titles,
+  Nunito for text, JetBrains Mono for commands and paths, a visible column grid every 160 px, 80 px
+  margins, red marks the human or the open decision. He presents these himself on a laptop, so they are
+  speaker-led: each slide is mainly one drawing of the thing he is explaining (a map, a track, a
+  comparison), with the labels and numbers he needs to explain it, not paragraphs. First deck:
+  asus `~/projects/esyst-firma/prezentacia/esyst-workflowy.html`, source and build in
+  `~/projects/esyst-firma/overenie/navrh/prezentacia/` (`build.py` embeds the fonts, `render.sh` renders
+  every slide and runs the overflow check).
 
 ## School
 
