@@ -12,7 +12,7 @@ relevant checks. Give council the updated implementation; do not defer known
 fixes until reviews return. If the user wants to discard the implementation
 and explore new ideas, skip fixes to code being replaced.
 
-## Members (Karchi, 2026-11-16)
+## Members (Karchi, 2026-11-17)
 
 Unless Karchi names other members in his request, the council is exactly these
 three, one per provider:
@@ -20,7 +20,7 @@ three, one per provider:
 | Member | `providerInstanceId` | `model` | `options` |
 | --- | --- | --- | --- |
 | Claude Opus 5.5 | `claudeAgent` | `claude-opus-5-5` | `{effort: "high"}` |
-| GPT Sol 6.1 | `codex` (or `codex_infowork`) | `gpt-6.1-sol` | `{reasoningEffort: "high"}` |
+| GPT Sol 6.2 | `codex` (or `codex_infowork`) | `gpt-6.2-sol` | `{reasoningEffort: "high"}` |
 | DeepSeek Flash 4.1 | `opencode` | `opencode/deepseek-v4.1-flash-free` | `{variant: "high"}` |
 
 Check the IDs with `orchestrator_capabilities` (`search` finds a model the
@@ -50,7 +50,7 @@ disabled or out of limit, use the other.
    ssh asus 'opencode run --archived -m "opencode/deepseek-v4.1-flash-free#high" -f /tmp/council.diff "<brief>"'
    ```
 
-   Sol the same way with `codex exec -m gpt-6.1-sol -c model_reasoning_effort=high`,
+   Sol the same way with `codex exec -m gpt-6.2-sol -c model_reasoning_effort=high`,
    Opus with `claude -p --model claude-opus-5-5 --effort high`.
 
 If a member cannot run anywhere, report which and why instead of substituting
@@ -85,7 +85,7 @@ Rounds: 2
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
-| GPT Sol 6.1 | 8/10 | 10/10 |
+| GPT Sol 6.2 | 8/10 | 10/10 |
 | DeepSeek Flash 4.1 | 7/10 | 9/10 |
 ```
 
