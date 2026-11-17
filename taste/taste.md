@@ -52,6 +52,11 @@ says now applies.
   as soon as it opens; manual adjustment stays possible.
 - **Settings belong in Settings.** What he wants to tune (touchpad sensitivity, rounding, battery
   mode) should be visible and selectable in the UI, not in a config file.
+- **No password for light features** ("tieto ľahké features nemôžu mať authentifikáciu", 17. 11. 2026, after
+  picking the battery to run from asked for one). Toggles he flips often (battery to run from, Hold, charge limit,
+  power profile, brightness and the like) must never ask for a password or pkexec: give the files or the action to
+  his group (udev rule, tmpfiles, a narrow polkit rule) and make the write itself succeed. Where you think
+  authentication really belongs, ask him first and say why; he decides.
 - **Directly readable information** alongside a smart shortcut: the Wi-Fi password as text, not just a QR code.
 - **Context-aware controls.** Brightness changes only on the monitor where the cursor is.
 - **Use the whole screen** and page through with a touchpad gesture.
