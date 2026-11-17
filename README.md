@@ -76,12 +76,14 @@ Wiring:
 (commit ca45fc4, 2026-10-28, Apache-2.0, `LICENSE.txt` kept). `avoid-ai-design` is
 [funboy322/avoid-ai-design](https://github.com/funboy322/avoid-ai-design) without its README, docs and
 examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). `frontend-slides` is
-[zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) without its README, plugin
-copy, `scripts/deploy.sh` and the templates' `template.html` (commit 9906a34, 2026-06-23, MIT, `LICENSE`
-kept). `academic-pptx` is [Gabberflast/academic-pptx-skill](https://github.com/Gabberflast/academic-pptx-skill)
+[zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) without its README, `.gitignore`,
+`.claude-plugin`, `plugins` copy, `bold-template-pack/README.md` and `scripts/deploy.sh` (commit 9906a34,
+2026-06-23, MIT, `LICENSE` kept); `scripts/export-pdf.sh` is changed: its server listens only on
+127.0.0.1 and serves only the deck's folder, it uses `/usr/bin/chromium` when there is one instead of
+downloading a browser, and it no longer opens the PDF. `academic-pptx` is [Gabberflast/academic-pptx-skill](https://github.com/Gabberflast/academic-pptx-skill)
 without its README and PDF (commit 9f2b703, 2026-07-14, MIT, `LICENSE` kept; the `license` line of its
 frontmatter said Proprietary and is corrected). In both, the `description` starts with a pointer to
-`prezentacie`. To update one, copy the same files from upstream
+`prezentacie` and a note under the title says what `prezentacie` overrides. To update one, copy the same files from upstream
 again. The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).
 
 ## One-off skills

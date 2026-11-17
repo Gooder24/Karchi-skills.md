@@ -45,9 +45,17 @@ presents out loud is speaker-led.
 - **Default looks**: a dark cover with white content slides and one blue accent, system fonts,
   everything in rounded grey panels. `frontend-slides` lists more under "DO NOT USE".
 - **Topic-label titles** ("Náklady", "Riziká"). The title says what the slide shows.
-- Where the two skills disagree, `frontend-slides` wins on the look and `academic-pptx` on the content:
-  its Step 3 (white background, navy, Arial, no palette) and its limit of 40 words per slide apply only
-  to a deck that is presented out loud to a committee, and even there the style is one he picked.
+
+## What of the two skills does not apply
+
+- `frontend-slides`: the Phase 1 questions (above); `open <file>` in Phase 2 and 5 (these machines have no
+  display: render to PNG and show the images in the thread); all of Phase 6: do not ask about sharing,
+  and never use Vercel or any other outside host.
+- `academic-pptx`: all of Step 3 (white background, navy, Arial, no palette, no icons). The look always
+  comes from the style he picked, also for a committee. Its limit of about 40 words per slide holds only
+  for a deck presented out loud; a reading deck is denser.
+- Both: nothing is installed globally (`npm install -g`, `pip install` into the system, `brew`). What a
+  build needs goes into the build directory (`npm install` there, a Python venv).
 
 ## Pictures and facts
 
@@ -60,11 +68,14 @@ a source on the slide or in a closing sources slide; never invent one.
 
 - **HTML** (default for work and for sharing a link): the single file `frontend-slides` produces. Give
   him a link he can open: publish it as a private artifact, or the file path. Never deploy to Vercel or
-  any other outside host (its `deploy.sh` is not vendored); PDF with `frontend-slides/scripts/export-pdf.sh`.
+  any other outside host (its `deploy.sh` is not vendored). PDF: `frontend-slides/scripts/export-pdf.sh`,
+  which here serves the deck only to this machine, uses the system Chromium and installs the Playwright
+  package into a temporary folder.
 - **Claude Slides artifact**: the artifact type is only the container. The style and content still come
   from the two skills; all look lives in the deck's own CSS.
 - **PowerPoint** (school asks for an editable `.pptx`; it must open in OnlyOffice on x270): build the
-  chosen style with the `pptx` skill and pptxgenjs. [primer.js](primer.js),
+  chosen style with pptxgenjs, following Anthropic's `pptx` skill where the agent has one
+  (`anthropic-skills:pptx` in Claude Code; Codex has none and works from the helpers here). [primer.js](primer.js),
   [scripts/apply_theme.js](scripts/apply_theme.js) and [assets/starter.js](assets/starter.js) remain as
   helpers for masters, footer, slide numbers, `P.photo()` (fits an image without stretching) and the
   editable theme palette; replace their Primer colours and Arial with the chosen style's. Render through

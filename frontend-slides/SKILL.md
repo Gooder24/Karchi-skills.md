@@ -5,6 +5,10 @@ description: The look of Karchi's presentations; start at the `prezentacie` skil
 
 # Frontend Slides
 
+> **Karchi's copy.** [`prezentacie`](../prezentacie/SKILL.md) is the entry point and overrides this file:
+> no Phase 1 questions, no `open` of files, no Phase 6 question and no Vercel (Phase 6A is void), nothing
+> installed globally. The bold templates here have only `design.md` and `preview.md`, no `template.html`.
+
 Create zero-dependency, animation-rich HTML presentations that run entirely in the browser.
 
 ## Core Principles

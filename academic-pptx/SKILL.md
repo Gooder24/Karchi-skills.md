@@ -6,6 +6,10 @@ license: MIT. Complete terms in LICENSE
 
 # Academic Presentations Skill
 
+> **Karchi's copy.** [`prezentacie`](../prezentacie/SKILL.md) is the entry point and overrides this file:
+> only the content rules apply (Steps 1, 2 and the checklist in Step 4). Step 3 (colour, type, layout) is
+> void: the look comes from `frontend-slides`. Install nothing globally.
+
 ## How This Skill Works
 
 This skill has two layers:

@@ -136,7 +136,7 @@ cat > "$TEMP_SCRIPT" << 'EXPORT_SCRIPT'
 import { chromium } from 'playwright';
 import { createServer } from 'http';
 import { readFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
-import { join, extname, resolve } from 'path';
+import { join, extname, resolve, sep } from 'path';
 import { execSync } from 'child_process';
 
 const SERVE_DIR = process.argv[2];
@@ -169,7 +169,10 @@ const MIME_TYPES = {
 const server = createServer((req, res) => {
   // Decode URL-encoded characters (e.g., %20 → space) so filenames with spaces resolve correctly
   const decodedUrl = decodeURIComponent(req.url);
-  let filePath = join(SERVE_DIR, decodedUrl === '/' ? HTML_FILE : decodedUrl);
+  // Karchi's copy: serve only files inside the presentation folder.
+  const root = resolve(SERVE_DIR);
+  const filePath = resolve(root, '.' + (decodedUrl === '/' ? '/' + HTML_FILE : decodedUrl.split('?')[0]));
+  if (!filePath.startsWith(root + sep)) { res.writeHead(403); res.end('Forbidden'); return; }
   try {
     const content = readFileSync(filePath);
     const ext = extname(filePath).toLowerCase();
@@ -183,20 +186,22 @@ const server = createServer((req, res) => {
 
 // Find a free port
 const port = await new Promise((resolve) => {
-  server.listen(0, () => resolve(server.address().port));
+  server.listen(0, '127.0.0.1', () => resolve(server.address().port)); // Karchi's copy: this machine only
 });
 
 console.log(`  Local server on port ${port}`);
 
 // ─── Screenshot each slide ────────────────────────────────
 
-const browser = await chromium.launch();
+// Karchi's copy: the system Chromium when there is one, so nothing is downloaded.
+const SYSTEM_CHROMIUM = existsSync('/usr/bin/chromium') ? { executablePath: '/usr/bin/chromium' } : {};
+const browser = await chromium.launch(SYSTEM_CHROMIUM);
 const page = await browser.newPage({
   viewport: { width: VP_WIDTH, height: VP_HEIGHT },
 });
 
 // Load the presentation
-await page.goto(`http://localhost:${port}/`, { waitUntil: 'networkidle' });
+await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
 
 // Wait for fonts to load
 await page.evaluate(() => document.fonts.ready);
@@ -291,7 +296,7 @@ server.close();
 
 console.log('  Assembling PDF...');
 
-const browser2 = await chromium.launch();
+const browser2 = await chromium.launch(SYSTEM_CHROMIUM);
 const pdfPage = await browser2.newPage();
 
 // Build an HTML page with all screenshots, one per page
@@ -365,7 +370,7 @@ npm install playwright &>/dev/null || {
 }
 
 # Ensure Chromium browser binary is downloaded
-npx playwright install chromium 2>/dev/null || {
+[ -x /usr/bin/chromium ] || npx playwright install chromium 2>/dev/null || {
     err "Failed to install Chromium browser for Playwright."
     err "Try running manually: npx playwright install chromium"
     rm -rf "$TEMP_DIR"
@@ -410,9 +415,4 @@ echo "  Note: Animations are not preserved (it's a static export)."
 echo -e "${BOLD}════════════════════════════════════════${NC}"
 echo ""
 
-# Open the PDF automatically
-if command -v open &>/dev/null; then
-    open "$OUTPUT_PDF"
-elif command -v xdg-open &>/dev/null; then
-    xdg-open "$OUTPUT_PDF"
-fi
+# Karchi's copy: the PDF is not opened; the agent links it in the thread.
