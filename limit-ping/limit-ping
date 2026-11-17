@@ -183,20 +183,25 @@ def run(lane, now):
     cfg = LANES[lane]
     ok, (used, reset), week, out = ping_codex(cfg["home"]) if "home" in cfg else ping_claude()
     now = time.time()
+    weekly = False
     if not ok and not (reset and reset > now):
         reset = said_reset(out, now)
-        last = load(lane).get("week") or {}
+        try:
+            last_reset = float(load(lane)["week"]["resets"])
+        except (KeyError, TypeError, ValueError):
+            last_reset = 0
         # Only the weekly limit lasts longer than a window; a shorter wait is the weekly one when it ends
         # when the week last seen ends.
-        if reset and (reset - now > WINDOW or abs(reset - float(last.get("resets", 0))) <= 15 * 60):
+        weekly = bool(reset) and (reset - now > WINDOW or abs(reset - last_reset) <= 15 * 60)
+        if weekly:
             week = (100.0, int(reset))
     if ok:
         nxt, note = after_ping(lane, now, reset)
         info = f"used={used or 0:g}% resets={clock(reset)}" if reset else "(no window info)"
         log(lane, f"ok {info}" + (f"; {note}" if note else ""))
     elif reset and reset > now:  # limit used up: ping again when it resets
-        # Longer than a window means the weekly limit: wait for the first slot after it.
-        nxt, note = chain_after(lane, now, reset) if reset - now <= WINDOW else (next_slot(lane, reset), None)
+        # The weekly limit: wait for the first slot after it.
+        nxt, note = (next_slot(lane, reset), None) if weekly else chain_after(lane, now, reset)
         log(lane, f"FAIL limit used up until {clock(reset)}; {note or 'next ping ' + clock(nxt)}")
     else:
         nxt = retry_at(lane, now)
@@ -213,9 +218,11 @@ def main():
                 print(f"{lane:15} not started yet")
                 continue
             w = state.get("week")
-            w = w if isinstance(w, dict) and {"used", "resets", "seen"} <= w.keys() else None
-            week = (f"   week {w['used']:g}% used, resets {datetime.fromtimestamp(w['resets']):%a %d.%m. %H:%M}"
-                    f" (seen {datetime.fromtimestamp(w['seen']):%a %H:%M})") if w else ""
+            try:
+                week = (f"   week {w['used']:g}% used, resets {datetime.fromtimestamp(w['resets']):%a %d.%m. %H:%M}"
+                        f" (seen {datetime.fromtimestamp(w['seen']):%a %H:%M})") if w else ""
+            except (KeyError, TypeError, ValueError, OverflowError, OSError):
+                week = "   week unreadable"
             print(f"{lane:15} next ping {datetime.fromtimestamp(state['next']):%a %H:%M}{week}")
         return
     import fcntl
