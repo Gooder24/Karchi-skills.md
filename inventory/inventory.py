@@ -79,6 +79,7 @@ KNOWN = {
     ("asus", "diktovanie"): ("áno", CLAUDE, "Whisper lokálne + Haiku 5.5", "prepis reči pre voxtype na x270, text čistí Haiku"),
     ("asus", "spevnik-audio"): ("áno", CLAUDE, "Whisper, demucs lokálne + Haiku 5.5", "import piesne z nahrávky (akordy, text, tagy)"),
     ("asus", "prehlad"): ("nie", "", "", "Prehľad dvora: táto stránka, číta stroje každých 30 min"),
+    ("asus", "spotrex-demo"): ("nie", "", "", "SPOTREX: rozúčtovanie nanečisto, spotrex.dvoriste.xyz"),
     ("asus", "Nočný worker"): ("áno", CLAUDE, None, "revízia inboxu a jedna položka za noc"),
     ("dell", "t3-context"): ("nie", "", "", "export tvojich T3 správ zo všetkých strojov"),
     ("dell", "partsheet-sync"): ("nie", "", "", "Partsheet: piesne zo spevnik.mustangy.sk"),
