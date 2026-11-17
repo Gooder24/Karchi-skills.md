@@ -20,7 +20,7 @@ A model trained on a decade of Tailwind tutorials, shadcn starters, and GitHub s
 
 **First order: the median.** The purple gradient, Inter, the centered hero over three icon cards, untouched shadcn. This is what "AI slop" meant in 2024-25, and what most of this catalog was first built to catch.
 
-**Second order: the tasteful escape.** Once everyone learned to avoid the purple gradient, the escapes converged too. Anthropic's own `frontend-design` skill now lists five clusters that AI design gathers around ([source 14](#sources)):
+**Second order: the tasteful escape.** Once everyone learned to avoid the purple gradient, the escapes converged too. Anthropic's own `frontend-design` skill now lists five clusters that AI design gathers around ([Anthropic frontend-design skill (see Sources)](#sources)):
 
 1. a warm cream ground with a high-contrast serif and a terracotta or clay accent;
 2. a near-black ground with a single acid-green or vermilion accent;
