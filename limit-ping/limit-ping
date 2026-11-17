@@ -14,8 +14,12 @@ window ends, or right away. Such catch-up pings stop 5 h before the lane's first
 day, so the night gap brings every lane back to its plan. Claude's 01:00 window only lines up
 06:00, so it is never caught up later than 01:09 (Claude counts windows from 10-minute marks).
 
+Each ping also records the lane's weekly limit as last seen ("week": used % and reset time), which
+the Hermes job "Nevyužitý limit" on asus reads (~/.hermes/scripts/limit-leftover.py). A Codex account
+whose weekly limit is used up waits for the weekly reset instead of retrying every 10 minutes.
+
   limit-ping          run due lanes (the timer)
-  limit-ping status   next ping of each lane
+  limit-ping status   next ping and last seen weekly limit of each lane
 State: ~/.local/state/limit-ping/<lane>.json, log: ~/.local/state/limit-ping/log
 """
 import glob, json, os, re, subprocess, sys, time
@@ -100,7 +104,9 @@ def ping_claude():
          "--no-session-persistence", "--setting-sources", "local", "--output-format", "stream-json",
          "--verbose"], cwd=DIR, capture_output=True, text=True, timeout=300).stdout
     m = re.search(r'"five_hour":\{"utilization":([0-9.]+),"resetsAt":([0-9]+)', out)
-    return '"is_error":false' in out, (float(m[1]) * 100, int(m[2])) if m else (None, None), out
+    w = re.search(r'"seven_day":\{"utilization":([0-9.]+),"resetsAt":([0-9]+)', out)
+    return ('"is_error":false' in out, (float(m[1]) * 100, int(m[2])) if m else (None, None),
+            (float(w[1]) * 100, int(w[2])) if w else None, out)
 
 
 def ping_codex(home):
@@ -111,21 +117,29 @@ def ping_codex(home):
          "Reply with the single word: ok"], cwd=DIR, env=env, stdin=subprocess.DEVNULL,
         capture_output=True, text=True, timeout=300).stdout
     m = re.search(r'"thread_id":"([^"]+)"', out)
-    win = (None, None)
+    win, week = (None, None), None
     if m:
         # The rate limits come only in the session file; delete it so it stays out of the threads.
         for f in glob.glob(f"{home}/sessions/*/*/*/*{m[1]}.jsonl"):
-            lim = re.findall(r'"primary":\{"used_percent":([0-9.]+),"window_minutes":300,"resets_at":([0-9]+)',
-                             open(f).read())
+            text = open(f).read()
+            lim = re.findall(r'"primary":\{"used_percent":([0-9.]+),"window_minutes":300,"resets_at":([0-9]+)', text)
             if lim:
                 win = (float(lim[-1][0]), int(lim[-1][1]))
+            lim = re.findall(r'"secondary":\{"used_percent":([0-9.]+),"window_minutes":10080,"resets_at":([0-9]+)',
+                             text)
+            if lim:
+                week = (float(lim[-1][0]), int(lim[-1][1]))
         subprocess.run([f"{H}/.local/bin/codex", "delete", "--force", m[1]], env=env, capture_output=True,
                        timeout=60)
-    return '"type":"turn.completed"' in out, win, out
+    return '"type":"turn.completed"' in out, win, week, out
 
 
 def said_reset(out, now):
-    """Reset time from a used-up limit message: Codex "try again at 9:41 PM", Claude "resets 2am"."""
+    """Reset time from a used-up limit message: Codex "try again at 9:41 PM" or, for the weekly limit,
+    "try again at Nov 18th, 2026 5:56 PM"; Claude "resets 2am"."""
+    m = re.search(r"try again at ([A-Z][a-z]{2}) (\d{1,2})(?:st|nd|rd|th)?, (\d{4}) (\d{1,2}):(\d{2}) ?([AaPp][Mm])", out)
+    if m:
+        return datetime.strptime(f"{m[1]} {m[2]} {m[3]} {m[4]}:{m[5]} {m[6].upper()}", "%b %d %Y %I:%M %p").timestamp()
     m = re.search(r"(?:try again at|resets) (\d{1,2})(?::(\d{2}))? ?([AaPp][Mm])", out)
     if not m:
         return None
@@ -134,8 +148,20 @@ def said_reset(out, now):
     return (t if t.timestamp() > now else t + timedelta(days=1)).timestamp()
 
 
-def save(lane, nxt):
-    json.dump({"next": nxt}, open(f"{DIR}/{lane}.json", "w"))
+def load(lane):
+    try:
+        state = json.load(open(f"{DIR}/{lane}.json"))
+        return state if isinstance(state, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save(lane, nxt, week=None):
+    state = load(lane)
+    state["next"] = nxt
+    if week:
+        state["week"] = {"used": week[0], "resets": week[1], "seen": int(time.time())}
+    json.dump(state, open(f"{DIR}/{lane}.json", "w"))
 
 
 def retry_at(lane, now):
@@ -145,8 +171,8 @@ def retry_at(lane, now):
 
 def run(lane, now):
     try:
-        due = float(json.load(open(f"{DIR}/{lane}.json"))["next"])
-    except (OSError, ValueError, KeyError, TypeError):  # first run or lost state: catch up the last slot
+        due = float(load(lane)["next"])
+    except (ValueError, KeyError, TypeError):  # first run or lost state: catch up the last slot
         due = prev_slot(lane, now)
     if now < due:
         return
@@ -155,10 +181,12 @@ def run(lane, now):
         log(lane, f"missed {clock(due)}, too late to catch up, next ping {clock(nxt)}")
         return save(lane, nxt)
     cfg = LANES[lane]
-    ok, (used, reset), out = ping_codex(cfg["home"]) if "home" in cfg else ping_claude()
+    ok, (used, reset), week, out = ping_codex(cfg["home"]) if "home" in cfg else ping_claude()
     now = time.time()
     if not ok and not (reset and reset > now):
         reset = said_reset(out, now)
+        if reset and reset - now > WINDOW:  # only the weekly limit lasts longer than a window
+            week = (100.0, int(reset))
     if ok:
         nxt, note = after_ping(lane, now, reset)
         info = f"used={used or 0:g}% resets={clock(reset)}" if reset else "(no window info)"
@@ -170,17 +198,21 @@ def run(lane, now):
     else:
         nxt = retry_at(lane, now)
         log(lane, f"FAIL, next try {clock(nxt)}: " + " ".join(out[-300:].split()))
-    save(lane, nxt)
+    save(lane, nxt, week)
 
 
 def main():
     os.makedirs(DIR, exist_ok=True)
     if sys.argv[1:] == ["status"]:
         for lane in LANES:
-            try:
-                print(f"{lane:15} next ping {datetime.fromtimestamp(json.load(open(f'{DIR}/{lane}.json'))['next']):%a %H:%M}")
-            except (OSError, ValueError, KeyError):
+            state = load(lane)
+            if "next" not in state:
                 print(f"{lane:15} not started yet")
+                continue
+            w = state.get("week")
+            week = (f"   week {w['used']:g}% used, resets {datetime.fromtimestamp(w['resets']):%a %d.%m. %H:%M}"
+                    f" (seen {datetime.fromtimestamp(w['seen']):%a %H:%M})") if w else ""
+            print(f"{lane:15} next ping {datetime.fromtimestamp(state['next']):%a %H:%M}{week}")
         return
     import fcntl
     lock = open(f"{DIR}/.lock", "w")
