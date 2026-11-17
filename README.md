@@ -39,7 +39,7 @@ The [Claude Code](#claude-code) section says what it does.
 | [`weft`](weft/SKILL.md) | `weft` on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
-| [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high) and DeepSeek Flash 4.1 (OpenCode), on another machine when this one cannot run a member |
+| [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high) and Kimi K3.1 Pro (OpenCode Go), on another machine when this one cannot run a member |
 | `full-send`, `full-stop`, `sol-loop`, `file-pr`, `takeover`, `babysit-pr`, `modernize`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
 
 ## Hooks

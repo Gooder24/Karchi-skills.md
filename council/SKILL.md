@@ -21,11 +21,12 @@ three, one per provider:
 | --- | --- | --- | --- |
 | Claude Opus 5.5 | `claudeAgent` | `claude-opus-5-5` | `{effort: "high"}` |
 | GPT Sol 6.2 | `codex` (or `codex_infowork`) | `gpt-6.2-sol` | `{reasoningEffort: "high"}` |
-| DeepSeek Flash 4.1 | `opencode` | `opencode/deepseek-v4.1-flash-free` | `{variant: "high"}` |
+| Kimi K3.1 Pro | `opencode` | `opencode-go/kimi-k3.1-pro` | `{variant: "high"}` |
 
 Check the IDs with `orchestrator_capabilities` (`search` finds a model the
 short list omits). The two Codex instances are two accounts; when one is
-disabled or out of limit, use the other.
+disabled or out of limit, use the other. Kimi runs on Karchi's OpenCode Go
+subscription (account karollupi6, logged in on dell, asus and e540).
 
 ## Where each member runs
 
@@ -47,15 +48,17 @@ disabled or out of limit, use the other.
 
    ```bash
    git diff <base> > /tmp/council.diff && scp /tmp/council.diff asus:/tmp/
-   ssh asus 'opencode run --archived -m "opencode/deepseek-v4.1-flash-free#high" -f /tmp/council.diff "<brief>"'
+   ssh asus 'opencode run --archived -m "opencode-go/kimi-k3.1-pro#high" -f /tmp/council.diff "<brief>"'
    ```
 
    Sol the same way with `codex exec -m gpt-6.2-sol -c model_reasoning_effort=high`,
    Opus with `claude -p --model claude-opus-5-5 --effort high`.
 
 If a member cannot run anywhere, report which and why instead of substituting
-another model. "Free usage limit reached" from OpenCode is shared by every home
-machine (one public IP): another machine does not help, report it.
+another model. One exception: when OpenCode Go reports its usage limit for
+Kimi, run `opencode/deepseek-v4.1-flash-free` (variant high) in its place and
+say so in the report. Both limits are shared by every home machine (one Go
+account, one public IP for the free model): another machine does not help.
 
 ## Running it
 
@@ -86,7 +89,7 @@ Rounds: 2
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
 | GPT Sol 6.2 | 8/10 | 10/10 |
-| DeepSeek Flash 4.1 | 7/10 | 9/10 |
+| Kimi K3.1 Pro | 7/10 | 9/10 |
 ```
 
 If a delegate gives no score, write `no score`. Do not invent one.
