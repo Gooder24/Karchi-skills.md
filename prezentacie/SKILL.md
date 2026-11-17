@@ -49,10 +49,12 @@ presents out loud is speaker-led.
 ## What of the two skills does not apply
 
 - `frontend-slides`: the Phase 1 questions (above); `open <file>` in Phase 2 and 5 (these machines have no
-  display: render to PNG and show the images in the thread); all of Phase 6: do not ask about sharing,
-  and never use Vercel or any other outside host.
-- `academic-pptx`: all of Step 3 (white background, navy, Arial, no palette, no icons). The look always
-  comes from the style he picked, also for a committee. Its limit of about 40 words per slide holds only
+  display: render to PNG and show the images in the thread); the offer to share or export at the end of
+  Phase 5 and all of Phase 6: do not ask about sharing, and never use Vercel or any other outside host.
+  Lines that point to a template's `template.html`: those files are not here.
+- `academic-pptx`: all of Step 3 and every other rule about colour, fonts, sizes, icons or layout (white
+  background, navy, Arial, 20 pt body, no palette, no icons). The look always comes from the style he
+  picked, also for a committee. Its limit of about 40 words per slide holds only
   for a deck presented out loud; a reading deck is denser.
 - Both: nothing is installed globally (`npm install -g`, `pip install` into the system, `brew`). What a
   build needs goes into the build directory (`npm install` there, a Python venv).

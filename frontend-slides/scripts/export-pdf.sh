@@ -135,7 +135,7 @@ cat > "$TEMP_SCRIPT" << 'EXPORT_SCRIPT'
 
 import { chromium } from 'playwright';
 import { createServer } from 'http';
-import { readFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync, realpathSync } from 'fs';
 import { join, extname, resolve, sep } from 'path';
 import { execSync } from 'child_process';
 
@@ -170,8 +170,10 @@ const server = createServer((req, res) => {
   // Decode URL-encoded characters (e.g., %20 → space) so filenames with spaces resolve correctly
   const decodedUrl = decodeURIComponent(req.url);
   // Karchi's copy: serve only files inside the presentation folder.
-  const root = resolve(SERVE_DIR);
-  const filePath = resolve(root, '.' + (decodedUrl === '/' ? '/' + HTML_FILE : decodedUrl.split('?')[0]));
+  // Real paths, so a link inside the folder cannot lead out of it.
+  const root = realpathSync(SERVE_DIR);
+  let filePath = resolve(root, '.' + (decodedUrl === '/' ? '/' + HTML_FILE : decodedUrl.split('?')[0]));
+  try { filePath = realpathSync(filePath); } catch { res.writeHead(404); res.end('Not found'); return; }
   if (!filePath.startsWith(root + sep)) { res.writeHead(403); res.end('Forbidden'); return; }
   try {
     const content = readFileSync(filePath);

@@ -7,8 +7,11 @@ license: MIT. Complete terms in LICENSE
 # Academic Presentations Skill
 
 > **Karchi's copy.** [`prezentacie`](../prezentacie/SKILL.md) is the entry point and overrides this file:
-> only the content rules apply (Steps 1, 2 and the checklist in Step 4). Step 3 (colour, type, layout) is
-> void: the look comes from `frontend-slides`. Install nothing globally.
+> only the content rules apply: Steps 1 and 2, `content_guidelines.md` sections 1 to 6, and from the Step 4
+> checklist the lines about titles, the ghost deck test, exhibits, citations and the closing slide. Step 3
+> and every rule about colour, fonts, sizes, icons or layout are void: the look comes from `frontend-slides`.
+> The "PPTX skill" it sends you to is read only when the deck is a PowerPoint and the agent has that skill.
+> Install nothing globally.
 
 ## How This Skill Works
 
