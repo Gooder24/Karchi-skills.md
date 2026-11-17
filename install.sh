@@ -21,6 +21,8 @@ for d in "$R"/*/; do
 done
 # weft: Karchi's Weft inbox for agents, on every machine (runs on asus, elsewhere over ssh; see weft/SKILL.md).
 mkdir -p "$HOME/.local/bin" && ln -sfn "$R/weft/weft" "$HOME/.local/bin/weft"
+# ucenie: Karchi's learning app Učenie for agents (runs on asus, elsewhere over ssh; see ucenie/SKILL.md).
+ln -sfn "$R/ucenie/ucenie" "$HOME/.local/bin/ucenie"
 # One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md.
 # A real file there is kept once as <name>.bak-<date>, then replaced by the link.
 for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md"; do

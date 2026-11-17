@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# ucenie: Učenie for agents (see `ucenie --help`). Runs on asus; elsewhere over ssh.
+if [ -d "$HOME/ucenie/venv" ]; then
+  cd "$HOME/ucenie/src/server" && UCENIE_DATA="$HOME/ucenie/data" exec "$HOME/ucenie/venv/bin/python" -m ucenie.cli "$@"
+fi
+exec ssh -o BatchMode=yes asus "ucenie $(printf '%q ' "$@")"

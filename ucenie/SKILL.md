@@ -1,44 +1,40 @@
 ---
 name: ucenie
-description: Karchi's learning system "Učenie" (flashcards like Anki, maturita, sidequest decks, notes, EduPage homework and a "learn harness" in one app built like Weft), planned and built in an e540 thread. Use only when Karchi himself talks about that system: building, choosing or changing a learning or study app or system, putting his flashcards and quizzes in one place, a learn harness, new cards or quizzes for a school subject, homework drafts, or the maturita quiz and its Telegram bot. Never for work on one existing deck or project that merely uses Anki, such as the Katolický atlas rosary deck.
+description: Karchi's learning app Učenie (Anki-style cards, maturita, sidequest decks like the rosary or Meitei numbers, notes, EduPage homework with agent drafts, the learn harness), with the `ucenie` command on every machine. Use when Karchi talks about his learning system or wants something in it: new cards or a pack for a subject, cards from homework material or a note, a homework draft, what is due, importing or exporting an Anki deck, the maturita quiz and its Telegram bot, or changing the app. Never for work on one existing deck or project that merely uses Anki, such as the Katolický atlas rosary deck itself.
 ---
 
-# Učenie: the plan and the build already exist
+# Učenie
 
-On 16. 11. 2026 Karchi asked for one app for all his learning: Anki-style review, a learn harness, sidequest
-decks (rosary decades, Meitei numbers), notes, EduPage (and later his university's system) "like Weft", with
-homework solved into drafts that he submits. The plan and the build live in this thread, project „Učenie“
-(e540 `~/.t3/projects/ucenie`, the goal is `GOAL-ucenie.md` there, its build was scheduled for 17. 11. 1:00):
+Karchi's one place for learning (built 17. 11. 2026, plan and history in the e540 thread
+[celý systém ako budem mať svoje učenie pod kontrol...](t3-thread://v2/93bab4d1-e3e8-41f6-a853-20b3b844f477/c183bd0d-b31a-4c8b-87eb-88715762d123),
+goal `GOAL-ucenie.md`). Code: github.com/Gooder24/ucenie, checkout e540 `~/.t3/projects/ucenie`; it runs on asus
+(unit `ucenie`, data `~/ucenie/data`, https://asus-vivobook-x1504v.taila3702d.ts.net:8451/), x270 opens it from the
+launcher (karchi-os `karchi-ucenie`, a Helium app window). A change to the app goes into that repo and out with its
+`tools/deploy`; never start a second learning app or plan beside it.
 
-[celý systém ako budem mať svoje učenie pod kontrol...](t3-thread://v2/93bab4d1-e3e8-41f6-a853-20b3b844f477/c183bd0d-b31a-4c8b-87eb-88715762d123)
-on e540, T3 environment `93bab4d1-e3e8-41f6-a853-20b3b844f477`, thread `c183bd0d-b31a-4c8b-87eb-88715762d123`.
+## For agents: `ucenie`
 
-The first plan (QML app, 16. 11. afternoon) is in the e540 thread `d48da998-18e1-4ae9-bf76-5d96673c0255`;
-the goal file replaces it.
+`ucenie` (in `~/.local/bin` on every machine; it runs on asus, elsewhere over `ssh asus`):
 
-## When it applies
+```
+ucenie dnes                          what is due per pack, homework, tests
+ucenie balicky | ucenie ulohy        packs (and those waiting for approval) | homework with its draft state
+ucenie koncept ULOHA                 the agent writes a draft for that homework (stored in the app, never sent)
+ucenie make-pack --uloha ID | --poznamka PREDMET/NAZOV.md | --subor PATH  [--nazov N] [--predmet P] [--druh D]
+ucenie pridaj-balik PACK.json        a pack you wrote yourself (validated); waits for approval unless --hned
+ucenie import FILE.apkg [--druh ...] | ucenie export BALIK OUT.apkg | ucenie anki-historia KOLEKCIA BALIK
+```
 
-Only when Karchi's own message is about the learning system itself (see the description). A thread that
-works on one deck or app and merely uses Anki is not that: on 16. 11. the Katolický atlas thread, asked to
-redo the rosary cards, woke the snoozed plan ten minutes after he snoozed it. Then do nothing: no
-sentence, no wake.
+A pack is one JSON: `{"id", "nazov", "druh": "skola|maturita|sidequest", "predmet", "karty": [...]}`, a card is
+`{"id", "typ": "karticka", "otazka", "odpoved"}`, `{"typ": "ad", "moznosti": {"A": ...}, "spravne": "B"}` or
+`{"typ": "kratka", "varianty": [...]}`, optionally `"ukazka"` (a key of the pack's `"ukazky"`, shown beside it).
+When Karchi asks for cards on something, write the pack (facts only from a source you name in `"zdroj"`) and add it
+with `ucenie pridaj-balik`; it waits in Balíky for him to accept.
 
-1. Start your reply with one sentence saying the system exists, with the thread link above.
-2. If that thread is snoozed, wake it once: `t3_thread_organize` with `action: "unsnooze"`, its `threadId`
-   and the `environmentId` above, then `action: "mark_unread"`. Outside T3, or when the call fails, say
-   once that the thread is on e540 and go on.
-3. Build on `GOAL-ucenie.md` and the code in that project. When his new ask changes it, say what changes
-   and change that file; never start a second plan beside it.
+## Rules
 
-## Open decisions (also in his inbox)
-
-- Which university system comes after EduPage.
-- The first real homework submission from a draft: he tries it once himself.
-- Whether Anki on x270 and the atlas's separate Anki deck go away once the app works.
-- The Telegram bot never ran: after he creates a bot with @BotFather he runs
-  `ssh -t e540 ~/maturita-bot/set-token.sh`.
-
-## Removing this skill
-
-When the app is built and in use, or he drops the idea, delete this folder and its README row, then commit
-and push, so it stops loading.
+- Nothing goes to EduPage: drafts stay in Učenie until Karchi submits them himself (the app copies the draft and
+  opens EduPage). Automatic submission is not built; it needs his one test on a real homework first.
+- The answer log is his progress: tests run against a throwaway instance (`overenie/test-server.sh` in the repo),
+  never against `~/ucenie/data`.
+- The learn harness drafts new homework by itself only 7:00–22:00, a few a day, each homework once.
