@@ -7,8 +7,9 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 
 ## Where changes go
 
-- Karchi's personal projects (karchi-os, karchi-skills) are committed straight to `main` and pushed.
-  No branches or pull requests.
+- Karchi's personal repos are full send: every repo of Gooder24's own except forks and the eSYST work repos
+  (spotrex, eSYSTAK, partsheet, enex-crz-email-mvp). Commit straight to `main` and push without asking. No
+  branches or pull requests; an open PR there is cleaned up at once (AGENTS.md, GitHub).
 - Work projects (eSYST) do not have an agreed workflow yet. Ask before a commit, push, branch or PR.
 - Never open a pull request unless Karchi explicitly asks. One request is one PR.
 - A repo with `scripts/land.sh` (Partsheet) lands PRs only through it, never with `gh pr merge` or the

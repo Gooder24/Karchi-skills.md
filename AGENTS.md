@@ -54,7 +54,7 @@ Karchi chce každého subagenta na Haiku 5.5 s effort xhigh, na všetkých stroj
 
 # GitHub
 
-Osobné projekty (`karchi-os`, `karchi-skills`): commit rovno do `main`, pred pushom `git pull --rebase`, žiadne vetvy ani PR. Jedna zmena je jeden commit a `git add` len súbory tej zmeny. Pracovné projekty (eSYST): pred commitom alebo pushom sa spýtaj. Zvyšok je v skille `github`.
+Osobné repá sú full send (Karchi, 2026-11-17): všetky vlastné repá Gooder24 okrem forkov a pracovných eSYST (`spotrex`, `eSYSTAK`, `partsheet`, `enex-crz-email-mvp`), teda `karchi-os`, `Karchi-skills.md`, `weft`, `ucenie`, `kalendarix` a ďalšie. Zmena v nich ide hneď do `main` a pushne sa bez pýtania: pred pushom `git pull --rebase`, žiadne vetvy ani PR, jedna zmena je jeden commit a `git add` len súbory tej zmeny. Otvorené PR v nich je chyba: keď na nejaké narazíš (aj z inboxu, kam ich raz denne zapisuje Hermes úloha „Visiace PR“, `~/.hermes/scripts/hanging-prs.py`), to, čo je stále žiadané, daj do `main` a PR zavri s jednou vetou a commitom; zastarané zavri s jednou vetou prečo. Pracovné projekty (eSYST): pred commitom alebo pushom sa spýtaj. Zvyšok je v skille `github`.
 
 # Na x270 a pri KarchiOS
 
