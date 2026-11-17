@@ -185,7 +185,10 @@ def run(lane, now):
     now = time.time()
     if not ok and not (reset and reset > now):
         reset = said_reset(out, now)
-        if reset and reset - now > WINDOW:  # only the weekly limit lasts longer than a window
+        last = load(lane).get("week") or {}
+        # Only the weekly limit lasts longer than a window; a shorter wait is the weekly one when it ends
+        # when the week last seen ends.
+        if reset and (reset - now > WINDOW or abs(reset - float(last.get("resets", 0))) <= 15 * 60):
             week = (100.0, int(reset))
     if ok:
         nxt, note = after_ping(lane, now, reset)
@@ -210,6 +213,7 @@ def main():
                 print(f"{lane:15} not started yet")
                 continue
             w = state.get("week")
+            w = w if isinstance(w, dict) and {"used", "resets", "seen"} <= w.keys() else None
             week = (f"   week {w['used']:g}% used, resets {datetime.fromtimestamp(w['resets']):%a %d.%m. %H:%M}"
                     f" (seen {datetime.fromtimestamp(w['seen']):%a %H:%M})") if w else ""
             print(f"{lane:15} next ping {datetime.fromtimestamp(state['next']):%a %H:%M}{week}")
