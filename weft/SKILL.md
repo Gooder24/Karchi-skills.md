@@ -13,6 +13,7 @@ for machine-readable output.
 weft chats [TEXT] [--unread] [--net messenger|instagram|whatsapp|discord|edupage|gmail] [-n 30] [--all]
 weft read CHAT [-n 30]               the chat, oldest first (older pages come from the archive, never from Meta)
 weft search WORDS [--chat CHAT]      homeserver and archive, newest first
+weft file ID > PATH                  an old message's attachment; `read` prints its ID as „(weft file ID, size)“
 weft draft CHAT [TEXT|-] [--file P]  a draft (text, files) in that chat's message box in Weft; he sends it himself
 weft drafts [--clear CHAT]           drafts he has not sent yet
 weft relay CHAT --to FRIEND [--note] when CHAT answers him, a picture of the answer lands as a draft in FRIEND's chat
