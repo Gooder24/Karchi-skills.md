@@ -67,6 +67,8 @@ FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit)")
 # The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
+# an absolute or ~ path that contains spaces, such as ~/Obhajoba práce/overenie/verdikt.md
+SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt\.md|index\.html)")
 EVIDENCE_NAMES = {"verdikt.md", "index.html"}
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
@@ -159,7 +161,7 @@ def changed_something(tools):
 
 def evidence(line, t0, cwd):
     """A verdikt.md or index.html under an overenie/ folder, non-empty and written in this turn."""
-    for raw in PATH.findall(line):
+    for raw in PATH.findall(line) + SPACED_PATH.findall(line):
         if ".." in raw:
             continue
         p = os.path.expanduser(raw.rstrip(".:"))
