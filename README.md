@@ -5,6 +5,25 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 [`AGENTS.md`](AGENTS.md) holds Karchi's rules for every agent on every machine; `install.sh` links it as
 `~/.claude/CLAUDE.md`, `~/.claude/AGENTS.md` and `~/.codex/AGENTS.md`.
 
+## Requirements
+
+- `bash`, `git` and `curl` for the install.
+- Python 3 for the hooks, the tests and `check-docs.py`.
+- Node.js 18 or later for the `avoid-ai-design` detector and its test.
+
+## Quick start
+
+On a machine with Claude Code or Codex:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Gooder24/Karchi-skills.md/main/install.sh | bash
+```
+
+This links the skills into `~/.claude` and `~/.codex` and edits their settings files on the machine it runs on.
+The [Claude Code](#claude-code) section says what it does.
+
+## Skills
+
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
@@ -17,7 +36,7 @@ Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
 | [`ucenie`](ucenie/SKILL.md) | Karchi's learning app Učenie and the `ucenie` command: cards and packs, homework drafts, the learn harness, Anki import and export; points to the e540 thread that built it |
 | [`weft`](weft/SKILL.md) | `weft` on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
-| [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every UI before Karchi sees it |
+| [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
 | [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.1 and DeepSeek Flash 4.1 (OpenCode), on another machine when this one cannot run a member |
 | `full-send`, `full-stop`, `sol-loop`, `file-pr`, `takeover`, `babysit-pr`, `modernize`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
 
@@ -68,17 +87,14 @@ ln -s ~/.work/karchi-skills/one-off/ntfs-dirty-flag ~/.claude/skills/
 
 | Skill | Used for |
 |-------|---------|
-| [`ntfs-dirty-flag`](one-off/ntfs-dirty-flag/SKILL.md) | External NTFS disk that Linux mounts only read-only: check the hardware, back up the metadata, rehearse `ntfsfix` on a copy, repair, verify (2026-10) |
+| [`ntfs-dirty-flag`](one-off/ntfs-dirty-flag/SKILL.md) | External NTFS (Windows file system) disk that Linux mounts only read-only: check the hardware, back up the metadata, rehearse `ntfsfix` on a copy, repair, verify (2026-10) |
 
 ## Claude Code
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/Gooder24/Karchi-skills.md/main/install.sh | bash
-```
-
-It clones the repo to `~/.work/karchi-skills` and links every skill into `~/.claude/skills` (and
-`~/.codex/skills` if Codex is installed). Installed on x270, asus, dell, e540 and the VPS, where a
-`SessionStart` hook in `~/.claude/settings.json` runs `install.sh` again at the start of every session,
+The [quick start](#quick-start) command clones the repo to `~/.work/karchi-skills` and links every skill into
+`~/.claude/skills` (and `~/.codex/skills` if Codex is installed). Installed on x270, asus, dell, e540 and the
+VPS (virtual private server), where a `SessionStart` hook in `~/.claude/settings.json` runs `install.sh` again
+at the start of every session,
 so a pushed change reaches every machine in its next session. It also puts `overenie/` in the global
 gitignore, so verification files never show in T3's changed files or in a commit:
 
@@ -97,3 +113,27 @@ Upload `taste.zip` in Settings → Capabilities → Skills. After every change t
 zipped and uploaded again; the web app does not fetch the repository on its own.
 
 Without skills, it is enough to paste the content of `taste/taste.md` into the project instructions or into your personal preferences.
+
+## Testing
+
+Run these from the repository root:
+
+```sh
+node --test avoid-ai-design/scripts/detect.test.mjs
+python3 anna-pdf/test_watch.py
+python3 .github/scripts/check-docs.py
+```
+
+`anna-pdf/test_watch.py` runs its checks when the file is executed and ends with one `PASS:` line; `pytest` finds no tests in it.
+
+## Accessibility
+
+[ACCESSIBILITY.md](ACCESSIBILITY.md) says what the repository checks, how to report a barrier, and what has not been tested yet. The Markdown check runs on every pull request, see [the workflow](.github/workflows/accessibility.yml).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+No license has been chosen yet. Without one, the default copyright rules apply, so reuse needs the owner's permission. The third-party skills keep their own licenses, see [Third-party skills](#third-party-skills).
