@@ -10,8 +10,19 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 - Karchi's personal repos are full send: every repo of Gooder24's own except forks and the eSYST work repos
   (spotrex, eSYSTAK, partsheet, enex-crz-email-mvp). Commit straight to `main` and push without asking. No
   branches or pull requests; an open PR there is cleaned up at once (AGENTS.md, GitHub).
+- Repos that his machines use by themselves (Karchi, 2026-11-18): karchi-os, karchi-os-headless-debian with
+  its parts laptop-server and reboot-when-idle, weft, kalendarix and Karchi-skills.md. A change reaches them
+  in exactly one of two ways:
+  1. Commit straight to `main` and push, once the repo's own checks pass locally. This is the default.
+     When CI on `main` then turns red, fix it in the next commit.
+  2. Open a pull request, wait until the repo's tests (CI) pass on its current head, merge it yourself and
+     only then deploy, all in the same turn. Never deploy before the tests pass.
+
+  No third way may happen there: no PR left open for Karchi or a review, and no merge on red tests. When
+  the tests stay red and you cannot fix them, close the PR with one sentence why and put the step in his
+  inbox (skill `priority`).
 - Work projects (eSYST) do not have an agreed workflow yet. Ask before a commit, push, branch or PR.
-- Never open a pull request unless Karchi explicitly asks. One request is one PR.
+- Never open a pull request unless Karchi explicitly asks, apart from way 2 above. One request is one PR.
 - A repo with `scripts/land.sh` (Partsheet) lands PRs only through it, never with `gh pr merge` or the
   merge button: it merges only when CI passed on the PR's current head. On a private repo without
   GitHub Pro nothing else stops a merge on red CI.
