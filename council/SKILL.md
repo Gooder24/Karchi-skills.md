@@ -31,7 +31,9 @@ subscription (account karollupi6, logged in on dell, asus and e540).
 ## Where each member runs
 
 1. This machine: `delegate_task` with `target` from the table, `role: "review"`,
-   all three in parallel.
+   all three in parallel. Members are side threads under your thread: never
+   `t3_thread_launch` or `create_threads` for them (Karchi, 2026-11-18: council
+   threads must not land in his sidebar).
 2. A member this machine cannot run (provider disabled, model missing, Codex
    broken as on dell): run it on another linked machine. Take the first of asus
    (`5182d572-beb3-4cf2-9f9e-d459777f2d15`), e540
