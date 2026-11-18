@@ -144,7 +144,7 @@ Write `pr-drafts/<branch>-obhajoba.md` in Slovak, at most a page:
 - **Otázky, ktoré prídu**: three to five likely reviewer questions, each with the answer and where in the code it is.
 - **Čo nie je otestované** and what he would answer if asked.
 
-He reads it before saying „podaj“. The PR is filed (`gh pr create` with the approved body, from his fork) only then,
+He reads it before saying „podaj“. The PR is filed (`gh pr create` with the approved body, from his fork) only then and never merged by us (full stop: the maintainers merge),
 and its link goes into the thread.
 
 ### 8. Follow the replies

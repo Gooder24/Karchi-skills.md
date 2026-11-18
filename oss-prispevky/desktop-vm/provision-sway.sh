@@ -5,6 +5,7 @@
 #   provision-sway.sh [/path/to/app.deb]
 set -euxo pipefail
 user=${DVM_USER:-tester} pkg=${1:-}
+. /etc/os-release; [[ $ID == debian ]] || { echo "provision-sway.sh is for Debian; use gnome on $ID" >&2; exit 1; }
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends sway swaybg foot nautilus gvfs dbus-user-session \
