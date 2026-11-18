@@ -66,11 +66,13 @@ $T/fetchpolicy.sh owner/repo ./policy/owner_repo && rg -in 'LLM|\bAI\b|generat|c
 ```
 
 Read CONTRIBUTING, AI_POLICY, AGENTS.md, the PR template, the CLA and the code of conduct whole, then write the
-project's rules in `progress.md`. Known as of 2026-11-18 (recheck before each project, policies change):
+project's rules in `progress.md`. Follow every guide they link, also one in another repo of the org (COSMIC's PR
+template links the ban in `pop-os/pop`). Known as of 2026-11-18 (recheck before each project, policies change):
 
 | Project | AI rule |
 |---|---|
 | Alacritty, Servo, niri | **Banned** (LLM content in code, docs, issues, comments). Skip. |
+| Pop!_OS and COSMIC (all `pop-os` repos, also its smithay-clipboard and libcosmic forks) | **Banned** in issues and PRs, "including code, comments, and descriptions" (pop-os/pop CONTRIBUTING, since 2026-09-30); the PR template makes you tick "I have not included any LLM generated content". Skip. |
 | Flathub | Manifests must not contain AI-generated or AI-assisted content; AI in the app must be disclosed; no AI-opened PRs or replies. Flathub packaging is not for this workflow. |
 | Ghostty (Zig) | Disclose every use and its extent; a maintainer must vouch for a first-time contributor before PRs; bad AI contributions go on a public denounce list. |
 | Zed | LLM coding welcome with a human who understands it; no autonomous agents; replies and PR text in your own words; three open PRs at most; CLA. |
@@ -165,3 +167,6 @@ teaches something.
 - 2026-11-17 Atlas: Fedora GNOME showed that the Wayland clipboard fix (#23, data-control) does not work on GNOME;
   without the GNOME VM it would have shipped as "fixes the clipboard". Test every desktop family you claim.
 - 2026-11-17 Debian #1144467 (see `github`): disclose AI at the top and keep it short; a 150-line reply got told off.
+- 2026-11-18 COSMIC Files #2136: the research called COSMIC "no written AI rules" although its PR template, already
+  fetched into `data/policy/`, bans LLM content; caught only after the root-cause work. Read the template whole
+  in step 2 before scoring a project.
