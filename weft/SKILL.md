@@ -39,6 +39,8 @@ needs `--to` (teacher's name, any current teacher, also one he never wrote to) o
 take no answer, and if EduPage refuses, the bridge says so in that chat a few seconds later (`weft read
 EduPage -n 3`). Drafts are text only; for files use `send` once he said to send.
 Times are Europe/Bratislava; `--start 2026-11-12` alone is an all-day event.
+A Discord server he switched off in Weft (Settings → Účty → Servery na Discorde) is in no `chats`, `read`
+or `search`; to show one, he switches it on there himself.
 
 ## Rules
 
