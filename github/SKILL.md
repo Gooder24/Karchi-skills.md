@@ -49,8 +49,9 @@ Before writing code:
   missing piece is small, the cheapest fix is a comment on that PR or its issue with the diagnosis and a
   short diff, which the maintainers' pipeline finishes. Offer Karchi that comment first; open your own PR
   only when he picks it (#37314, 15. 11.: a 15-line fix #34957 had listed as left out took a whole PR).
-- A PR you do open names every related open PR in its body: what each fixes, what yours takes off its
-  list, and that they merge cleanly (`git merge-tree --write-tree <your branch> <their head>`).
+- A PR you do open names each related open PR in one line: what it fixes and that yours merges cleanly
+  with it (`git merge-tree --write-tree <your branch> <their head>`). No table and no paragraph per PR:
+  the 40 outside PRs T3 Code merged 10. to 18. 11. had a median body of 2,900 characters, #37314 had 7,900.
 - One problem per PR, but everything that fix needs (contracts, server, clients, tests, docs).
   Cleanup and a second fix go elsewhere.
 
@@ -81,10 +82,32 @@ of the changed files, captures again, and restores them. The header of each file
 and which options exist (`--setup`, `--hover`, `--text`, `--clip`). Run `vp run check:changed` where you
 work; only when it cannot run there at all (lint or knip crash for lack of memory), run it over `ssh asus`.
 
+T3 Code merges most outside bug fixes through the maintainers' pipeline, not a person's review. Measured
+18. 11. 2026: 165 of the 197 outside PRs merged 18. 10. to 18. 11. ended with a maintainer's commit, a
+median 0.9 h from opening to merge. A maintainer labels the PR `takeover:in-progress`; an agent merges
+`main`, reworks the fix, captures its own proof in a real dev app and merges. It stops with
+`takeover:blocked` and a `factory:stopped-<reason>` comment. Of 68 stopped PRs, 27 needed something its
+workers cannot run (a remote SSH host, macOS, a real provider account), 20 showed no bug on `main`, and 13
+had a push from the author during the takeover (#37314: three force-pushes in the 13 minutes after the
+label). So:
+
+- Pick bugs their worker can show in an isolated dev web app (`vp run dev`, the Replay provider, seeded
+  data). A bug that needs other hardware or accounts gets an issue with the diagnosis, or a PR whose body
+  carries a capture of the bug on `main` and the exact steps.
+- Write repro steps that a stranger can run unchanged on `main`, and say what to look at.
+- Once the PR is open, do not push while it is `takeover:in-progress` or before a maintainer has looked:
+  the pipeline answers CodeRabbit itself. Answer a bot finding in a reply; push only when a person asks,
+  or when the PR has had no takeover for a day.
+- Features from authors who are not in `.github/VOUCHED.td` are closed (7 of the 197 merged were `feat`).
+  Maintainers add people to that list by hand.
+- The cheapest help is what CONTRIBUTING asks for first: link a duplicate, confirm that an issue no longer
+  happens on the latest release, or test an open PR and comment what you saw.
+
 After opening (in work projects, ask before each push, as above):
 
 - Read every bot finding (CodeRabbit, Macroscope), including the security and risk sections. Fix real
-  ones with a push and a short reply, dismiss false ones with a reason. Never close your own PR to
+  ones with a push and a short reply (T3 Code: never during a takeover, see above), dismiss false ones
+  with a reason. Never close your own PR to
   dodge feedback.
 - Keep it mergeable (rebase on conflicts) and under the repo's open-PR limit.
 
