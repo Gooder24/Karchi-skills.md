@@ -45,8 +45,10 @@ working on its own; Karchi must never find it stopped.
 2. Before `t3_thread_launch`, call `t3_environment_read` with asus's `environmentId`
    (`5182d572-beb3-4cf2-9f9e-d459777f2d15`). Move only when it answers with that id. On an error, or
    when it answers for this machine (an older T3 drops `environmentId` silently, which on 2026-10-29
-   put a „moved“ thread on dell instead of asus), launch nothing: say „Presun na asus nejde (Linked
-   environments vypnuté).“ first and do the task in this thread, heavy parts through `ssh asus`.
+   put a „moved“ thread on dell instead of asus), launch nothing. Report the actual failure first:
+   „Linked environments is off“ only when the tool reports it (Settings → Labs); otherwise say
+   Asus is unreachable or the returned environment id is wrong. Do the available task in this
+   thread, heavy parts through `ssh asus` when reachable.
 3. Launch with `environmentId`, `delegatedFrom` and the whole task and context in `message`; without
    `message` the thread stays idle. Then `t3_thread_read` it with asus's `environmentId`: it must be
    `preparing`, `queued`, `starting` or `running`. If it is `idle`, send the message with
