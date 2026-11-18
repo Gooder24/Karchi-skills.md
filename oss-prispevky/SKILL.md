@@ -25,10 +25,11 @@ správcu súborov“ on asus, its folder `~/.t3/scratch/2026-11-15-https-github-
    Features always start as an issue or discussion (Zed: "If there isn't a GitHub issue with staff confirmation that
    we want it, start a discussion").
 4. **No batches.** At most three open PRs in a new project until the first one merges, and only in a project that
-   regularly merges outside PRs; otherwise one. Each is a small, independent bug fix with its own issue (or a failure anyone can
-   see, such as red CI on the default branch) and its own evidence, so any one can be merged or closed alone; never a stack of features or cleanups. Never above the
-   project's limit (Zed: three). Atlas lesson: five PRs in two days to a project that had never merged an outside PR,
-   zero replies after two days, and the owner's habit is to reimplement outside fixes himself (#4, #11).
+   regularly merges outside PRs; otherwise one. Each is a small, independent bug fix with its own issue (or a failure
+   anyone can see, such as red CI on the default branch) and its own evidence, so any one can be merged or closed
+   alone; never a stack of features or cleanups. Never above the project's limit (Zed: three). Atlas lesson: five PRs
+   in two days to a project that had never merged an outside PR, zero replies after two days, and the owner's habit is
+   to reimplement outside fixes himself (#4, #11).
 5. **Disclose AI the way the project asks, and at the top.** Name the tools (Claude Code, Codex) and the extent. A
    project that bans AI-generated content is skipped entirely, not worked around (list below).
 6. **Karchi understands every line and speaks for himself.** Before a PR goes out he has read its `obhajoba` (below)
