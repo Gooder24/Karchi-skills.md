@@ -21,8 +21,8 @@ správcu súborov“ on asus, its folder `~/.t3/scratch/2026-11-15-https-github-
    inbox (skill `priority`) as a decision.
 2. **One problem per PR, with proof.** A repro, a test that fails on `main` and passes on the branch, a real run
    (screenshots or video for UI, numbers for performance). "Tests pass" is not proof.
-3. **Issue or discussion first**, unless the project's CONTRIBUTING invites PRs for obvious bugs and the bug is one.
-   Features always start as an issue or discussion (Zed: "If there isn't a GitHub issue with staff confirmation that
+3. **Issue or discussion first**, unless the project's CONTRIBUTING invites PRs for obvious bugs and the bug is one,
+   or the PR fixes red CI on the default branch. Features always start as an issue or discussion (Zed: "If there isn't a GitHub issue with staff confirmation that
    we want it, start a discussion").
 4. **No batches.** At most three open PRs in a new project until the first one merges, and only in a project that
    regularly merges outside PRs; otherwise one. Each is a small, independent bug fix with its own issue (or a failure
@@ -168,10 +168,10 @@ teaches something.
 
 ## Lessons (append one line each with date and evidence)
 
-- 2026-11-18 arboard INCR (X11 clipboard): three council rounds found three real races the builder's tests missed
-  (two transfers to one window, a reused property, a late Delete). One passing run of a race test proved nothing:
-  Kimi hit the race on the "fixed" commit. Make the order deterministic (here GrabServer) and run it 20 times on the
-  old and the new commit (20/20 vs 0/20).
+- 2026-11-18 arboard INCR (X11 clipboard): three council rounds found three real races the builder's tests missed (two
+  transfers to one window, a reused property, a late Delete). An unforced race test passes or fails by chance: one run
+  on the fixed commit failed in the other, unfixable order and looked like the fix had failed. Force the order (here
+  GrabServer) and run it 20 times on the old and the new commit (20/20 vs 0/20).
 - 2026-11-18 Atlas: the owner had never merged an outside PR and reimplemented them (#4, #11). Measure that in
   step 1 before investing days; five PRs (#23 to #27) waited with no reply.
 - 2026-11-17 Atlas #23: three council rounds before filing caught real problems; worth it for code that every
