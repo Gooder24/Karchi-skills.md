@@ -36,8 +36,8 @@ one-line fixes, "nechcem X") and put it in the file, so none of it comes back as
 - If he asked only for the prompt, give him one line to paste:
   `/goal Splň zadanie z <path>. Hotové je, keď prejdú všetky kontroly v sekcii „Hotové keď“.`
 - Otherwise do it yourself in this thread. Work through the checks, then verify with the `overenie`
-  skill (runnable checks, a fresh verifier on Opus, evidence page) before you report. Heavy work
-  belongs on asus (AGENTS.md, „Kde beží práca“).
+  skill (runnable checks, a fresh verifier on Opus, evidence page) before you report. The whole thread
+  belongs on asus; remote steps run through SSH with progress in the asus thread (AGENTS.md, „Kde beží práca“).
 - Long runs use Opus 5.5 at high effort. Use Fable only for a part where Opus already failed: it uses up
   his weekly limit 2.5× faster.
 

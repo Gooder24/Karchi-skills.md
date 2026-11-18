@@ -33,11 +33,15 @@ only because he asked in this thread, and mention that Hermes keeps it.
 
 ## Moving the thread to asus
 
-AGENTS.md („Kde beží práca“) moves a thread that does not need its machine to asus. The moved
-thread has to start working on its own; Karchi must never find it stopped.
+AGENTS.md („Kde beží práca“) starts every new thread on asus and moves a thread on another
+machine there immediately, including desktop and KarchiOS work. The asus thread runs remote steps
+through SSH and shows each step and its result. Only long independent work that must run on another
+machine uses a remote delegate, with its link shown at startup. The moved thread has to start
+working on its own; Karchi must never find it stopped.
 
 1. A thread whose first message starts with „Presunuté z vlákna“ has been moved already: never move
-   it again, do the task where you are (heavy parts through `ssh asus` when this is not asus).
+   it again. On asus, do remote steps through `ssh <alias>`. If a failed move left it elsewhere,
+   do the available work there, with heavy parts through `ssh asus` when reachable.
 2. Before `t3_thread_launch`, call `t3_environment_read` with asus's `environmentId`
    (`5182d572-beb3-4cf2-9f9e-d459777f2d15`). Move only when it answers with that id. On an error, or
    when it answers for this machine (an older T3 drops `environmentId` silently, which on 2026-10-29

@@ -20,9 +20,15 @@ Karchi ti píše cez T3 Code. Každý stroj nižšie je samostatný T3 environme
 
 Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodinnypcl` cez OpenSSH len z asusu, Tailscale SSH na Windowse nie je). `vps` dosiahneš len z `x270`. Na inom stroji konaj iba na Karchiho pokyn; keď neodpovedá, povedz to.
 
-# Kde beží práca (Karchi, 2026-10-29)
+# Kde beží práca (Karchi, 2026-11-18)
 
-Vlákno, ktoré nepotrebuje stroj, na ktorom beží (najmä Karchiho x270: desktop, konfigy, overenie, že to tam funguje), má bežať celé na asuse, nie len jeho ťažká časť. Hneď na začiatku ho presuň: `t3_thread_launch` s `environmentId` asusu `5182d572-beb3-4cf2-9f9e-d459777f2d15`, s celým zadaním a doterajším kontextom v `message` a s `delegatedFrom` tohto vlákna; pošli Karchimu link a tu skonči. Keď presun nejde (hláška „Linked environments is off“: zapína sa v T3 Code Settings → Labs a asus musí byť prilinkovaný), povedz mu to prvou vetou a ťažkú časť (benchmarky, buildy, sťahovanie a konverzia modelov, dlhé výpočty, servery a služby) pusti cez `ssh asus`. Na x270 ostáva len to, čo x270 potrebuje.
+Asus je centrum: každé nové vlákno začína na asuse. Vlákno na inom stroji hneď presuň na asus: `t3_thread_launch` s `environmentId` asusu `5182d572-beb3-4cf2-9f9e-d459777f2d15`, s celým zadaním a doterajším kontextom v `message` a s `delegatedFrom` tohto vlákna; pošli Karchimu link a tu skonči. Postup presunu a kontrolu cieľového stroja určuje skill `priority`.
+
+Prácu na inom stroji (aj x270 desktop a konfigy, KarchiOS a overenie priamo na stroji) robí vlákno na asuse cez `ssh <alias>`. Každý krok a jeho výsledok ukazuj priamo vo vlákne na asuse, aby Karchi videl aj priebeh, nielen záverečný výsledok. Pravidlá pre x270 a KarchiOS nižšie platia aj cez SSH.
+
+Agenta na inom stroji (`delegate_task` s jeho `environmentId`) púšťaj len na dlhú samostatnú prácu, ktorá musí bežať tam. Jeho link daj do vlákna hneď pri štarte, aby sa dal priebeh sledovať; mobil má byť spárovaný so všetkými strojmi. Asus je hlavný, dell a e540 sú záloha pri jeho výpadku; x270 umožňuje otvoriť tamojšie staršie vlákna.
+
+Keď presun nejde (hláška „Linked environments is off“: zapína sa v T3 Code Settings → Labs a asus musí byť prilinkovaný), povedz mu to prvou vetou a ťažkú časť (benchmarky, buildy, sťahovanie a konverzia modelov, dlhé výpočty, servery a služby) pusti cez `ssh asus`. Keď je asus nedostupný, povedz to a pokračuj dostupnou prácou v záložnom vlákne; nevytváraj ďalšie presuny do nedostupného prostredia.
 
 # SPOTREX (Karchi, 2026-11-16)
 
