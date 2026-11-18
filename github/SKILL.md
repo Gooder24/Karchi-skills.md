@@ -100,14 +100,15 @@ author (#37314: three force-pushes in the 13 minutes after the label). So:
   the pipeline merges `main` and reworks the fix itself. Answer a bot finding in a reply; push only when a
   person asks for a change, or to resolve a `needs-rebase` label when no takeover is running.
 - Features from authors who are not in `.github/VOUCHED.td` are closed (7 of the 197 merged were `feat`,
-  all from vouched authors). Theo adds people to that list in commits like `chore: vouch <login>`.
+  all from vouched authors). The maintainers add people to that list by hand, lately Theo in commits like
+  `chore: vouch <login>`.
 - The cheapest help is what CONTRIBUTING asks for first: link a duplicate, confirm that an issue no longer
   happens on the latest release, or test an open PR and comment what you saw.
 
 After opening (in work projects, ask before each push, as above):
 
 - Read every bot finding (CodeRabbit, Macroscope), including the security and risk sections. Fix real
-  ones with a push and a short reply (T3 Code: never during a takeover, see above), dismiss false ones
+  ones with a push and a short reply (T3 Code: a reply only, see above), dismiss false ones
   with a reason. Never close your own PR to
   dodge feedback.
 - Keep it mergeable (rebase on conflicts; T3 Code: only on `needs-rebase` and never during a takeover)
