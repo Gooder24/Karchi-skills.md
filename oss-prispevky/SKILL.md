@@ -168,6 +168,10 @@ teaches something.
 
 ## Lessons (append one line each with date and evidence)
 
+- 2026-11-18 arboard INCR (X11 clipboard): three council rounds found three real races the builder's tests missed
+  (two transfers to one window, a reused property, a late Delete). One passing run of a race test proved nothing:
+  Kimi hit the race on the "fixed" commit. Make the order deterministic (here GrabServer) and run it 20 times on the
+  old and the new commit (20/20 vs 0/20).
 - 2026-11-18 Atlas: the owner had never merged an outside PR and reimplemented them (#4, #11). Measure that in
   step 1 before investing days; five PRs (#23 to #27) waited with no reply.
 - 2026-11-17 Atlas #23: three council rounds before filing caught real problems; worth it for code that every
