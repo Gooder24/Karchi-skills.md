@@ -85,7 +85,8 @@ downloading a browser, and it no longer opens the PDF. `academic-pptx` is [Gabbe
 without its README and PDF (commit 9f2b703, 2026-07-14, MIT, `LICENSE` kept; the `license` line of its
 frontmatter said Proprietary and is corrected). In both, the `description` starts with a pointer to
 `prezentacie` and a note under the title says what `prezentacie` overrides. To update one, copy the same files from upstream
-again. The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).
+again. The section „Ako pracovať“ in `AGENTS.md` is translated and adapted from T3 Code's `AGENTS.md`
+([pingdotgg/t3code](https://github.com/pingdotgg/t3code), MIT, `LICENSE-t3code`). The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).
 
 ## One-off skills
 
@@ -149,4 +150,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-No license has been chosen yet. Without one, the default copyright rules apply, so reuse needs the owner's permission. The third-party skills keep their own licenses, see [Third-party skills](#third-party-skills).
+MIT, see [LICENSE](LICENSE). The third-party skills keep their own licenses, see [Third-party skills](#third-party-skills); the
+skills from tstack are under [`LICENSE-tstack`](LICENSE-tstack).
