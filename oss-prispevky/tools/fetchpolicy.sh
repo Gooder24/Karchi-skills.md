@@ -6,7 +6,8 @@
 r=$1; d=$2; mkdir -p "$d"
 files=(CONTRIBUTING.md .github/CONTRIBUTING.md docs/CONTRIBUTING.md AI.md AI_POLICY.md AI-POLICY.md .github/AI_POLICY.md
   AGENTS.md CLAUDE.md .github/pull_request_template.md .github/PULL_REQUEST_TEMPLATE.md
-  PULL_REQUEST_TEMPLATE.md .github/FUNDING.yml docs/src/development.md)
+  PULL_REQUEST_TEMPLATE.md docs/PULL_REQUEST_TEMPLATE.md docs/pull_request_template.md .github/FUNDING.yml
+  docs/src/development.md)
 get() { gh api "repos/$1/contents/$2" -H "Accept: application/vnd.github.raw" 2>/dev/null; }
 save() { # repo path prefix
   local body out="$d/$3$(echo "$2" | tr / _)"
@@ -18,14 +19,14 @@ savedir() {
   gh api "repos/$1/contents/$2" --jq '.[] | select(.type == "file") | .path' 2>/dev/null |
     while read -r f; do save "$1" "$f" "$3"; done
 }
-for dir in .github/PULL_REQUEST_TEMPLATE .github/ISSUE_TEMPLATE; do savedir "$r" "$dir" ""; done
+for dir in .github/PULL_REQUEST_TEMPLATE .github/ISSUE_TEMPLATE PULL_REQUEST_TEMPLATE docs/PULL_REQUEST_TEMPLATE; do savedir "$r" "$dir" ""; done
 # Org defaults, used by GitHub for a file the repo does not have.
 org=${r%%/*}/.github
 for f in CONTRIBUTING.md .github/CONTRIBUTING.md AI.md AI_POLICY.md .github/PULL_REQUEST_TEMPLATE.md \
-  .github/pull_request_template.md PULL_REQUEST_TEMPLATE.md; do
+  .github/pull_request_template.md PULL_REQUEST_TEMPLATE.md docs/PULL_REQUEST_TEMPLATE.md docs/pull_request_template.md; do
   save "$org" "$f" "org-"
 done
-for dir in .github/PULL_REQUEST_TEMPLATE .github/ISSUE_TEMPLATE PULL_REQUEST_TEMPLATE ISSUE_TEMPLATE; do
+for dir in .github/PULL_REQUEST_TEMPLATE .github/ISSUE_TEMPLATE PULL_REQUEST_TEMPLATE ISSUE_TEMPLATE docs/PULL_REQUEST_TEMPLATE; do
   savedir "$org" "$dir" "org-"
 done
 echo "-- guides linked from these files (read each):"
