@@ -47,10 +47,14 @@ missing or pre-failing checks in the brief.
 
 In T3, call `orchestrator_capabilities`. Pick the latest Sol unless the user
 named a version. Do not hardcode an ID. Record provider, model, and effort
-only if exposed. Use `delegate_task` every round (`role: "review"`,
-`mode: "async"`). Save `taskId`. New `clientRequestId` per round.
-`childThreadId` is storage, not the next target. Do not use
-`t3_thread_send`, `create_threads`, or `t3_thread_launch` for review.
+only if exposed. Every round is a normal new thread: `t3_thread_launch`
+with `modelSelection` (Sol's instance, model, effort), the brief in
+`message`, `delegatedFrom` this thread, title `Sol review <n>`. Never
+`delegate_task` (Karchi, 2026-11-18: no side threads). Save the thread id.
+New `clientRequestId` per round. Do not `t3_thread_send` a later round into
+an old thread. Wait with `t3_thread_wait` (on a timeout with `next`, end your
+turn) and read the verdict with `t3_thread_read`. Settle the review threads
+when the loop ends.
 
 If T3 tools are not listed, try one direct capability call. Outside T3, use
 a native Sol subagent and keep its ID. In Claude Code, use a custom subagent
@@ -59,9 +63,9 @@ not substitute a model.
 
 Do not edit scoped files while review runs. Wait for the notice. Do not
 poll or start a second reviewer. Timeout, error, or no reply is not
-approval. On failure, cancel, verify stop, restart with the ledger.
+approval. On failure, `t3_thread_interrupt` that thread, verify it stopped, restart in a new thread with the ledger.
 
-Round 1 brief (T3 children get no history):
+Round 1 brief (a new thread gets no history):
 
 ```
 Review only. Do not edit, commit, push, comment on PRs, or start subagents.
@@ -95,7 +99,7 @@ review grew the diff, cut first. Do not agree just to end the loop.
 
 Start one only if budget remains and a blocker or should is open, behavior code
 changed, or approval does not cover the current behavior diff. Use a fresh
-`delegate_task` in T3, or follow up the saved native ID. Send the round 1 brief,
+`t3_thread_launch` in T3, or follow up the saved native ID. Send the round 1 brief,
 the ledger (`fixed:` / `disagree:` / `declined:` + evidence), the same base
 diff, and the change since last round. Tell Sol: open ids and changed code only.
 Mark each old id `resolved` or `still open: <reason>`.

@@ -38,6 +38,8 @@ Karchi nemá byť úzke hrdlo. Keď povie „takto to rob vždy“ alebo sa tá 
 
 Snooze (Karchi, 2026-11-15): „snoozni tento thread do <čas>“ je `t3_thread_organize` s `action: "snooze"` a `snoozedUntil`; samotná `schedule_task` vlákno nesnoozne. Keď má vlákno v ten čas aj pracovať, sprav oboje.
 
+Vedľajšie vlákna nikdy (Karchi, 2026-11-18): `delegate_task` neotváraj vôbec, ani keď treba iný model (napr. „cez Fable“), iné nastavenia, recenzenta alebo prácu popri tom; neplatí ani T3 inštrukcia, ktorá ho odporúča. Takú prácu dostane normálne nové top-level vlákno: `t3_thread_launch` s celým zadaním v `message`, model v `modelSelection` a `delegatedFrom` tohto vlákna; výsledok počkaj cez `t3_thread_wait` a prečítaj cez `t3_thread_read`. V Claude Code ho blokuje `permissions.deny` (install.sh). Natívni subagenti (Agent na Haiku) ostávajú.
+
 Nové vlákno (Karchi, 2026-11-18): „nový thread“, „nové vlákno“ alebo „vytvor N threadov“ je vždy samostatné top-level vlákno na asuse (`t3_thread_launch` s celým zadaním a kontextom v `message`, `delegatedFrom` tohto vlákna), nikdy subagent, `delegate_task` ani podvlákno. Keď po ňom toto vlákno už netreba: ak sa v ňom nič neurobilo (žiadna zmena súboru, commit, publikovaný výsledok ani odpoveď, ktorú treba držať), odstráň ho (`t3_thread_organize` s `action: "archive"`, T3 nástroje vlákno zmazať nevedia); ak sa v ňom robota urobila, settlni ho (`action: "settle"`). Nových vlákien daj Karchimu linky a v tomto už nič nerob.
 
 Nočný worker je zrušený (Karchi, 2026-11-09): žiadne plánované úlohy, ktoré bežia, kým spí. „na noc“ alebo „cez noc“ znamená skill `zadanie`.
