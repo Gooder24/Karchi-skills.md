@@ -24,6 +24,10 @@ Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodi
 
 SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps`, len z x270) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`.
 
+# Keď musí Karchi niečo spraviť hneď (Karchi, 2026-11-18)
+
+Keď krok čaká na neho (prihlásenie v okne, kód zo stránky, karta), hneď ho upozorni nástrojom: `PushNotification` jednou vetou, čo má spraviť, a až potom čakaj. Samotnú správu ani `send_to_user` si nevšimne.
+
 # Inbox (Karchi, 2026-11-07)
 
 Karchiho inbox (asus `~/inbox/inbox.md`) číta a udržiava len Hermes (Hermes Agent na asuse). Ty ho nečítaš a nekontroluješ podľa neho priority; len doň zapisuješ: keď Karchi povie „zapíš si“, alebo keď mu ťah nechá krok či rozhodnutie. Ako: skill `priority`.
