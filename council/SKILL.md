@@ -30,22 +30,17 @@ subscription (account karollupi6, logged in on dell, asus and e540).
 
 ## Where each member runs
 
-1. This machine: one normal new thread per member, all three at once
-   (`t3_thread_launch` with `modelSelection` from the table: `instanceId`,
-   `model`, `options`; the brief and material in `message`, `delegatedFrom` this
-   thread, title `Council: <member>`). Never `delegate_task` (Karchi,
-   2026-11-18: no side threads). Wait with `t3_thread_wait` (on a timeout with
-   `next`, end your turn) and read each answer with `t3_thread_read`; settle
-   the threads when the council is done.
+1. This machine: `delegate_task` with `target` from the table, `role: "review"`,
+   all three in parallel.
 2. A member this machine cannot run (provider disabled, model missing, Codex
    broken as on dell): run it on another linked machine. Take the first of asus
    (`5182d572-beb3-4cf2-9f9e-d459777f2d15`), e540
    (`93bab4d1-e3e8-41f6-a853-20b3b844f477`), dell
    (`6b0b1936-5991-4a14-bcbe-751352777957`) whose
-   `orchestrator_capabilities({environmentId})` lists the model, and pass
-   `environmentId` to `t3_thread_launch`. That thread has no copy of this
-   checkout: put the diff or the documents in `message`, or the pushed branch
-   and repo URL it should clone read-only.
+   `orchestrator_capabilities({environmentId})` lists the model, and add
+   `target.environmentId`. That child has no copy of this checkout: put the
+   diff or the documents in `task`, or the pushed branch and repo URL it should
+   clone read-only.
 3. No T3 tools (plain Claude Code or Codex CLI on a Linux machine): run the
    member as a CLI on asus over ssh, the brief in the prompt and the material
    as a file. rodinnypcl cannot reach the other machines: report the members

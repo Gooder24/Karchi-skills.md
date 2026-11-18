@@ -58,16 +58,16 @@ for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspa
              "anthropic-skills:brand-partner": "off", "anthropic-skills:import-memory": "off",
              "fewer-permission-prompts": "off", "plugin-authoring": "off"}.items():
     o.setdefault(k, v)
-# No T3 side threads (Karchi, 2026-11-18): delegate_task is denied; new work goes to t3_thread_launch.
-deny = s.setdefault("permissions", {}).setdefault("deny", [])
-deny_changed = "mcp__t3-code__delegate_task" not in deny
-if deny_changed: deny.append("mcp__t3-code__delegate_task")
+# delegate_task was denied for an hour on 2026-11-18; Karchi wants side threads back (AGENTS.md says when).
+deny = s.get("permissions", {}).get("deny", [])
+deny_changed = "mcp__t3-code__delegate_task" in deny
+if deny_changed: deny.remove("mcp__t3-code__delegate_task")
 # The Cowork plugin from claude.ai: its skills ignore skillOverrides, so the whole plugin goes off.
 e = s.setdefault("enabledPlugins", {}); new_plugin = "cowork-plugin-management@synced" not in e
 e.setdefault("cowork-plugin-management@synced", False)
 if len(o) != n or new_plugin or compact_changed or deny_changed:
     json.dump(s, open(p + ".tmp", "w"), indent=2, ensure_ascii=False); os.replace(p + ".tmp", p)
-    print("ok Claude settings: auto-compact 350k, skillOverrides, no delegate_task")
+    print("ok Claude settings: auto-compact 350k, skillOverrides, delegate_task allowed")
 PY
 # Codex compacts at 350k too (T3's Codex accounts link their config.toml to this one).
 if [ -d "$HOME/.codex" ]; then
