@@ -151,8 +151,11 @@ and its link goes into the thread.
 
 ### 8. Follow the replies
 
-Add the PR to Hermes' watch list without a checkout path (`owner/repo#N` in `~/.hermes/pr-babysit.list` on asus),
-so Hermes only watches and never pushes or replies there. For every human review or question: a Slovak note for
+Add the PR to Hermes' watch list (`owner/repo#N` in `~/.hermes/pr-babysit.list` on asus) without a checkout path.
+When Karchi says babysit, add the asus checkout on the PR's branch as the path, but only after the PR as filed passed
+its check (its GitHub head SHA is the one the gates and `verify.sh` ran on). With a path, Hermes pushes fixes for CI,
+conflicts and real bot findings to his fork, and in repos not owned by Gooder24 never writes to people there (rule in
+its job prompt since 2026-11-18): questions and reviews reach him as inbox notes. For every human review or question: a Slovak note for
 Karchi with what they ask, whether they are right, the fix if one is needed (pushed only after he agrees), and the
 points his reply should make. He writes and posts the reply. Bot findings (CI, CodeRabbit) are fixed the way
 `github` says. When a PR is closed unmerged, write down why in `progress.md` and in this skill's lessons if it
