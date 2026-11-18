@@ -32,7 +32,7 @@ The [Claude Code](#claude-code) section says what it does.
 | [`academic-pptx`](academic-pptx/SKILL.md) | The content of his presentations: narrative spine, action titles, one job per slide, sources |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`oss-prispevky`](oss-prispevky/SKILL.md) | Contributing to other people's open-source projects: project choice by measured merge rates, AI policies, bugs reproduced in desktop VMs (`desktop-vm/dvm.sh`), PRs with proof and a merge chance, a Slovak explanation he defends himself |
-| [`priority`](priority/SKILL.md) | Karchi's inbox on asus: only Hermes reads it, every chat only writes to it; moving threads to asus |
+| [`priority`](priority/SKILL.md) | Karchi's inbox on asus: only Hermes reads it, every chat only writes to it |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
 | [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
 | [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
