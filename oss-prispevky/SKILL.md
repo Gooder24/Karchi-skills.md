@@ -76,7 +76,7 @@ template links the ban in `pop-os/pop`). Known as of 2026-11-18 (recheck before 
 | Flathub | Manifests must not contain AI-generated or AI-assisted content; AI in the app must be disclosed; no AI-opened PRs or replies. Flathub packaging is not for this workflow. |
 | Ghostty (Zig) | Disclose every use and its extent; a maintainer must vouch for a first-time contributor before PRs; bad AI contributions go on a public denounce list. |
 | Smithay (and Smithay/smithay-clipboard) | `AI.md`: allowed but "strongly advise against"; AI code marked in the commit messages; no AI-written issues, comments or PR descriptions (a translation tool is fine). |
-| Tauri | `.github/CONTRIBUTING.md` "AI Tool Policy": review and test all LLM content yourself; no AI replies to review comments; else closed as `ai-slop`. |
+| Tauri | `.github/CONTRIBUTING.md` "AI Tool Policy": review and test all LLM content yourself; no AI replies to review comments except translations; else closed as `ai-slop`. |
 | Zed | LLM coding welcome with a human who understands it; no autonomous agents; replies and PR text in your own words; three open PRs at most; CLA. |
 | Linebender (Xilem, Vello) | Disclose ahead of time in the PR description, also plans an LLM proposed; never write "no AI was used". |
 | Rerun, egui | You own the quality; Rerun asks you to state your confidence; egui closes "LLM slop" and massive PRs. |
