@@ -62,7 +62,7 @@ desktop its author could not try, with numbers.
 ### 2. Read the rules and the AI policy
 
 ```sh
-$T/fetchpolicy.sh owner/repo ./policy/owner_repo && rg -in 'LLM|\bAI\b|generat|copilot|agent' ./policy/owner_repo
+$T/fetchpolicy.sh owner/repo ./policy/owner_repo && rg --hidden -in 'LLM|\bAI\b|generat|copilot|agent' ./policy/owner_repo
 ```
 
 Read CONTRIBUTING, AI_POLICY, AGENTS.md, the PR template, the CLA and the code of conduct whole, then write the
@@ -75,6 +75,8 @@ template links the ban in `pop-os/pop`). Known as of 2026-11-18 (recheck before 
 | Pop!_OS and COSMIC (all `pop-os` repos, also its smithay-clipboard and libcosmic forks) | **Banned** in issues and PRs, "including code, comments, and descriptions" (pop-os/pop CONTRIBUTING, since 2026-09-30); the PR template makes you tick "I have not included any LLM generated content". Skip. |
 | Flathub | Manifests must not contain AI-generated or AI-assisted content; AI in the app must be disclosed; no AI-opened PRs or replies. Flathub packaging is not for this workflow. |
 | Ghostty (Zig) | Disclose every use and its extent; a maintainer must vouch for a first-time contributor before PRs; bad AI contributions go on a public denounce list. |
+| Smithay (and Smithay/smithay-clipboard) | `AI.md`: allowed but "strongly advise against"; AI code marked in the commit messages; no AI-written issues, comments or PR descriptions (a translation tool is fine). |
+| Tauri | `.github/CONTRIBUTING.md` "AI Tool Policy": review and test all LLM content yourself; no AI replies to review comments; else closed as `ai-slop`. |
 | Zed | LLM coding welcome with a human who understands it; no autonomous agents; replies and PR text in your own words; three open PRs at most; CLA. |
 | Linebender (Xilem, Vello) | Disclose ahead of time in the PR description, also plans an LLM proposed; never write "no AI was used". |
 | Rerun, egui | You own the quality; Rerun asks you to state your confidence; egui closes "LLM slop" and massive PRs. |
@@ -172,4 +174,6 @@ teaches something.
 - 2026-11-17 Debian #1144467 (see `github`): disclose AI at the top and keep it short; a 150-line reply got told off.
 - 2026-11-18 COSMIC Files #2136: the research called COSMIC "no written AI rules" although its PR template, already
   fetched into `data/policy/`, bans LLM content; caught only after the root-cause work. Read the template whole
-  in step 2 before scoring a project.
+  in step 2 before scoring a project. Same day: Smithay's `AI.md` and Tauri's policy were missed too, because `rg`
+  skips the hidden `.github_*` files `fetchpolicy.sh` saves (now `rg --hidden`, and it fetches `AI.md` and the org's
+  `.github` defaults).
