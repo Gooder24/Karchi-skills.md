@@ -14,8 +14,8 @@ weft chats [TEXT] [--unread] [--net messenger|instagram|whatsapp|discord|edupage
 weft read CHAT [-n 30]               the chat, oldest first (older pages come from the archive, never from Meta)
 weft search WORDS [--chat CHAT]      homeserver and archive, newest first
 weft file ID > PATH                  an old message's attachment; `read` prints its ID as „(weft file ID, size)“
-weft draft CHAT [TEXT|-] [--file P]  a draft (text, files) in that chat's message box in Weft; he sends it himself
-weft drafts [--clear CHAT]           drafts he has not sent yet
+weft draft CHAT [TEXT|-] [--file P]  a draft (text, files) on top of that chat's stash („Odložené“) in Weft; he sends it himself
+weft drafts [--clear CHAT]           the stash and drafts Weft has not taken yet; --clear removes agents' drafts
 weft relay CHAT --to FRIEND [--note] when CHAT answers him, a picture of the answer lands as a draft in FRIEND's chat
 weft relays [--cancel ID]            what waits for an answer, and what came of it
 weft send CHAT [TEXT|-] [--file PATH]... [--reply ID] --yes
@@ -44,8 +44,8 @@ or `search`; to show one, he switches it on there himself.
 
 ## Rules
 
-- **Draft by default.** When he asks you to answer or write to someone, use `weft draft`: it appears in
-  that chat's message box in Weft (and as „Koncept:“ in the list) and he sends it. Use `weft send --yes`
+- **Draft by default.** When he asks you to answer or write to someone, use `weft draft`: it lands on top of
+  that chat's stash in Weft (the row says „odložené N“; Ctrl+S in an empty box takes it) and he sends it. Use `weft send --yes`
   only when he said to send it in this conversation (pošli, odošli) and the text and the chat are settled.
   Run it once without `--yes` first and check the chat it names.
 - A message goes to real people and cannot be taken back. Never send in a loop, never to a chat you
