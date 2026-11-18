@@ -2,8 +2,8 @@
 
 Jeden súbor pre všetkých agentov (Claude Code, Codex a ďalších) na všetkých Karchiho strojoch. Zdroj je
 `~/.work/karchi-skills/AGENTS.md`; `install.sh` naň linkuje `~/.claude/CLAUDE.md`, `~/.claude/AGENTS.md` a
-`~/.codex/AGENTS.md`. Meň len tento súbor, commitni a pushni ho (skill `github`); ostatné stroje si ho stiahnu pri
-ďalšom štarte agenta.
+`~/.codex/AGENTS.md`. Meň len tento súbor, commitni a pushni ho (skill `github`); ostatné stroje si ho stiahnu do 3
+minút (`karchi-skills-update.timer`).
 
 # Karchiho stroje (T3 Code)
 

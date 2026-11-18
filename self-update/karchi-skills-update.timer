@@ -1,0 +1,9 @@
+[Unit]
+Description=Keep karchi-skills current, so a new agent session reads the latest AGENTS.md
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=3min
+
+[Install]
+WantedBy=timers.target

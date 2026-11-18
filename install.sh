@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Installs or updates these skills on this machine: pulls the repo and links every skill folder
 # into ~/.claude/skills (and ~/.codex/skills where Codex is installed). Safe to run again; the
-# SessionStart hook in ~/.claude/settings.json runs it at the start of every session.
+# karchi-skills-update.timer runs it every 3 minutes, and the SessionStart hook in ~/.claude/settings.json at
+# the start of every session (that hook is async: the session has already read the old AGENTS.md).
 set -e
 R="$HOME/.work/karchi-skills"
 if [ -d "$R/.git" ]; then git -C "$R" pull -q --ff-only
@@ -84,6 +85,17 @@ if ! grep -qx 'overenie/' "$ign" 2>/dev/null; then
   mkdir -p "$(dirname "$ign")"
   [ -s "$ign" ] && [ -n "$(tail -c1 "$ign")" ] && echo >> "$ign"
   echo 'overenie/' >> "$ign" && echo "ok $ign: overenie/"
+fi
+# self-update: a push reaches every machine within 3 minutes, before the next session starts.
+if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then
+  mkdir -p "$HOME/.config/systemd/user"
+  if ! cmp -s "$R/self-update/karchi-skills-update.service" "$HOME/.config/systemd/user/karchi-skills-update.service" ||
+     ! cmp -s "$R/self-update/karchi-skills-update.timer" "$HOME/.config/systemd/user/karchi-skills-update.timer"; then
+    cp "$R"/self-update/karchi-skills-update.{service,timer} "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload
+  fi
+  systemctl --user is-enabled --quiet karchi-skills-update.timer 2>/dev/null ||
+    { systemctl --user enable --now karchi-skills-update.timer && echo "ok karchi-skills-update.timer"; }
 fi
 # limit-fallback: pri 3 % zvyšku týždenného Claude limitu prepne T3 default na Codex, po resete späť.
 if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then

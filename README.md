@@ -104,9 +104,11 @@ ln -s ~/.work/karchi-skills/one-off/ntfs-dirty-flag ~/.claude/skills/
 
 The [quick start](#quick-start) command clones the repo to `~/.work/karchi-skills` and links every skill into
 `~/.claude/skills` (and `~/.codex/skills` if Codex is installed). Installed on x270, asus, dell, e540 and the
-VPS (virtual private server), where a `SessionStart` hook in `~/.claude/settings.json` runs `install.sh` again
-at the start of every session,
-so a pushed change reaches every machine in its next session. It also puts `overenie/` in the global
+VPS (virtual private server). `install.sh` sets up `karchi-skills-update.timer` (systemd user timer in
+[`self-update/`](self-update/)), which runs it again every 3 minutes, so a pushed change reaches every machine
+before its next session; `systemctl --user list-timers karchi-skills-update.timer` shows the last run. A
+`SessionStart` hook in `~/.claude/settings.json` runs it too, but asynchronously, after the session has read
+AGENTS.md. It also puts `overenie/` in the global
 gitignore, so verification files never show in T3's changed files or in a commit:
 
 ```json

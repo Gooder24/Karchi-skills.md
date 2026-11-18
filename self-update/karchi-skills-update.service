@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull karchi-skills and relink skills and AGENTS.md
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=GIT_TERMINAL_PROMPT=0
+ExecStart=/usr/bin/timeout 60 /bin/bash %h/.work/karchi-skills/install.sh
+# Runs every 3 minutes; keep the "ok" lines and systemd's start and stop lines out of the journal.
+StandardOutput=null
+LogLevelMax=notice
