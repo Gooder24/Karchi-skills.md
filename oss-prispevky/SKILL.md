@@ -22,8 +22,8 @@ správcu súborov“ on asus, its folder `~/.t3/scratch/2026-11-15-https-github-
 2. **One problem per PR, with proof.** A repro, a test that fails on `main` and passes on the branch, a real run
    (screenshots or video for UI, numbers for performance). "Tests pass" is not proof.
 3. **Issue or discussion first**, unless the project's CONTRIBUTING invites PRs for obvious bugs and the bug is one,
-   or the PR fixes red CI on the default branch. Features always start as an issue or discussion (Zed: "If there isn't a GitHub issue with staff confirmation that
-   we want it, start a discussion").
+   or the PR fixes red CI on the default branch. Features always start as an issue or discussion (Zed: "If there isn't
+   a GitHub issue with staff confirmation that we want it, start a discussion").
 4. **No batches.** At most three open PRs in a new project until the first one merges, and only in a project that
    regularly merges outside PRs; otherwise one. Each is a small, independent bug fix with its own issue (or a failure
    anyone can see, such as red CI on the default branch) and its own evidence, so any one can be merged or closed
