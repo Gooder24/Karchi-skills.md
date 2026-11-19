@@ -24,7 +24,7 @@ INBOX = HOME / "inbox/inbox.md"
 JUDGED = HOME / ".hermes/settled-steps.judged"
 CACHE = HOME / ".cache/settled-steps"
 HOSTS = ["asus", "dell", "e540", "x270"]
-SINCE = "2026-11-19T16:45:00Z"
+SINCE = "2026-11-19T16:45:00.000Z"  # same shape as T3 settledAt, so strings compare
 
 # Runs on each machine: settled and open top-level threads with the last user and assistant text.
 REMOTE = r'''
@@ -38,9 +38,13 @@ for tid, title, pj in c.execute("select thread_id, title, payload_json from orch
         continue
     t = {"id": tid, "title": title, "settledAt": p.get("settledAt") if p.get("settledOverride") == "settled" else None}
     if t["settledAt"]:
-        for role in ("user", "assistant"):
-            r = c.execute("select json_extract(payload_json,'$.text') from orchestration_v2_projection_messages where thread_id=? and role=? and streaming=0 and (role='assistant' or not (json_extract(payload_json,'$.createdBy')='agent' and json_extract(payload_json,'$.creationSource') in ('provider','server'))) order by created_at desc limit 1", (tid, role)).fetchone()
-            t[role] = (r[0] or "") if r else ""
+        q = "select json_extract(payload_json,'$.text') from orchestration_v2_projection_messages where thread_id=? and streaming=0 and "
+        # Karchi's last own message; in a thread an agent started for him, its first message (his brief)
+        r = (c.execute(q + "role='user' and coalesce(json_extract(payload_json,'$.createdBy'),'user')='user' order by created_at desc limit 1", (tid,)).fetchone()
+             or c.execute(q + "role='user' order by created_at limit 1", (tid,)).fetchone())
+        t["user"] = (r[0] or "") if r else ""
+        r = c.execute(q + "role='assistant' order by created_at desc limit 1", (tid,)).fetchone()
+        t["assistant"] = (r[0] or "") if r else ""
     out.append(t)
 print(json.dumps(out, ensure_ascii=False))
 '''
