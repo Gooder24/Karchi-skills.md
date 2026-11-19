@@ -3,7 +3,7 @@
 
 Usage: python3 .github/scripts/check-docs.py [--update-baseline]   (run in the repository root)
 
-Checks every *.md file git knows or would add (tracked, or new and not ignored) for:
+Checks every *.md file git knows or would add (tracked, or new and not ignored), past any YAML front matter, for:
   heading-skip    a heading that skips a level (## followed by ####)
   heading-empty   a heading without text
   img-alt         an image without alt text (![](x) or <img> without alt)
@@ -34,8 +34,14 @@ def markdown_files():
 def problems(path):
     level = 0
     fence = None
-    for n, line in enumerate(Path(path).read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+    lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+    # YAML front matter (a leading --- ... --- block, as in SKILL.md) is metadata, not rendered Markdown.
+    front = lines[0].strip() == "---" if lines else False
+    for n, line in enumerate(lines, 1):
         stripped = line.strip()
+        if front:
+            front = not (n > 1 and stripped in ("---", "..."))
+            continue
         m = re.match(r"^(```+|~~~+)", stripped)
         if m:
             fence = None if fence and stripped.startswith(fence) else (fence or m.group(1))
