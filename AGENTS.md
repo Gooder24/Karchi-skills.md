@@ -24,6 +24,10 @@ Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodi
 
 SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
 
+# Weft (Karchi, 2026-11-20)
+
+Weft (`Gooder24/weft`) sa vyvíja na asuse: T3 projekt „Weft“ v `~/weft`, vedľa jeho služieb v `~/matrix-spike`. Nové Weft vlákno zakladaj tam (`environmentId` asusu). Projekt „Weft“ na delli (`~/.t3/projects/spojka`) a checkout na e540 sa už nepoužívajú: 3,7 GB nestačilo na viac Weft vlákien s prehliadačmi.
+
 # Keď musí Karchi niečo spraviť hneď (Karchi, 2026-11-18)
 
 Keď krok čaká na neho (prihlásenie v okne, kód zo stránky, karta), hneď ho upozorni nástrojom: `PushNotification` jednou vetou, čo má spraviť, a až potom čakaj. Samotnú správu ani `send_to_user` si nevšimne.
