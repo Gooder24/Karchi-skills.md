@@ -24,6 +24,8 @@ done
 mkdir -p "$HOME/.local/bin" && ln -sfn "$R/weft/weft" "$HOME/.local/bin/weft"
 # ucenie: Karchi's learning app Učenie for agents (runs on asus, elsewhere over ssh; see ucenie/SKILL.md).
 ln -sfn "$R/ucenie/ucenie" "$HOME/.local/bin/ucenie"
+# citacka: what the Orca screen reader says on a page or in a terminal (runs on e540 when Orca is not here).
+ln -sfn "$R/citacka/citacka" "$HOME/.local/bin/citacka"
 # One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md.
 # A real file there is kept once as <name>.bak-<date>, then replaced by the link.
 for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md"; do

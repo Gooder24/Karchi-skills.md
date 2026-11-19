@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+"""citacka: a transcript of what the Orca screen reader says on a web page or in a terminal.
+
+  citacka README.md                     # GitHub's rendering of a Markdown file, read in Chromium
+  citacka https://github.com/o/r        # any web page
+  citacka page.html --mode headings,links
+  citacka --terminal 'karchi-doctor'    # a command's output in a terminal (lxterminal)
+
+Orca runs in its own Xvfb display and D-Bus session; speech-dispatcher's generic module writes every
+utterance to a file instead of a sound card, so the transcript is the text the synthesizer received.
+Each line of the transcript is one key press and what Orca said after it.
+
+Modes for a page: lines (Down arrow through the page, the default), headings (H), links (K),
+tables (T, then every cell with Alt+Shift+arrows), sayall (Orca's Say All). For a terminal: live (what
+Orca says while the output appears) and review (flat review, line by line upwards from the prompt).
+
+Runs here when Orca is installed, otherwise over ssh on --host (default e540). Writes
+<out>/<name>.txt (default out: ./citacka) and prints its path. See SKILL.md next to this file.
+"""
+import argparse, json, os, re, shutil, signal, socket, subprocess, sys, tempfile, time, urllib.parse
+from datetime import datetime
+from pathlib import Path
+
+SELF = Path(__file__).resolve()
+NEEDS = ["orca", "Xvfb", "xdotool", "speech-dispatcher", "dbus-run-session"]
+PAGE_MODES = ["lines", "headings", "links", "tables", "sayall"]
+TERM_MODES = ["live", "review"]
+
+
+def die(msg):
+    sys.exit(f"citacka: {msg}")
+
+
+def run(cmd, **kw):
+    return subprocess.run(cmd, check=True, text=True, capture_output=True, **kw).stdout
+
+
+# ---------- preparing the page ----------
+
+def github_repo(path):
+    """owner/repo of the git checkout that holds path, or None."""
+    try:
+        url = run(["git", "-C", str(path.parent), "remote", "get-url", "origin"]).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    m = re.search(r"github\.com[:/]([^/]+/[^/]+?)(\.git)?$", url)
+    return m.group(1) if m else None
+
+
+def render_markdown(md, lang, out):
+    """GitHub's own HTML for a Markdown file (gh api markdown), in a page with a title and language.
+    Mode markdown, as github.com renders files: mode gfm is for comments and turns every newline into <br>."""
+    repo = github_repo(md)
+    body = run(["gh", "api", "markdown", "-f", f"text={md.read_text()}", "-f", "mode=markdown"])
+    title = f"{md.name} · {repo}" if repo else md.name
+    out.write_text(f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><title>{title}</title>'
+                   f'</head><body><main><article class="markdown-body">{body}</article></main></body></html>')
+    return repo
+
+
+# ---------- the session: Xvfb, AT-SPI, speech-dispatcher, Orca, the app ----------
+
+class Session:
+    def __init__(self, work):
+        self.w = work
+        self.procs = []
+        self.spoken = work / "spoken.txt"
+        self.spoken.touch()
+        self.pos = 0
+
+    def start(self, *cmd, log, env=None):
+        p = subprocess.Popen(cmd, stdout=open(self.w / log, "w"), stderr=subprocess.STDOUT,
+                             env=env, start_new_session=True)
+        self.procs.append(p)
+        return p
+
+    def stop(self):
+        # Only the processes this session started, newest first, each with its own process group, then
+        # the speech-dispatcher Orca spawned, found by the pid file in this session's runtime folder.
+        for p in reversed(self.procs):
+            if p.poll() is None:
+                try:
+                    os.killpg(p.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    p.wait(5)
+                except subprocess.TimeoutExpired:
+                    os.killpg(p.pid, signal.SIGKILL)
+        pidfile = self.w / "runtime" / "speech-dispatcher" / "pid" / "speech-dispatcher.pid"
+        if pidfile.exists():
+            pid = int(pidfile.read_text().split()[0])
+            kids = [int(d.name) for d in Path("/proc").iterdir() if d.name.isdigit() and ppid(d) == pid]
+            for k in [pid] + kids:
+                if str(self.w) in cmdline(k) or k in kids:
+                    try:
+                        os.kill(k, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+
+    def setup(self):
+        w = self.w
+        r, wfd = os.pipe()
+        xv = subprocess.Popen(["Xvfb", "-displayfd", str(wfd), "-screen", "0", "1366x768x24", "-nolisten", "tcp"],
+                              pass_fds=[wfd], stdout=open(w / "xvfb.log", "w"), stderr=subprocess.STDOUT,
+                              start_new_session=True)
+        self.procs.append(xv)
+        os.close(wfd)
+        with os.fdopen(r) as f:
+            num = f.readline().strip()
+        if not num:
+            die("Xvfb did not start; see " + str(w / "xvfb.log"))
+        os.environ["DISPLAY"] = ":" + num
+        for k in ["CONFIG", "DATA", "CACHE", "RUNTIME"]:
+            d = w / k.lower()
+            d.mkdir(mode=0o700)
+            os.environ[f"XDG_{k}_HOME" if k != "RUNTIME" else "XDG_RUNTIME_DIR"] = str(d)
+        # speech-dispatcher: the generic module writes each message to spoken.txt; ALSA's null device
+        # stands in for the sound card that speech-dispatcher insists on opening.
+        sd = w / "config" / "speech-dispatcher"
+        (sd / "modules").mkdir(parents=True)
+        langs = ["en", "en-US", "sk", "cs", "de"]
+        (sd / "speechd.conf").write_text(
+            'AudioOutputMethod "alsa"\nAudioALSADevice "null"\n'
+            'AddModule "prepis" "sd_generic" "prepis.conf"\nDefaultModule prepis\n'
+            + "".join(f'LanguageDefaultModule "{l}" "prepis"\n' for l in langs))
+        (sd / "modules" / "prepis.conf").write_text(
+            f'GenericExecuteSynth "printf \'%s\\\\n\' \\\'$DATA\\\' >> {self.spoken}"\n'
+            'GenericCmdDependency "printf"\n'
+            + "".join(f'AddVoice "{l}" "MALE1" "{l}"\nGenericLanguage "{l}" "{l}" "utf-8"\n' for l in langs))
+        self.start("/usr/libexec/at-spi-bus-launcher", "--launch-immediately", log="atspi.log")
+        time.sleep(1)
+        # Orca's defaults, except key echo: the generic module garbles single keys, and the echo of
+        # every key the tool presses is noise in a transcript of the content.
+        prefs = w / "orca-prefs"
+        prefs.mkdir()
+        (prefs / "user-settings.conf").write_text(json.dumps({
+            "general": {"enableKeyEcho": False},
+            "profiles": {"default": {"profile": ["Default", "default"], "pronunciations": {}, "keybindings": {},
+                                     "enableKeyEcho": False}},
+            "pronunciations": {}, "keybindings": {}}))
+        self.start("orca", "--debug-file", str(w / "orca-debug.log"), "-u", str(w / "orca-prefs"), log="orca.log")
+        if not self.wait_for("Screen reader on", 20):
+            die("Orca did not start; see " + str(w / "orca.log"))
+
+    # Speech arrives asynchronously; a reply is done when spoken.txt has not grown for `quiet` seconds.
+    def settle(self, quiet=0.8, first=2.5, limit=60):
+        t0 = time.time()
+        size = self.spoken.stat().st_size
+        last = t0
+        while time.time() - t0 < limit:
+            time.sleep(0.15)
+            s = self.spoken.stat().st_size
+            if s != size:
+                size, last = s, time.time()
+            elif size == self.pos and time.time() - t0 >= first:
+                break
+            elif size != self.pos and time.time() - last >= quiet:
+                break
+        with open(self.spoken, "rb") as f:
+            f.seek(self.pos)
+            text = f.read(size - self.pos).decode("utf-8", errors="replace")
+        self.pos = size
+        return [clean(l) for l in text.splitlines() if l.strip()]
+
+    def wait_for(self, phrase, limit):
+        t0 = time.time()
+        while time.time() - t0 < limit:
+            if phrase in self.spoken.read_text(errors="replace"):
+                return True
+            time.sleep(0.2)
+        return False
+
+    def key(self, k, quiet=0.8):
+        subprocess.run(["xdotool", "key", "--delay", "40", k], check=True)
+        return self.settle(quiet)
+
+
+def clean(line):
+    """An utterance as text. The generic module garbles one that is only punctuation (', ', ': ' in Orca's
+    debug log) into bytes that are not text; such an utterance is marked instead."""
+    line = line.strip()
+    if "\ufffd" in line or re.search(r"[\x00-\x08\x0b-\x1f\x7f]", line):
+        return "(punctuation)"
+    return line
+
+
+def cmdline(pid):
+    try:
+        return Path(f"/proc/{pid}/cmdline").read_bytes().decode(errors="replace").replace("\0", " ")
+    except OSError:
+        return ""
+
+
+def ppid(d):
+    try:
+        return int((d / "stat").read_text().rsplit(")", 1)[1].split()[1])
+    except (OSError, IndexError, ValueError):
+        return -1
+
+
+def versions():
+    def v(cmd):
+        r = subprocess.run(cmd + ["--version"], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        return (r.stdout.strip().splitlines() or ["unknown"])[-1]
+    return {"orca": v(["orca"]).removeprefix("Orca version "), "chromium": v(["chromium"]).split(" built")[0],
+            "speech-dispatcher": run(["dpkg-query", "-W", "-f", "${Version}", "speech-dispatcher"]),
+            "machine": socket.gethostname(), "date": datetime.now().strftime("%Y-%m-%d %H:%M")}
+
+
+# ---------- reading ----------
+
+class Transcript:
+    def __init__(self):
+        self.lines = []
+
+    def section(self, title):
+        self.lines += ["", f"## {title}", ""]
+
+    def add(self, label, said):
+        self.lines.append(f"[{label}] " + (" | ".join(said) if said else "(nothing)"))
+
+
+def step_until_end(s, t, key, label, max_n, stop_words=()):
+    seen_same = 0
+    empty = 0
+    prev = None
+    for i in range(1, max_n + 1):
+        said = s.key(key)
+        if any(w in x for x in said for w in stop_words):
+            t.add(f"{label} {i}", said)
+            return
+        empty = empty + 1 if not said else 0
+        seen_same = seen_same + 1 if said == prev and said else 0
+        if empty >= 3 or seen_same >= 2:
+            t.lines.append(f"[{label}] (end: no new speech)")
+            return
+        t.lines.append(f"[{label} {i}] (the same again)") if said == prev and said else t.add(f"{label} {i}", said)
+        prev = said
+    t.lines.append(f"[{label}] (stopped after {max_n} presses)")
+
+
+def read_tables(s, t, max_n):
+    for n in range(1, 21):
+        said = s.key("t")
+        t.add(f"T {n}", said)
+        if not said or any("Wrapping to top" in x or "No more tables" in x for x in said):
+            return
+        m = re.search(r"table with (\d+) rows? (\d+) columns?", " ".join(said))
+        if not m:
+            continue
+        rows, cols = int(m.group(1)), int(m.group(2))
+        presses = 0
+        for r in range(rows):
+            right = r % 2 == 0
+            for c in range(cols - 1):
+                t.add(f"Alt+Shift+{'Right' if right else 'Left'}", s.key("alt+shift+" + ("Right" if right else "Left")))
+                presses += 1
+            if r < rows - 1:
+                t.add("Alt+Shift+Down", s.key("alt+shift+Down"))
+                presses += 1
+            if presses > max_n:
+                t.lines.append(f"[table] (stopped after {max_n} presses)")
+                break
+        s.key("Escape")
+
+
+def read_page(s, t, url, modes, max_n):
+    profile = s.w / "chromium"
+    s.start("chromium", "--force-renderer-accessibility", "--no-first-run", "--no-default-browser-check",
+            "--disable-gpu", "--password-store=basic", "--disable-features=Translate", "--lang=en-US",
+            f"--user-data-dir={profile}", "--window-size=1366,768", "--window-position=0,0", url, log="chromium.log")
+    if not s.wait_for("Chromium frame", 40):
+        die("Chromium did not open a window Orca could see; see " + str(s.w / "chromium.log"))
+    time.sleep(2)
+    t.section("page load")
+    t.add("load", s.settle(quiet=1.5, first=4))
+    titles = {"lines": "lines: Down arrow from the top", "headings": "headings: H from the top",
+              "links": "links: K from the top", "tables": "tables: T, then each cell with Alt+Shift+arrows",
+              "sayall": "sayall: Orca's Say All (KP_Add) from the top"}
+    for mode in modes:
+        t.section(titles[mode])
+        t.add("Control+Home", s.key("Control+Home"))
+        if mode == "lines":
+            step_until_end(s, t, "Down", "Down", max_n)
+        elif mode == "headings":
+            step_until_end(s, t, "h", "H", max_n, ("Wrapping to top", "No more headings"))
+        elif mode == "links":
+            step_until_end(s, t, "k", "K", max_n, ("Wrapping to top", "No more links"))
+        elif mode == "tables":
+            read_tables(s, t, max_n)
+        elif mode == "sayall":
+            t.add("KP_Add", s.key("KP_Add", quiet=3))
+
+
+def read_terminal(s, t, command, modes, max_n):
+    # A plain bash in lxterminal; the tool types the command and presses Enter, as a user would.
+    rc = s.w / "bashrc"
+    rc.write_text("PS1='$ '\ncd ~\n")
+    s.start("lxterminal", "--geometry=140x45", "-e", f"bash --rcfile {rc} -i", log="terminal.log")
+    if not s.wait_for("Terminal", 30) and not s.wait_for("terminal", 1):
+        time.sleep(3)
+    t.section("open: the terminal gets focus")
+    t.add("open", s.settle(quiet=1.5, first=4))
+    subprocess.run(["xdotool", "type", "--delay", "20", command], check=True)
+    t.add("type the command", s.settle())
+    t.section("live: what Orca said while the output appeared")
+    t.add("Return", s.key("Return", quiet=3))
+    if "review" in modes:
+        t.section("review: flat review from the prompt upwards, KP_Up (this line), then KP_Home (line above)")
+        t.add("KP_Up", s.key("KP_Up"))
+        step_until_end(s, t, "KP_Home", "KP_Home", max_n, ("File Edit Tabs Help",))
+
+
+def inner(a):
+    work = Path(tempfile.mkdtemp(prefix="citacka-"))
+    s = Session(work)
+    t = Transcript()
+    try:
+        s.setup()
+        s.settle(first=1)
+        v = versions()
+        what = f"terminal: {a.terminal}" if a.terminal else f"page: {a.label or a.target}"
+        t.lines = [f"# citacka transcript: {what}",
+                   f"# Orca {v['orca']}, speech-dispatcher {v['speech-dispatcher']}"
+                   + ("" if a.terminal else f", {v['chromium']}") + (", lxterminal" if a.terminal else ""),
+                   f"# {v['machine']}, {v['date']}; Orca default settings with key echo off, desktop keyboard layout",
+                   "# Each line: [key] what Orca said, utterances separated by ' | '."]
+        if a.terminal:
+            read_terminal(s, t, a.terminal, a.modes, a.max)
+        else:
+            read_page(s, t, a.target, a.modes, a.max)
+    finally:
+        s.stop()
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(t.lines) + "\n")
+    if a.keep:
+        print(f"citacka: work files in {work}", file=sys.stderr)
+    else:
+        shutil.rmtree(work, ignore_errors=True)
+    print(out)
+
+
+# ---------- front: prepare, then run here or on the reader host ----------
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0],
+                                formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
+    p.add_argument("target", nargs="?", help="URL, .md or .html file")
+    p.add_argument("--terminal", metavar="COMMAND", help="read a command's output in a terminal instead")
+    p.add_argument("--mode", default=None, help="comma list; page: " + ",".join(PAGE_MODES)
+                   + " (default lines); terminal: " + ",".join(TERM_MODES) + " (default live,review)")
+    p.add_argument("--host", help="run Orca there over ssh (default: here if Orca is installed, else e540)")
+    p.add_argument("--out", default="citacka", help="output folder (default ./citacka)")
+    p.add_argument("--name", help="transcript file name without .txt")
+    p.add_argument("--lang", default="en", help="language of a rendered .md page (default en)")
+    p.add_argument("--max", type=int, default=600, help="most key presses per mode (default 600)")
+    p.add_argument("--keep", action="store_true", help="keep the work folder (Orca debug log, raw speech)")
+    p.add_argument("--inner", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--label", help=argparse.SUPPRESS)
+    a = p.parse_args()
+    if bool(a.target) == bool(a.terminal):
+        p.error("give a URL or file, or --terminal COMMAND")
+    allowed = TERM_MODES if a.terminal else PAGE_MODES
+    a.modes = (a.mode or ("live,review" if a.terminal else "lines")).split(",")
+    if bad := [m for m in a.modes if m not in allowed]:
+        p.error(f"unknown mode {bad}; choose from {allowed}")
+
+    if a.inner:
+        return inner(a)
+
+    tmp = Path(tempfile.mkdtemp(prefix="citacka-front-"))
+    try:
+        label = a.target
+        page = None
+        if a.target and not re.match(r"^(https?|file)://", a.target):
+            f = Path(a.target).resolve()
+            if not f.is_file():
+                die(f"no such file: {a.target}")
+            if f.suffix.lower() in (".md", ".markdown"):
+                page = tmp / (f.stem + ".html")
+                repo = render_markdown(f, a.lang, page)
+                label = f"{f.name} ({repo or 'no GitHub remote'}), GitHub's rendering of the local file"
+            else:
+                page = tmp / f.name
+                shutil.copy(f, page)
+        name = a.name or re.sub(r"[^A-Za-z0-9._-]+", "-",
+                                (a.terminal or (Path(a.target).stem if page else urllib.parse.urlparse(a.target).path
+                                                or urllib.parse.urlparse(a.target).netloc))).strip("-") or "page"
+        out = Path(a.out).resolve() / f"{name}.txt"
+        mode = ",".join(a.modes)
+        local = not a.host and all(shutil.which(c) for c in NEEDS)
+        rest = ["--mode", mode, "--max", str(a.max), "--label", label or ""] + (["--keep"] if a.keep else [])
+        if local:
+            target = ["--terminal", a.terminal] if a.terminal else [page.as_uri() if page else a.target]
+            cmd = ["dbus-run-session", "--", sys.executable, "-I", str(SELF), "--inner", "--out", str(out)] + rest + target
+            sys.exit(subprocess.run(cmd, stderr=None, stdout=None).returncode)
+        host = a.host or "e540"
+        rdir = run(["ssh", host, "mktemp -d /tmp/citacka-remote-XXXXXX"]).strip()
+        files = [str(SELF)] + ([str(page)] if page else [])
+        subprocess.run(["scp", "-q"] + files + [f"{host}:{rdir}/"], check=True)
+        target = ["--terminal", a.terminal] if a.terminal else [f"file://{rdir}/{page.name}" if page else a.target]
+        rcmd = ["dbus-run-session", "--", "python3", "-I", f"{rdir}/citacka", "--inner", "--out", f"{rdir}/out.txt"] + rest + target
+        r = subprocess.run(["ssh", host, " ".join(map(sh_quote, rcmd))], stdout=subprocess.DEVNULL)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        got = subprocess.run(["scp", "-q", f"{host}:{rdir}/out.txt", str(out)]).returncode == 0
+        subprocess.run(["ssh", host, f"rm -rf {sh_quote(rdir)}"])
+        if not got:
+            die(f"no transcript came back from {host} (exit {r.returncode})")
+        print(out)
+        sys.exit(r.returncode)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def sh_quote(s):
+    return "'" + s.replace("'", "'\\''") + "'"
+
+
+if __name__ == "__main__":
+    main()

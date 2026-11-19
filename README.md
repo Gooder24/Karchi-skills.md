@@ -37,7 +37,8 @@ The [Claude Code](#claude-code) section says what it does.
 | [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
 | [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
 | [`ucenie`](ucenie/SKILL.md) | Karchi's learning app Učenie and the `ucenie` command: cards and packs, homework drafts, the learn harness, Anki import and export; points to the e540 thread that built it |
-| [`weft`](weft/SKILL.md) | `weft` on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
+| [`weft`](weft/SKILL.md) | The `weft` command on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
+| [`citacka`](citacka/SKILL.md) | The `citacka` command: a transcript of what the Orca screen reader says on a page, a README or a command's output, for screen reader checks |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
 | [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high) and Kimi K3.1 Pro (OpenCode Go), on another machine when this one cannot run a member |
