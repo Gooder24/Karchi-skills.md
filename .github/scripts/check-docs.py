@@ -35,12 +35,13 @@ def problems(path):
     level = 0
     fence = None
     lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
-    # YAML front matter (a leading --- ... --- block, as in SKILL.md) is metadata, not rendered Markdown.
-    front = bool(lines) and lines[0].strip() == "---" and any(l.strip() in ("---", "...") for l in lines[1:])
+    # YAML front matter is metadata, not rendered Markdown: a first line ---, a key: on the next line, and a
+    # closing --- or ... at the start of a line (as in SKILL.md). Anything else is a thematic break.
+    end = next((i for i, l in enumerate(lines[1:], 1) if l.rstrip() in ("---", "...")), 0)
+    front = end if len(lines) > 1 and lines[0].rstrip() == "---" and re.match(r"[\w-]+\s*:", lines[1]) else 0
     for n, line in enumerate(lines, 1):
         stripped = line.strip()
-        if front:
-            front = not (n > 1 and stripped in ("---", "..."))
+        if front and n <= front + 1:
             continue
         m = re.match(r"^(```+|~~~+)", stripped)
         if m:
