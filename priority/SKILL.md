@@ -26,7 +26,11 @@ only because he asked in this thread, and mention that Hermes keeps it.
   „<thread title>“`, at most 300 characters. If this thread already has a line (grep for its title,
   nothing else), update that line in place instead.
 - „hotové“ about an item: change that line's `[ ]` to `[x]`, move it to Hotové, append
-  ` · hotové <date>: <where>`. Delete a line only when he says „vyhoď“.
+  ` · hotové <date>: <where>`. Delete a line only when he says „vyhoď“, „daj preč“,
+  „nepotrebujem“, „netreba“ or „nerieš“ about it (Karchi, 2026-11-19: „nerieš“ means drop the line, not
+  keep it and leave it alone).
+- Before you call an item done or stale, check its real state (PR, file, service, thread), not just
+  its text.
 - Change only the lines concerned, keep the format, put nothing else into `~/inbox`. From another
   machine: `ssh asus 'python3 - <<"PY" ... PY'` on the file. If asus does not answer, say
   „inbox na asuse nedostupný“ once and go on.
