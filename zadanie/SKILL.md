@@ -26,8 +26,9 @@ one-line fixes, "nechcem X") and put it in the file, so none of it comes back as
   order of work, small UX calls that follow `taste.md`).
 - **Nesmieš:** hard limits: live services, real people (no messages, no sending), deleting data,
   secrets in chat, spending money.
-- **Karchiho krok** (a login, token, purchase or taste decision): write it to the inbox (skill
-  `priority`), skip that item and go on with the rest. Never stop to wait.
+- **Karchiho krok** (a login, token, purchase or taste decision): name it under `Tvoj krok` in the
+  final reply (the thread stays unsettled, so it waits there; skill `priority`), skip that item and go
+  on with the rest. Never stop to wait.
 - **Koniec:** stop when every check passes, or after the time limit he gave (default 3 hours of
   work).
 

@@ -19,8 +19,8 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
      only then deploy, all in the same turn. Never deploy before the tests pass.
 
   No third way may happen there: no PR left open for Karchi or a review, and no merge on red tests. When
-  the tests stay red and you cannot fix them, close the PR with one sentence why and put the step in his
-  inbox (skill `priority`).
+  the tests stay red and you cannot fix them, close the PR with one sentence why and name his step at the end
+  of the reply (it waits in the thread; skill `priority`).
 - Work projects (eSYST) do not have an agreed workflow yet. Ask before a commit, push, branch or PR.
 - Never open a pull request unless Karchi explicitly asks, apart from way 2 above. One request is one PR.
 - A repo with `scripts/land.sh` (Partsheet) lands PRs only through it, never with `gh pr merge` or the
