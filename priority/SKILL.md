@@ -33,7 +33,8 @@ thread, and removes a line when its thread is unsettled again. You do not.
 - Outside T3 (a Hermes job, a scheduled task without a thread) the run's step goes to the inbox: one
   line `- [ ] <date> · <his step> · Hermes úloha „<name>“`, at most 300 characters, found again by its
   job name and never written twice.
-- Never a line for what is not his to do: your own work still running or scheduled, what you did,
+- Never a line for a test or check of something built (Karchi, 2026-11-19: „keď to nebude fungovať, ja sa
+  posťažujem“), nor for what is not his to do: your own work still running or scheduled, what you did,
   what cannot be done, a mistake you made, a setting he may change if he likes.
 - A line with `#<id>` (the last 8 characters of `$T3CODE_THREAD_ID`) belongs to that thread. When he
   says in this thread that its step is done („done“, „hotové“, „spravil som“), or his answer shows he
