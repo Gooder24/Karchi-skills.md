@@ -71,7 +71,7 @@ Accessibility is owned by **Gooder24**, the repository owner. The owner is respo
 
 ## Testing
 
-**Automated:** [`.github/workflows/accessibility.yml`](.github/workflows/accessibility.yml) runs `check-docs.py` on every pull request and on every push to `main`. It fails on a problem that is not in `.github/a11y-baseline.json`. The baseline is empty: the current files have no known problems of the kinds it checks.
+**Automated:** [`.github/workflows/accessibility.yml`](.github/workflows/accessibility.yml) runs `check-docs.py` on every pull request and every push to `main` that changes a Markdown file or the check itself. It fails on a problem that is not in `.github/a11y-baseline.json`. The baseline is empty: the current files have no known problems of the kinds it checks.
 
 **Keyboard-only check:** not applicable. The repository has no interface of its own; the steps in the README run in a terminal, and the pages on github.com are GitHub's.
 

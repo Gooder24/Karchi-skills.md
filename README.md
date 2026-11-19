@@ -142,7 +142,7 @@ python3 .github/scripts/check-docs.py
 
 ## Accessibility
 
-[ACCESSIBILITY.md](ACCESSIBILITY.md) says what the repository checks, how to report a barrier, and what has not been tested yet. The Markdown check runs on every pull request, see [the workflow](.github/workflows/accessibility.yml).
+[ACCESSIBILITY.md](ACCESSIBILITY.md) says what the repository checks, how to report a barrier, and what has not been tested yet. The Markdown check runs on every pull request or push that changes Markdown, see [the workflow](.github/workflows/accessibility.yml).
 
 ## Contributing
 
