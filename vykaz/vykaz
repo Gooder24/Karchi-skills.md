@@ -1,0 +1,5 @@
+#!/bin/sh
+# Výkaz práce pre eSYST (pozri vykaz.py). Beží na x270, kde je ~/Work/dual/1.plat; inde cez ssh x270.
+d=$(dirname "$(readlink -f "$0")")
+[ "$(uname -n)" = karchi ] || exec ssh x270 "\$HOME/.local/bin/vykaz $*"
+exec "$HOME/.local/share/vykaz/venv/bin/python" -I "$d/vykaz.py" "$@"

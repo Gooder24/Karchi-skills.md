@@ -1,0 +1,10 @@
+[Unit]
+Description=Výkaz eSYST: cez deň o 12:00 a 20:00 (aj po prebudení notebooku, nikdy v noci)
+
+[Timer]
+OnCalendar=*-*-* 12:00
+OnCalendar=*-*-* 20:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=Výkaz eSYST: kedy je na x270 aktívny Outlook, Teams alebo eSYST vlákno T3 (udalosti Hyprlandu)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/python3 -I %h/.work/karchi-skills/vykaz/okna.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=graphical-session.target

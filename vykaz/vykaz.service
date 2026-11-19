@@ -1,0 +1,6 @@
+[Unit]
+Description=Výkaz eSYST: zapíše dokončené dni do ~/Work/dual/1.plat/<mesiac>.xlsx
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/vykaz

@@ -120,6 +120,24 @@ if [ "$(uname -n)" = asus-vivobook-x1504v ] && command -v systemctl >/dev/null; 
     systemctl --user daemon-reload && systemctl --user enable --now limit-ping.timer && echo "ok limit-ping.timer"
   fi
 fi
+# vykaz: výkaz práce pre eSYST z T3 vlákien a okien Outlook/Teams; súbory a okná sú na x270, inde len príkaz cez ssh.
+ln -sfn "$R/vykaz/vykaz" "$HOME/.local/bin/vykaz"
+if [ "$(uname -n)" = karchi ] && command -v systemctl >/dev/null; then
+  [ -x "$HOME/.local/share/vykaz/venv/bin/python" ] || python3 -m venv "$HOME/.local/share/vykaz/venv"
+  "$HOME/.local/share/vykaz/venv/bin/python" -c 'import openpyxl' 2>/dev/null ||
+    "$HOME/.local/share/vykaz/venv/bin/pip" -q install openpyxl || true
+  mkdir -p "$HOME/.config/systemd/user"
+  if ! cmp -s "$R/vykaz/vykaz.timer" "$HOME/.config/systemd/user/vykaz.timer" ||
+     ! cmp -s "$R/vykaz/vykaz.service" "$HOME/.config/systemd/user/vykaz.service" ||
+     ! cmp -s "$R/vykaz/vykaz-okna.service" "$HOME/.config/systemd/user/vykaz-okna.service" ||
+     ! cmp -s "$R/vykaz/okna.py" "$HOME/.local/share/vykaz/okna.py.bezi"; then
+    cp "$R"/vykaz/vykaz{.service,.timer,-okna.service} "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload
+    systemctl --user enable --now vykaz.timer && echo "ok vykaz.timer"
+    systemctl --user enable vykaz-okna.service && systemctl --user restart vykaz-okna.service &&
+      cp "$R/vykaz/okna.py" "$HOME/.local/share/vykaz/okna.py.bezi" && echo "ok vykaz-okna.service"
+  fi
+fi
 # codex-unlock: po zlyhanom Codex ťahu (limit) pustí konverzáciu, aby išla prepnúť na iný Codex účet.
 if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
   mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
