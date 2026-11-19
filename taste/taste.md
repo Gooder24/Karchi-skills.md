@@ -86,6 +86,8 @@ says now applies.
 - **Generic AI summaries are "kinda meh".** He prefers the original source and specific news, "I don't want
   to waste time".
 - **Do not embellish.** In reports about himself, point out the negatives and the positives equally openly.
+- **No dramatic headings or metaphors** ("Where it hurts", "The elephant in the room"): they sound cringe to him,
+  in reports, READMEs, docs and UI alike. Headings say plainly what the section is about.
 - **Real numbers for the whole period**, not a slice. When data is missing, say exactly what is missing and why.
 - Open source takes precedence. A local solution takes precedence over the cloud, where possible.
 
