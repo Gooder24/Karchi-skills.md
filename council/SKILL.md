@@ -52,14 +52,13 @@ subscription (account karollupi6, logged in on dell, asus and e540).
    Opus with `claude -p --model claude-opus-5-5 --effort high`.
 
 If a member cannot run anywhere, report which and why instead of substituting
-another model. One exception: when OpenCode Go reports its usage limit for
-Kimi, run `opencode/deepseek-v4.1-flash-free` (variant high) in its place and
-say so in the report. Both limits are shared by every home machine (one Go
-account, one public IP for the free model): another machine does not help.
-The Go account's DeepSeek models (`opencode-go/deepseek-*`) are hosted outside
-the EU and US and fail until Karchi selects Global in the OpenCode console's
-privacy settings (not selected as of 2026-11-17); when he asks for DeepSeek,
-only the free model runs, and it is often out of its limit.
+another model. The OpenCode Go limit (5 hours, week, month) covers the whole
+account, every model and every home machine: when Go reports it, no other Go
+model or machine helps, report it.
+
+No DeepSeek model, not the Go ones and not the free `opencode/deepseek-*`
+(Karchi, 2026-11-20): they run outside the EU and US, and the Go account stays
+on its EU and US region. When he asks for DeepSeek, tell him that.
 
 ## Running it
 
