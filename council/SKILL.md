@@ -35,16 +35,11 @@ subscription (account karollupi6, logged in on dell, asus and e540).
    `t3_thread_launch` or `create_threads` for them (Karchi, 2026-11-18: council
    threads must not land in his sidebar).
 2. A member this machine cannot run (provider disabled, model missing, Codex
-   broken as on dell): run it on another linked machine. Take the first of asus
-   (`5182d572-beb3-4cf2-9f9e-d459777f2d15`), e540
-   (`93bab4d1-e3e8-41f6-a853-20b3b844f477`), dell
-   (`6b0b1936-5991-4a14-bcbe-751352777957`) whose
-   `orchestrator_capabilities({environmentId})` lists the model, and add
-   `target.environmentId`. That child has no copy of this checkout: put the
-   diff or the documents in `task`, or the pushed branch and repo URL it should
-   clone read-only.
-3. No T3 tools (plain Claude Code or Codex CLI on a Linux machine): run the
-   member as a CLI on asus over ssh, the brief in the prompt and the material
+   not logged in as on dell): run it as a CLI on asus over ssh, as in step 3.
+   Never `delegate_task` with another machine's `target.environmentId`: T3
+   makes that child a normal top-level thread in Karchi's sidebar on that
+   machine (Sol rounds from dell, 18.–19. 11.).
+3. No T3 tools, or step 2: run the member as a CLI on asus over ssh, the brief in the prompt and the material
    as a file. rodinnypcl cannot reach the other machines: report the members
    it cannot run there.
 

@@ -51,6 +51,10 @@ only if exposed. Use `delegate_task` every round (`role: "review"`,
 `mode: "async"`). Save `taskId`. New `clientRequestId` per round.
 `childThreadId` is storage, not the next target. Do not use
 `t3_thread_send`, `create_threads`, or `t3_thread_launch` for review.
+Never add another machine's `target.environmentId`: that child lands as a
+top-level thread in Karchi's sidebar. When this machine has no working Sol
+(dell), run each round as `ssh asus 'codex exec -m gpt-6.2-sol -c
+model_reasoning_effort=high ...'` with the brief and diff as files.
 
 If T3 tools are not listed, try one direct capability call. Outside T3, use
 a native Sol subagent and keep its ID. In Claude Code, use a custom subagent
