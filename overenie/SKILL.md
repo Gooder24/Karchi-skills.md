@@ -63,7 +63,8 @@ it between machines. Never `git add -f` it and never move checks to another fold
 - Where he will see it, test it there, not on a stand-in: his x270 session over `ssh x270` (`hyprctl`,
   `grim` of the live screen), his phone through Playwright WebKit with an iPhone profile on dell, the
   public URL rather than localhost. What you truly cannot reach (his real chats, a physical cable, his
-  eyes) is a `tvoj krok` check: put it on the `Overenie: neoverené – …` line and add it to his inbox.
+  eyes) is a `tvoj krok` check: put it on the `Overenie: neoverené – …` line; the inbox gets it only in a
+  run he is not in (skill `priority`).
 - Looks that no machine can judge ("not AI generic", "nice icons"): mark them `👁 tvoje oko`, put the
   screenshot beside the reference, and never count them as passed.
 

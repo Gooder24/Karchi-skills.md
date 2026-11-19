@@ -1,6 +1,6 @@
 ---
 name: priority
-description: Karchi's inbox on asus, which only Hermes reads. Use when a turn leaves Karchi a step or a decision, when a step this thread wrote there is done, and whenever he says inbox, zapíš si, zapíš do inboxu, nápad, úloha, hotové or done about an inbox item.
+description: Karchi's inbox on asus, which only Hermes reads. Use when a turn leaves Karchi a step or a decision that outlives the conversation, when a step this thread wrote there is done, and whenever he says inbox, zapíš si, zapíš do inboxu, nápad, úloha, hotové or done about an inbox item.
 ---
 
 # Inbox
@@ -21,10 +21,15 @@ only because he asked in this thread, and mention that Hermes keeps it.
 - „zapíš do inboxu“, „zapíš si“, or an idea or task he does not want now: append one line with
   today's date under P1, P2 or P3 (P1 only with a deadline or a real blocker; when unsure, P2).
   Confirm in one line with the priority you chose.
-- Your reply leaves Karchi a step (a „tvoj krok“, a decision, a login, a test only he can do), or you
-  stop unfinished and only he can restart the work: one line for this thread, `- [ ] <date> · <his
+- A step or decision of his that outlives this conversation (Karchi, 2026-11-19): it waits on a date
+  or deadline, on another person or a machine that is off, or on a decision he put off
+  („neskôr“, „rozmyslím si“); or nobody is in the thread (a `zadanie` or night run, a scheduled task,
+  a Hermes job) and the run ends with his step. Write one line for this thread, `- [ ] <date> · <his
   step> · <machine> vlákno „<thread title>“ #<id>`, at most 300 characters. `<id>` is the last 8
   characters of `$T3CODE_THREAD_ID` (the same as the end of a T3 scratch folder's name).
+- A click, look, test or command you ask of him in a conversation he is in („klikni“, „skús“,
+  „pozri“, „spusti live.sh“, a check on the `Overenie: neoverené` line) stays in the thread: T3 shows
+  it waiting, and he answers there.
 - Never a line for what is not his to do: your own work still running or scheduled, what you did,
   what cannot be done, a mistake you made, a setting he may change if he likes. Say it in the reply.
 - One thread, one line. Find it by `#<id>` (by the title only in old lines without an id) and
