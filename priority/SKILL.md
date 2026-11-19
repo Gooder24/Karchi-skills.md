@@ -12,7 +12,7 @@ deadline, blocks something, people or money waiting), `## P2 ďalej` (important,
 
 **Only Hermes reads it** (Hermes Agent on asus, Weft room „Hermes“, `~/.hermes/SOUL.md`; Karchi,
 2026-11-07). It keeps the inbox current and builds his day plan from it. Every other chat writes to it
-and never reads it: no inbox in the session context, no priority check against the task he gave
+only as „Writing to it“ below allows, and never reads it: no inbox in the session context, no priority check against the task he gave
 you, no „V inboxe čaká“. When he asks you what is in the inbox („ukáž inbox“, „čo čaká“), show it
 only because he asked in this thread, and mention that Hermes keeps it.
 
