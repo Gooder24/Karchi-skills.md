@@ -30,7 +30,7 @@ Keď krok čaká na neho (prihlásenie v okne, kód zo stránky, karta), hneď h
 
 # Inbox (Karchi, 2026-11-07)
 
-Karchiho inbox (asus `~/inbox/inbox.md`) číta a udržiava len Hermes (Hermes Agent na asuse). Ty ho nečítaš a nekontroluješ podľa neho priority; len doň zapisuješ: keď Karchi povie „zapíš si“, alebo keď mu ťah nechá krok či rozhodnutie, ktoré prežije vlákno (termín, čakanie na niekoho alebo niečo, odložené rozhodnutie, beh bez neho); klik či test zo živého vlákna ostane vo vlákne (Karchi, 2026-11-19). Riadok vlákna zmizne, keď je krok hotový. Ako: skill `priority`.
+Karchiho inbox (asus `~/inbox/inbox.md`) číta a udržiava len Hermes (Hermes Agent na asuse). Ty ho nečítaš (okrem chvíle, keď ho Karchi v tomto vlákne chce vidieť) a nekontroluješ podľa neho priority; len doň zapisuješ: keď Karchi povie „zapíš si“, alebo keď mu ťah nechá krok či rozhodnutie, ktoré prežije vlákno (termín, čakanie na niekoho alebo niečo, odložené rozhodnutie, beh bez neho); klik či test zo živého vlákna ostane vo vlákne (Karchi, 2026-11-19). Riadok vlákna zmizne, keď je krok hotový. Ako: skill `priority`.
 
 # Systémy, nie odpovede (Karchi, 2026-10-29)
 

@@ -26,15 +26,17 @@ only because he asked in this thread, and mention that Hermes keeps it.
   („neskôr“, „rozmyslím si“); or nobody is in the thread (a `zadanie` or night run, a scheduled task,
   a Hermes job) and the run ends with his step. Write one line for this thread, `- [ ] <date> · <his
   step> · <machine> vlákno „<thread title>“ #<id>`, at most 300 characters. `<id>` is the last 8
-  characters of `$T3CODE_THREAD_ID` (the same as the end of a T3 scratch folder's name).
+  characters of `$T3CODE_THREAD_ID` (the same as the end of a T3 scratch folder's name). Outside T3
+  (a Hermes job) there is no id: name the job, `· Hermes úloha „<name>“`.
 - A click, look, test or command you ask of him in a conversation he is in („klikni“, „skús“,
   „pozri“, „spusti live.sh“, a check on the `Overenie: neoverené` line) stays in the thread: T3 shows
   it waiting, and he answers there.
 - Never a line for what is not his to do: your own work still running or scheduled, what you did,
   what cannot be done, a mistake you made, a setting he may change if he likes. Say it in the reply.
-- One thread, one line. Find it by `#<id>` (by the title only in old lines without an id) and
-  replace that one line; never write the same text over every match and never add a second line. If
-  this thread has several, merge them into one.
+- One thread, one line, among the open lines (`- [ ]`) only. Find it by `#<id>` and replace that one
+  line; if several carry this id, merge them into one. Without an id (old lines, no
+  `$T3CODE_THREAD_ID`) use the title only when exactly one open line has it; when several do, leave
+  them alone and write your own line with the id. Never write the same text over several lines.
 - When the step is done (he says „done“, „hotové“ or „spravil som“ in this thread, or his answer shows
   he did it) or it no longer applies, mark this thread's line done (next point) in the
   same turn. A new step replaces the line only when it is his again under the rules above.
