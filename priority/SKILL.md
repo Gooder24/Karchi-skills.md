@@ -34,9 +34,9 @@ only because he asked in this thread, and mention that Hermes keeps it.
 - Never a line for what is not his to do: your own work still running or scheduled, what you did,
   what cannot be done, a mistake you made, a setting he may change if he likes. Say it in the reply.
 - One thread, one line, among the open lines (`- [ ]`) only. Find it by `#<id>`; if several carry
-  this id, merge them into one. A line without an id (older lines, a Hermes job) is yours only when
-  you see in this thread's history that you wrote it (same title or job name, same step); if not,
-  change none and say so in the reply. Never write the same text over several lines. A new step with
+  this id, merge them into one. A line without an id from an older thread is yours only when you
+  see in this thread's history that you wrote it; if not, change none, and when he said done, say so
+  in the reply. A Hermes job's line is found by its job name. Never write the same text over several lines. A new step with
   no line of yours found gets a new line with the id (a Hermes job: with its job name).
 - When the step is done (he says „done“, „hotové“ or „spravil som“ in this thread, or his answer shows
   he did it) or it no longer applies, mark this thread's line done (next point) in the
