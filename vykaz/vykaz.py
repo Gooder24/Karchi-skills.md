@@ -202,6 +202,12 @@ Balancovanie hardwaru a správneho modelu pre firemné AI
 Vytváranie softvérového prototypu na VPS pre testovanie"""
 
 
+def ciel():
+    """The "Čo sa ráta" section of predpoklady.md: what counts as eSYST work, as he can correct it."""
+    t = (HERE / "predpoklady.md").read_text()
+    return t.split("## Čo sa ráta", 1)[1].split("\n## ", 1)[0].strip()
+
+
 def popisy(d, sed):
     """One line per sitting from Haiku, '' for a sitting that is not eSYST work."""
     if not sed:
@@ -210,7 +216,7 @@ def popisy(d, sed):
                         for i, s in enumerate(sed))
     prompt = f"""Karol pracuje popri škole (duálne štúdium) pre firmu eSYST s.r.o. v Žiline a vedie si výkaz odpracovaných hodín za plat. Za deň {d.day}.{d.month}.{d.year} máš sedenia: jeho správy AI agentom v T3 Code (čas, [projekt / vlákno], text) a okná, ktoré mal otvorené (Outlook, Teams, vlákna T3).
 
-Firemná práca: SPOTREX (systém na odpočty meračov tepla a vody pre eSYST, stanice CRS 40, MQTT, VPS, účtovanie), firemný AI asistent a AI nástroje pre zamestnancov (eSYSŤák, Hermes, firemný T3 Code, tímové účty Claude, lokálne AI, firemné počítače, heslá, GitHub organizácia eSYST), zákazky eSYST (napr. Hurbanova), EUCF, firemné e-maily a Teams. Nie je firemná práca: vlastný notebook a jeho vzhľad, osobné aplikácie (Weft, Učenie, kalendár), škola a samotné písanie školskej práce (SOČ, obhajoba), hudba, open source.
+{ciel()}
 
 Pre každé sedenie napíš jeden riadok do stĺpca popisu: podstatné mená zo slovies, po slovensky, vecne, najviac 12 slov, bez bodky na konci, v štýle týchto starších riadkov:
 {PRIKLADY}
@@ -333,7 +339,7 @@ def zapis_den(d, sucho=False, aj_bez=False):
             print(f"{r['cas']:24} {trvanie(r['min']):8} {r['popis']}")
         print(f"({n} sedení, {len(nove)} firemných{'; nedostupné: ' + ', '.join(chyby) if chyby else ''})")
         return nove
-    if chyby and not aj_bez:
+    if "asus" in chyby or "x270" in chyby or (chyby and not aj_bez):
         # a sleeping machine would lose its part of the day: try again next run
         print(f"{d}: nedostupné {', '.join(chyby)}, skúsim nabudúce")
         return None
@@ -355,9 +361,12 @@ def auto():
     pridane = 0
     while d < today:
         if str(d) not in hotove:
-            # after two days a machine that still sleeps is left out, so the day gets written
+            # after two days dell or e540 asleep is left out, so the day gets written; without asus
+            # (most of his threads) or the network nothing is written and the next run tries again
             r = zapis_den(d, aj_bez=d < today - timedelta(days=2))
-            pridane += len(r or [])
+            if r is None:
+                break
+            pridane += len(r)
         d += timedelta(days=1)
     if pridane:
         notify(f"Výkaz: pridal som {pridane} riadkov do {subor(today - timedelta(days=1)).name}")

@@ -23,8 +23,9 @@ október vyplnil ručne). Riadok je jedno sedenie: A popis, B `D.M.RRRR H:MM-H:M
   správy zo všetkých strojov (x270 lokálne, asus, dell, e540 cez ssh) a okná. Správa = 5 min pred a 10 min po,
   okno najviac 20 min, udalosti do 20 min od seba sú jedno sedenie, zaokrúhlené na 5 min, kratšie než 10 min
   vypadnú. Vynechá čas utorkovej praxe (`~/Work/dual/dochadzka/zaznamy/<deň>.json`) a čas, ktorý už v súbore
-  je. Popis sedenia napíše Haiku (`claude -p`); sedenie, ktoré nie je práca pre eSYST (vlastný notebook, Weft,
-  škola, SOČ ako text práce), vynechá. Spiaci stroj: deň počká, po dvoch dňoch sa zapíše bez neho.
+  je. Popis sedenia napíše Haiku (`claude -p`); sedenie, ktoré nie je práca pre eSYST, vynechá. Čo sa ráta,
+  komu súbor ide a ďalšie predpoklady sú v `predpoklady.md` (oprav tam). Bez siete alebo asusu nezapíše nič a
+  skúsi to nabudúce; spiaci dell či e540 deň pozdrží, po dvoch dňoch sa zapíše bez neho.
 - Pred každou zmenou je záloha v `~/.local/share/vykaz/zalohy/<mesiac>-<čas>.xlsx`. Súbor otvorený v
   OnlyOffice/LibreOffice (zámok `.~lock.…#`) nechá na ďalší beh.
 
