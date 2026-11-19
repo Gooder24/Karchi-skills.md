@@ -94,7 +94,7 @@ KNOWN = {
     ("x270", "t3-limit-report"): ("nie", "", "", "jednorazová správa zo 14. 10."),
     ("x270", "lifeos-kalendarix-sync"): ("nie", "", "", "rozvrh z EduPage do Kalendarixu"),
     ("x270", "spravy-shots-cleanup"): ("nie", "", "", "jednorazové zmazanie screenshotov"),
-    ("x270", "voxtype"): ("spúšťa", CLAUDE, "", "diktovanie push-to-talk, prepis na asuse"),
+    ("x270", "voxtype"): ("áno", "", "Parakeet v3 lokálne", "diktovanie push-to-talk, prepis lokálne na x270"),
     ("x270", "usb-autopen-ws9"): ("nie", "", "", "otvorí USB kľúč na ploche 9"),
     ("x270", "tailscale-control-tunel"): ("nie", "Tailscale", "", "SSH tunel na VPS pre koordinačný server Tailscale"),
     ("x270", "Dell: overiť spevník po reštarte"): ("áno", CLAUDE, None, "jednorazová kontrola z 30. 10."),
