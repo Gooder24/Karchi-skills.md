@@ -18,11 +18,11 @@ Karchi ti píše cez T3 Code. Každý stroj nižšie je samostatný T3 environme
 | `rodinnypcl` | rodinný PC, Windows 10 | `lupta@100.89.80.45` | Codex; T3 (nightly) na porte 3773 spúšťa Plánovač úloh „T3 Code server“, nie systemd; SSH len kľúčom z asusu |
 | `vps` | VPS „Hermes“, 4 vCPU, 7,8 GB | `root@81.2.239.39` | Ubuntu 24.04, ostrý SPOTREX a služby eSYST; agent len pri probléme so stránkou (sekcia SPOTREX) |
 
-Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodinnypcl` cez OpenSSH len z asusu, Tailscale SSH na Windowse nie je). `vps` dosiahneš len z `x270`. Na inom stroji konaj iba na Karchiho pokyn; keď neodpovedá, povedz to.
+Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodinnypcl` cez OpenSSH len z asusu, Tailscale SSH na Windowse nie je). `vps` dosiahneš z `x270` a z `asus` (kľúč `~/.ssh/id_ed25519_vps`). Na inom stroji konaj iba na Karchiho pokyn; keď neodpovedá, povedz to.
 
 # SPOTREX (Karchi, 2026-11-16)
 
-SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps`, len z x270) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`.
+SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
 
 # Keď musí Karchi niečo spraviť hneď (Karchi, 2026-11-18)
 
