@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Keď týždenný Claude limit prejde PRAH % (3 % zvyšok), prepne default model T3 na Codex účet Infowork
-(T3 inštancia codex_infowork; Karchi 2026-11-17); po resete limitu vráti pôvodný. T3 si settings.json sleduje sám, zmena platí hneď pre nové vlákna.
+(T3 inštancia codex_infowork; Karchi 2026-11-17), a keď má Infowork týždeň minutý, na Môj (inštancia codex);
+po resete limitu vráti pôvodný. T3 si settings.json sleduje sám, zmena platí hneď pre nové vlákna.
+Týždeň Codex účtov berie z limit-ping (~/.local/state/limit-ping/codex-<účet>.json, beží na asuse; iné stroje ho čítajú cez ssh asus).
 Stav: ~/.local/share/t3-claude-fallback/state.json"""
-import fcntl, json, math, os, sys, time, urllib.error, urllib.request
+import fcntl, json, math, os, subprocess, sys, time, urllib.error, urllib.request
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -12,8 +14,41 @@ PRAH = float(os.environ.get("PRAH", 97))
 SETTINGS = H / ".t3/userdata/settings.json"
 STATE = H / ".local/share/t3-claude-fallback/state.json"
 USAGE = H / ".local/share/t3-claude-fallback/usage.json"
-CODEX = {"instanceId": os.environ.get("CODEX_INSTANCE", "codex_infowork"), "model": os.environ.get("CODEX_MODEL", "gpt-6.1-sol"),
-         "options": [{"id": "reasoningEffort", "value": "high"}]}
+# T3 inštancia -> limit-ping lane, v poradí, v akom sa skúšajú; CODEX_INSTANCE nechá len jednu.
+ACCOUNTS = {"codex_infowork": "codex-infowork", "codex": "codex-moj"}
+if os.environ.get("CODEX_INSTANCE"):
+    ACCOUNTS = {os.environ["CODEX_INSTANCE"]: None}
+LIMIT_PING = H / ".local/state/limit-ping"
+
+
+def codex(instance):
+    return {"instanceId": instance, "model": os.environ.get("CODEX_MODEL", "gpt-6.2-sol"),
+            "options": [{"id": "reasoningEffort", "value": "high"}]}
+
+
+def week_used_up(lane, now):
+    """Last weekly limit limit-ping saw for this Codex account: True only when it is used up and not yet reset."""
+    if not lane:
+        return False
+    try:
+        try:
+            text = (LIMIT_PING / f"{lane}.json").read_text()
+        except FileNotFoundError:
+            text = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "asus",
+                                   f"cat .local/state/limit-ping/{lane}.json"],
+                                  capture_output=True, text=True, timeout=15, check=True).stdout
+        week = json.loads(text)["week"]
+        return float(week["used"]) >= 100 and float(week["resets"]) > now
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        return False
+
+
+def pick():
+    now = time.time()
+    for instance, lane in ACCOUNTS.items():
+        if not week_used_up(lane, now):
+            return codex(instance)
+    return codex(next(iter(ACCOUNTS)))
 
 
 def retry_delay(value, now):
@@ -84,13 +119,18 @@ def main():
     s = json.loads(SETTINGS.read_text())
     cur = s.get("defaultModelSelection") or {}
     saved = json.loads(STATE.read_text()) if STATE.exists() else None
-    if used >= PRAH and not saved and cur.get("instanceId", "claudeAgent") == "claudeAgent":
-        write(STATE, cur)
-        s["defaultModelSelection"] = CODEX
+    ours = cur in [codex(i) for i in ACCOUNTS]  # a selection this automation installed
+    if used >= PRAH and (not saved and cur.get("instanceId", "claudeAgent") == "claudeAgent" or saved and ours):
+        target = pick()
+        if target == cur:
+            return
+        if not saved:
+            write(STATE, cur)
+        s["defaultModelSelection"] = target
         write(SETTINGS, s)
-        print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {CODEX['model']}")
+        print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {target['instanceId']} {target['model']}")
     elif used < PRAH and saved:
-        if cur == CODEX:  # Restore only the exact selection this automation installed.
+        if ours:  # Restore only a selection this automation installed.
             s["defaultModelSelection"] = saved
             write(SETTINGS, s)
             print(f"{datetime.now():%F %T} týždeň {used:.0f} %: default späť -> {saved.get('model')}")
