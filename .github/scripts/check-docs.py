@@ -36,7 +36,7 @@ def problems(path):
     fence = None
     lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
     # YAML front matter (a leading --- ... --- block, as in SKILL.md) is metadata, not rendered Markdown.
-    front = lines[0].strip() == "---" if lines else False
+    front = bool(lines) and lines[0].strip() == "---" and any(l.strip() in ("---", "...") for l in lines[1:])
     for n, line in enumerate(lines, 1):
         stripped = line.strip()
         if front:
