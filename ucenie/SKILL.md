@@ -22,7 +22,8 @@ ucenie balicky | ucenie ulohy        packs (and those waiting for approval) | ho
 ucenie koncept ULOHA                 the agent writes a draft for that homework (stored in the app, never sent)
 ucenie make-pack --uloha ID | --poznamka PREDMET/NAZOV.md | --subor PATH  [--nazov N] [--predmet P] [--druh D]
 ucenie pridaj-balik PACK.json        a pack you wrote yourself (validated); waits for approval unless --hned
-ucenie import FILE.apkg [--druh ...] | ucenie export BALIK OUT.apkg | ucenie anki-historia KOLEKCIA BALIK
+ucenie import FILE.apkg [--druh ...] | ucenie export BALIK OUT.apkg
+ucenie anki-historia KOLEKCIA BALIK [--zaloha F.colpkg ...] [--alias STARE=NOVE]   Anki answers into the log
 ```
 
 A pack is one JSON: `{"id", "nazov", "druh": "skola|maturita|sidequest", "predmet", "karty": [...]}`, a card is
@@ -33,8 +34,20 @@ with `ucenie pridaj-balik`; it waits in Balíky for him to accept.
 
 ## Rules
 
-- Nothing goes to EduPage: drafts stay in Učenie until Karchi submits them himself (the app copies the draft and
-  opens EduPage). Automatic submission is not built; it needs his one test on a real homework first.
+- Nothing goes to EduPage: drafts stay in Učenie until Karchi submits them himself. „Odovzdať…“ shows the exact
+  text, copies it, saves it as a .txt in Downloads and opens EduPage (whole path checked 20. 11. by
+  `overenie/submit.cjs`). EduPage homework without an answer card (`etestAnswerCards: 0`, most of his) is handed in as
+  a reply with an attachment under the homework, which is a message to the teacher in his name; homework with answer
+  cards is filled in EduPage's own player. Neither is automated, by decision: it stays his click.
 - The answer log is his progress: tests run against a throwaway instance (`overenie/test-server.sh` in the repo),
   never against `~/ucenie/data`.
 - The learn harness drafts new homework by itself only 7:00–22:00, a few a day, each homework once.
+
+## Decisions (Karchi let the agent decide, 20. 11. 2026)
+
+- University system: no adapter yet. He is in III. A of a business academy, so a university is over a year away
+  and its system (AIS2 at most Slovak public universities, MAIS at TUKE, Moodle for courses) is not known. The empty
+  „Vysoká škola“ box stays; the adapter is built for his school once he is admitted and has a login.
+- Anki: keep it installed, untouched, but stop reviewing in it. Učenie is the only scheduler; two would set
+  different due dates. His last Anki review was 16. 11.; 25 of those 30 answers are in Učenie's log (5 belonged to
+  cards that existed only between Anki backups and cannot be matched). `.apkg` import and export stay the way in and out.
