@@ -48,7 +48,9 @@ subscription (account karollupi6, logged in on dell, asus and e540).
    ssh asus 'opencode run --archived -m "opencode-go/kimi-k3.1-pro#high" -f /tmp/council.diff "<brief>"'
    ```
 
-   Sol the same way with `codex exec -m gpt-6.2-sol -c model_reasoning_effort=high`,
+   Sol the same way with `CODEX_HOME=~/.codex-t3code/infowork codex exec -m gpt-6.2-sol -c
+   model_reasoning_effort=high` (T3's logins; `~/.codex` is not logged in; when Infowork's week is used
+   up, `limit-ping status` on asus shows it, use `~/.codex-t3code/moj`),
    Opus with `claude -p --model claude-opus-5-5 --effort high`.
 
 If a member cannot run anywhere, report which and why instead of substituting
