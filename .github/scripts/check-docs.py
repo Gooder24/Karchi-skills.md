@@ -35,10 +35,13 @@ def problems(path):
     level = 0
     fence = None
     lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
-    # YAML front matter is metadata, not rendered Markdown: a first line ---, a key: on the next line, and a
-    # closing --- or ... at the start of a line (as in SKILL.md). Anything else is a thematic break.
+    # YAML front matter is metadata, not rendered Markdown: a first line ---, a key: on the next line, then only
+    # key:, indented, list, comment or blank lines up to a closing --- or ... at the start of a line (as in
+    # SKILL.md). Anything else is a thematic break and the text after it is checked.
     end = next((i for i, l in enumerate(lines[1:], 1) if l.rstrip() in ("---", "...")), 0)
-    front = end if len(lines) > 1 and lines[0].rstrip() == "---" and re.match(r"[\w-]+\s*:", lines[1]) else 0
+    yamlish = lambda l: not l.strip() or re.match(r"[\w-]+\s*:|\s|-(\s|$)|#", l)
+    front = end if (len(lines) > 1 and lines[0].rstrip() == "---" and re.match(r"[\w-]+\s*:", lines[1])
+                    and all(yamlish(l) for l in lines[1:end])) else 0
     for n, line in enumerate(lines, 1):
         stripped = line.strip()
         if front and n <= front + 1:
