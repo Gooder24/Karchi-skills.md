@@ -24,11 +24,12 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   znova“ sa predtým rátalo ako 15 až 20 min, hoci na x270 trvalo 21 s). Pred jeho správou: od chvíle, keď bola
   odpoveď agenta hotová, alebo od jeho poslednej správy kdekoľvek, najviac 1 min + 1 min na 1000 znakov odpovede +
   1 min na 40 znakov jeho správy, nanajvýš 10 min; po odoslaní 1 min. Kým agent pracuje, to nie je jeho práca.
-  Zaostrené okno eSYST vlákna, Outlooku či Teams na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od
-  seba sú jedno sedenie, kratšie než 5 min vypadne, okraje sa zaokrúhlia na najbližších 5 min (konštanty na
-  začiatku `vykaz.py`). Keď sa pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní pri ďalšom
-  behu prepočíta sám; riadky, ktoré Karchi napísal alebo upravil, ostanú. Najprv Haiku posúdi každú správu zvlášť a
-  sedenia sa skladajú len z firemných, aby osobné vlákno medzi nimi nenafúklo čas.
+  Správa vnútri riadku, ktorý už v súbore je (jeho, upravený, zmazaný), ďalší čas nepridá. Zaostrené okno eSYST
+  vlákna, Outlooku či Teams na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od seba sú jedno sedenie,
+  kratšie než 5 min vypadne, okraje sa zaokrúhlia na najbližších 5 min (konštanty na začiatku `vykaz.py`). Keď sa
+  pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní pri ďalšom behu prepočíta sám; riadky,
+  ktoré Karchi napísal alebo upravil, ostanú. Najprv Haiku posúdi každú správu zvlášť a sedenia sa skladajú len z
+  firemných, aby osobné vlákno medzi nimi nenafúklo čas.
 - Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom.
 - Zdroje: T3 na asuse, x270, delle a e540. Rodinný PC (Windows, Codex) sa nečíta, eSYST tam nerobí.
 

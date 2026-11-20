@@ -309,9 +309,10 @@ def navrh(d, ws, zmazane=()):
     p = prax(d)
     if p:
         vynechat.append(p)
-    # a message inside a row he deleted is work he rejected, also when newer rules would count it earlier
+    # a message inside a row already in the sheet (his, or one he edited) is counted there, and one inside a row he
+    # deleted is work he rejected: neither adds time around it, even where newer rules would start it earlier
     dna = [r for r in spravy if r["t"].date() == d and r.get("esyst", True)
-           and not any(a <= r["t"] <= b for a, b in zm)]
+           and not any(a <= r["t"] <= b for a, b in vynechat)]
     sed = sedenia(d, firemne(d, dna), okna(d), vynechat, spravy)
     txt = popisy(d, sed)
     rows = [(t, s) for t, s in zip(txt, sed) if t]
@@ -394,6 +395,19 @@ def notify(text):
     print(text)
 
 
+def novy_den(v):
+    """Not written yet (vrat may leave only the rows he deleted)."""
+    return v is None or (isinstance(v, dict) and "riadky" not in v)
+
+
+def spolu_sedi(ws):
+    """The "spolu" row holds the sum of the rows above it (or there is none yet)."""
+    rs = next((r for r in range(1, ws.max_row + 1) if str(ws.cell(r, 4).value or "").strip() == "spolu"), None)
+    if rs is None:
+        return True
+    return minuty_bunky(ws.cell(rs, 3).value) == sum(minuty_bunky(ws.cell(r, 3).value) for r in range(1, rs))
+
+
 def svoje_riadky(d):
     v = stav().get("dni", {}).get(str(d))
     return list(v["riadky"] if isinstance(v, dict) else v or [])
@@ -426,10 +440,12 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
     pred = f.stat().st_mtime_ns if f.exists() else None
     wb = nacitaj(f)
     # rows it wrote that are gone from the sheet he deleted: that time is not his work, never propose it again
-    v_liste = {f"{wb.active.cell(r, 2).value} {wb.active.cell(r, 1).value}" for r in range(1, wb.active.max_row + 1)}
+    # (a row whose time is still there is his edit, not a deletion)
+    casy = {str(wb.active.cell(r, 2).value).strip() for r in range(1, wb.active.max_row + 1)}
     stary = stav().get("dni", {}).get(str(d))
     zmazane = list(stary.get("zmazane", [])) if isinstance(stary, dict) else []
-    zmazane += [k.split(" ", 2)[0] + " " + k.split(" ", 2)[1] for k in svoje_riadky(d) if k not in v_liste]
+    zmazane += [c for c in (" ".join(k.split(" ", 2)[:2]) for k in svoje_riadky(d)) if c not in casy]
+    spolu_ok = spolu_sedi(wb.active)
     zmazane = sorted(set(zmazane))
     prec = odober_svoje(wb.active, d) if znova or sucho else []  # ukaz shows what znova would write
     nove, chyby, n = navrh(d, wb.active, zmazane)
@@ -449,14 +465,14 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
     s = stav()
     kluce = [r["cas"] + " " + r["popis"] for r in nove]
     z = None
-    if sorted(kluce) == sorted(prec):
+    if sorted(kluce) == sorted(prec) and spolu_ok:
         nove = []  # znova came to the same rows: the file stays as it is
-    elif nove or prec:
+    elif nove or prec or not spolu_ok:
         z = zaloha(f)
         celkom = zapis_riadky(f, wb, nove)
         print(f"{d}: {'-' + str(len(prec)) + ' starých, ' if prec else ''}+{len(nove)} riadkov, "
               f"spolu {trvanie(celkom)} (záloha {z})")
-    if znova or stary is None:
+    if znova or novy_den(stary):
         # its rows now are what it just wrote; a row it could not replace because he changed it is his
         dni = {"riadky": kluce, "pravidla": PRAVIDLA}
     else:
@@ -464,6 +480,8 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         dni = {"riadky": svoje_riadky(d) + kluce,
                "pravidla": stary.get("pravidla", 1) if isinstance(stary, dict) else 1}
     dni["zaloha"] = z.name if z else (stary.get("zaloha") if isinstance(stary, dict) else None)
+    if z and not novy_den(stary):
+        dni["pred"] = stary if isinstance(stary, dict) else {"riadky": stary}  # for vrat
     if zmazane:
         dni["zmazane"] = zmazane
     s.setdefault("dni", {})[str(d)] = dni
@@ -479,8 +497,8 @@ def auto():
     pridane = 0
     while d < today and datetime.now(TZ).hour in ZOBUDENY:
         v = hotove.get(str(d))
-        stare = v is not None and (not isinstance(v, dict) or v.get("pravidla", 1) != PRAVIDLA)
-        if v is None or stare:
+        stare = not novy_den(v) and (not isinstance(v, dict) or v.get("pravidla", 1) != PRAVIDLA)
+        if novy_den(v) or stare:
             # after two days dell or e540 asleep is left out, so the day gets written; without asus
             # (most of his threads) or the network nothing is written and the next run tries again
             # counting a written day again waits for every machine, so no machine's rows get lost
@@ -507,8 +525,18 @@ def vrat(mesiac=None):
     shutil.copy2(f, ZALOHY / f"pred-vratenim-{f.stem}-{datetime.now():%Y%m%d-%H%M%S-%f}.xlsx")
     shutil.copy2(src, f)
     s = stav()
-    s["dni"] = {k: v for k, v in s.get("dni", {}).items()
-                if not (isinstance(v, dict) and v.get("zaloha") and v["zaloha"] >= src.name)}
+    for k, v in list(s.get("dni", {}).items()):
+        if not (isinstance(v, dict) and v.get("zaloha") and v["zaloha"] >= src.name):
+            continue
+        # the day as it was before that write; rows he deleted stay deleted
+        pred = dict(v.get("pred") or {})
+        zm = sorted(set(pred.get("zmazane", [])) | set(v.get("zmazane", [])))
+        if zm:
+            pred["zmazane"] = zm
+        if pred:
+            s["dni"][k] = pred
+        else:
+            del s["dni"][k]
     src.rename(src.with_name("vratene-" + src.name))  # the next vrat goes one write further back
     uloz_stav(s)
     print(f"{f} <- {src}")

@@ -42,8 +42,8 @@ vykaz stav            zapísané dni, zálohy, dnešné okná a stav jednotiek
 ```
 
 Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore. Zmazaný riadok si výkaz pamätá
-(`zmazane` v `zapisane.json`) a jeho čas ani správy už nenavrhne, ani pri prepočítaní; prepísaný riadok
-(text, čas, trvanie, poznámka v D–F) je jeho a ostane. Celý deň nanovo: `vykaz znova DÁTUM`.
+(`zmazane` v `zapisane.json`, aj po `vykaz vrat`) a jeho čas ani správy už nenavrhne, ani pri prepočítaní; riadok
+s prepísaným textom, trvaním alebo poznámkou v D–F je jeho a ostane (zmenený čas platí ako zmazanie a nový riadok). Celý deň nanovo: `vykaz znova DÁTUM`.
 
 Inštaluje to `install.sh` (len na x270, `uname -n` = `karchi`): venv s openpyxl v
 `~/.local/share/vykaz/venv`, jednotky v `~/.config/systemd/user`, `~/.local/bin/vykaz` na každom stroji.
