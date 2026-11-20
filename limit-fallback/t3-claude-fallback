@@ -54,7 +54,7 @@ def pick(cur):
     for instance, used_up in seen.items():
         if not used_up:
             return codex(instance)
-    return codex(next(iter(ACCOUNTS)))
+    return cur or codex(next(iter(ACCOUNTS)))  # every week used up: stay where it is
 
 
 def retry_delay(value, now):
@@ -128,8 +128,9 @@ def main():
     # the first version held only the saved selection, and it always installed Infowork with gpt-6.1-sol.
     state = json.loads(STATE.read_text()) if STATE.exists() else None
     if state and "saved" not in state:
-        state = {"saved": state, "installed": {"instanceId": "codex_infowork", "model": "gpt-6.1-sol",
-                                               "options": [{"id": "reasoningEffort", "value": "high"}]}}
+        first = {"instanceId": "codex_infowork", "model": "gpt-6.1-sol", "options": [{"id": "reasoningEffort", "value": "high"}]}
+        # 40f6402 wrote the same state and installed any of the current presets too.
+        state = {"saved": state, "installed": cur if cur in [first] + [codex(i) for i in ACCOUNTS] else first}
     saved = state and state["saved"]
     ours = bool(state) and cur == state["installed"]  # only the exact selection this automation installed
     if used >= PRAH and (not state and cur.get("instanceId", "claudeAgent") == "claudeAgent" or ours):
@@ -141,8 +142,11 @@ def main():
         write(SETTINGS, s)
         print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {target['instanceId']} {target['model']}")
     elif used < PRAH and state:
-        if ours:  # Restore only a selection this automation installed.
-            s["defaultModelSelection"] = saved
+        if ours:  # Restore only a selection this automation installed; none before means none after.
+            if saved:
+                s["defaultModelSelection"] = saved
+            else:
+                s.pop("defaultModelSelection", None)
             write(SETTINGS, s)
             print(f"{datetime.now():%F %T} týždeň {used:.0f} %: default späť -> {saved.get('model')}")
         else:
