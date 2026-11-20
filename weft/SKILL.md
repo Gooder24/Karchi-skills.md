@@ -16,7 +16,9 @@ weft search WORDS [--chat CHAT]      homeserver and archive, newest first
 weft file ID > PATH                  an old message's attachment; `read` prints its ID as „(weft file ID, size)“
 weft draft CHAT [TEXT|-] [--file P]  a draft (text, files) on top of that chat's stash („Odložené“) in Weft; he sends it himself
 weft drafts [--clear CHAT]           the stash and drafts Weft has not taken yet; --clear removes agents' drafts
-weft relay CHAT --to FRIEND [--note] when CHAT answers him, a picture of the answer lands as a draft in FRIEND's chat
+weft relay CHAT --to FRIEND [--note] [--draft] [--show-name]
+                                     when CHAT answers him, a picture of the answer is sent to FRIEND's chat, without
+                                     CHAT's name and photo; --draft only puts it in FRIEND's stash
 weft relays [--cancel ID]            what waits for an answer, and what came of it
 weft send CHAT [TEXT|-] [--file PATH]... [--reply ID] --yes
                                      sends as Karchi (without --yes it only shows what would go where)
