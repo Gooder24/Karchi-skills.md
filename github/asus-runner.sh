@@ -16,14 +16,16 @@ repo=${1:?usage: asus-runner.sh [--remove] <repo>}
 home=/var/lib/github-runner
 dir=$home/$(tr 'A-Z.' 'a-z-' <<<"$repo")
 name=asus-$(basename "$dir")
-# $home is private to github-runner, so everything inside it runs through sudo.
+unit=actions.runner.Gooder24-$repo.$name.service
+# $home is private to github-runner, so everything inside it runs through sudo. Nothing in it runs as
+# root: CI jobs can write there, so the systemd unit is written here instead of by the runner's svc.sh.
 as_runner() { sudo -u github-runner -H bash -c 'cd "$0" && "$@"' "$dir" "$@"; }
-as_root() { sudo bash -c 'cd "$0" && "$@"' "$dir" "$@"; }
 
 if [ -n "$remove" ]; then
   token=$(gh api -X POST "repos/Gooder24/$repo/actions/runners/remove-token" -q .token)
-  as_root ./svc.sh stop
-  as_root ./svc.sh uninstall
+  sudo systemctl disable --now "$unit"
+  sudo rm -f "/etc/systemd/system/$unit"
+  sudo systemctl daemon-reload
   as_runner ./config.sh remove --token "$token"
   sudo rm -rf "$dir"
   echo "removed $name from Gooder24/$repo"
@@ -57,6 +59,23 @@ if ! as_runner test -f .runner; then
     --token "$token" --name "$name" --labels asus
 fi
 printf 'LANG=C.UTF-8\nACTIONS_RUNNER_HOOK_JOB_STARTED=%s\n' "$home/reject-forks.sh" | as_runner tee .env >/dev/null
-as_runner test -f .service || as_root ./svc.sh install github-runner >/dev/null
-as_root ./svc.sh stop >/dev/null; as_root ./svc.sh start >/dev/null
+sudo tee "/etc/systemd/system/$unit" >/dev/null <<EOF
+[Unit]
+Description=GitHub Actions Runner (Gooder24-$repo.$name)
+After=network-online.target
+
+[Service]
+ExecStart=$dir/bin/runsvc.sh
+User=github-runner
+WorkingDirectory=$dir
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=5min
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable "$unit" 2>/dev/null
+sudo systemctl restart "$unit"
 echo "$name runs jobs of Gooder24/$repo (runs-on: asus)"
