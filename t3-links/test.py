@@ -108,6 +108,12 @@ class Echo(World):
         return super().on(host, cmd, timeout)
 fresh(); w = Echo(t0, expires={"asus->dell": (t0 + timedelta(days=1)).isoformat()}); run(w)
 check("SECRETCODE" not in (Path(m.STATE) / "log").read_text() + json.dumps(state()), "a code echoed in an error is masked")
+class TokenThenFail(World):
+    def on(s, host, cmd, timeout=120):
+        if " pair " in cmd: return 1, "Token: SECRETCODE\n", "Error: saving pairing SECRETCODE failed"
+        return super().on(host, cmd, timeout)
+fresh(); w = TokenThenFail(t0, expires={"asus->dell": (t0 + timedelta(days=1)).isoformat()}); run(w)
+check("SECRETCODE" not in (Path(m.STATE) / "log").read_text() + json.dumps(state()), "pair failing after printing its code: code masked")
 # worst case time: every pair fails every try
 slept = []
 m.time.sleep = slept.append

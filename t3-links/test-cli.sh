@@ -22,6 +22,10 @@ printf '#!/bin/sh\necho "t3 v%s"\n' "$V" > "$h5/.t3/bin/t3"; chmod +x "$h5/.t3/b
 out=$(HOME=$h5 bash -c "$cli" 2>&1)
 check "app restarted on the installed version: its CLI is used, the old download is removed" '[ "$out" = "$h5/.t3/bin/t3" ] && [ -z "$(ls -A "$h5/.local/share/t3-links/cli")" ]'
 rm -rf "$h5"
+h6=$(home "$V"); mkdir -p "$h6/.local/share/t3-links/cli/.download-abc123/t3-x"; cp -r "$h/.local/share/t3-links/cli/$V" "$h6/.local/share/t3-links/cli/" 2>/dev/null
+HOME=$h6 bash -c "$cli" >/dev/null 2>&1
+check "a download left by a killed run is removed" '[ ! -e "$h6/.local/share/t3-links/cli/.download-abc123" ]'
+rm -rf "$h6"
 h3=$(home '1.0; touch /tmp/pwned-t3links'); out=$(HOME=$h3 bash -c "$cli" 2>&1); rc=$?
 check "odd version string refused" '[ $rc != 0 ] && [ ! -e /tmp/pwned-t3links ] && grep -q "unexpected server version" <<<"$out"'
 h4=$(home 0.0.0-nightly.19990101.1); out=$(HOME=$h4 bash -c "$cli" 2>&1); rc=$?

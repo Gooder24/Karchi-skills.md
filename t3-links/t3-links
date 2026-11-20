@@ -2,10 +2,10 @@
 """Keeps Karchi's T3 environments linked to each other over Tailscale HTTPS, so the links never run out.
 
 A T3 link is a 30-day token that T3 does not renew, and its expiry is kept in T3's own database, so no proxy
-can stretch it. A daily timer on asus (12:30, never caught up at night) therefore links each pair again (a
+can stretch it. A timer on asus (five times between 9:30 and 21:30, never at night) therefore links each pair again (a
 fresh pairing code from the target, `t3 environment link` on the source) once fewer than RENEW_DAYS are left,
 the link is missing, or its last use failed (a revoked token). A machine that does not answer (x270 asleep)
-is tried again the next day.
+is tried again at the next run.
 
 A pair that is fewer than WARN_DAYS from expiring, or failed WARN_DAYS + 1 days in a row with an unknown
 expiry, is an ALARM: the run exits 1, so t3-links.service shows as failed (`systemctl --user --failed`), and
@@ -40,7 +40,7 @@ set -eu
 v=$(python3 -c 'import json,os;print(json.load(open(os.path.expanduser("~/.t3/userdata/server-runtime.json")))["serverVersion"])')
 case $v in *[!0-9A-Za-z.-]*|"") echo "unexpected server version '$v'" >&2; exit 1;; esac
 d=~/.local/share/t3-links/cli
-for old in "$d"/*/; do [ -d "$old" ] && [ "$old" != "$d/$v/" ] && rm -rf "$old"; done
+for old in "$d"/*/ "$d"/.download-*/; do [ -d "$old" ] && [ "$old" != "$d/$v/" ] && rm -rf "$old"; done
 for c in ~/.t3/runtime/versions/$v/t3 ~/.t3/bin/t3 $d/$v/t3; do
   if [ -x "$c" ] && "$c" --version 2>/dev/null | grep -qxF "t3 v$v"; then echo "$c"; exit 0; fi
 done
@@ -117,7 +117,7 @@ def link(s, t, t3):
     rc, out, err = on(t, f"{t3[t]} pair --ttl 5m --label {s}-t3-links")
     code = next((l.split("Token: ", 1)[1].strip() for l in out.splitlines() if l.startswith("Token: ")), "")
     if rc or not code:
-        return None, f"no pairing code from {t}: " + (message(err + "\n" + out) or f"exit {rc}")
+        return None, f"no pairing code from {t}: " + (message(err + "\n" + out, code) or f"exit {rc}")
     rc, out, err = on(s, f"{t3[s]} environment link {MACHINES[t][1]} --pairing-code {shlex.quote(code)} "
                          f"--access {access(t)}")
     until = re.search(r"^Linked .* until (\S+?)\.?$", out, re.M)
