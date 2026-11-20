@@ -179,7 +179,7 @@ def sedenia(d, spravy, okn, vynechat):
         b = sd["do"] + timedelta(minutes=(-sd["do"].minute) % 5)
         b = b.replace(second=0, microsecond=0)
         a = max(a, datetime.combine(d, datetime.min.time(), TZ))
-        b = min(b, datetime.combine(d, datetime.max.time(), TZ).replace(second=0, microsecond=0))
+        b = min(b, datetime.combine(d + timedelta(days=1), datetime.min.time(), TZ))
         for s, e, _ in odober([(a, b, None)], vynechat):
             if (e - s).total_seconds() / 60 >= MIN_SEDENIE:
                 out.append({"od": s, "do": e, "veci": sd["veci"]})
@@ -226,6 +226,8 @@ def haiku(prompt, n):
         if m:
             got[int(m[1])] = m[2].strip().rstrip(".")
     if r.returncode != 0 or any(not got.get(i) for i in range(1, n + 1)):
+        if re.search(r"login|log in|auth|sign-in|setup-token", r.stdout + r.stderr, re.I):
+            notify("Výkaz nezapisuje: Claude na x270 nie je prihlásený (claude setup-token)")
         sys.exit(f"Haiku zlyhal ({r.returncode}): {r.stdout[:300]} {r.stderr[:300]}")
     return [got[i] for i in range(1, n + 1)]
 
