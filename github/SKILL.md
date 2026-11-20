@@ -27,6 +27,19 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
   merge button: it merges only when CI passed on the PR's current head. On a private repo without
   GitHub Pro nothing else stops a merge on red CI.
 
+## CI runs on asus (Karchi, 2026-11-20)
+
+- Every job of Karchi's personal repos runs on asus, not on GitHub's minutes: `runs-on` is
+  `${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || 'asus' }}`,
+  so only a pull request from a fork (someone else's code) goes to GitHub's machines. A new workflow
+  gets this line; a step that needs `sudo` gets `if: runner.environment == 'github-hosted'` and its
+  packages are installed on asus once by hand.
+- A repo with CI gets its runner with `github/asus-runner.sh <repo>` (from any machine; `--remove`
+  takes it away). The runner's hook `reject-forks.sh` fails a fork's job even when its workflow asks
+  for asus.
+- Jobs that need another OS (kalendarix `release.yml`: Windows, macOS) stay on GitHub. The eSYST repos
+  spotrex and eSYSTAK have their own runners on asus from before.
+
 ## Commits
 
 - Conventional commit titles in plain language: `fix(web): new threads no longer spike CPU`.

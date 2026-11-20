@@ -22,7 +22,9 @@ permissions:
 jobs:
   docs:
     name: Documentation accessibility check
-    runs-on: ubuntu-24.04
+    # Karchi's own pushes and PRs run on asus (github/asus-runner.sh in Karchi-skills.md);
+    # a pull request from a fork runs on GitHub's machines.
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || 'asus' }}
     steps:
       - uses: actions/checkout@v4
       - name: Check Markdown against the baseline
