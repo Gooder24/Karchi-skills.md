@@ -27,7 +27,7 @@ if [ -n "$remove" ]; then
   sudo rm -f "/etc/systemd/system/$unit"
   sudo systemctl daemon-reload
   as_runner ./config.sh remove --token "$token"
-  sudo rm -rf "$dir"
+  sudo -u github-runner rm -rf "$dir"
   echo "removed $name from Gooder24/$repo"
   exit
 fi
@@ -52,7 +52,7 @@ sudo chmod 755 "$hook"
 if ! sudo test -x "$dir/run.sh"; then
   url=$(gh api repos/actions/runner/releases/latest \
     -q '.assets[] | select(.name | test("actions-runner-linux-x64-.*\\.tar\\.gz$")) | .browser_download_url')
-  sudo install -d -o github-runner -g github-runner "$dir"
+  sudo -u github-runner mkdir -p "$dir"
   curl -fsSL "$url" | as_runner tar -xz
 fi
 
