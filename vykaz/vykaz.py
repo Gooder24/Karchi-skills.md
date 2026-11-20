@@ -410,7 +410,7 @@ def spolu_sedi(ws):
 
 def svoje_riadky(d):
     v = stav().get("dni", {}).get(str(d))
-    return list(v["riadky"] if isinstance(v, dict) else v or [])
+    return list(v.get("riadky", []) if isinstance(v, dict) else v or [])
 
 
 def odober_svoje(ws, d):
@@ -482,6 +482,8 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
     dni["zaloha"] = z.name if z else (stary.get("zaloha") if isinstance(stary, dict) else None)
     if z and not novy_den(stary):
         dni["pred"] = stary if isinstance(stary, dict) else {"riadky": stary}  # for vrat
+    elif not z and isinstance(stary, dict) and "pred" in stary:
+        dni["pred"] = stary["pred"]  # nothing written: the last write's undo stays
     if zmazane:
         dni["zmazane"] = zmazane
     s.setdefault("dni", {})[str(d)] = dni
@@ -526,7 +528,8 @@ def vrat(mesiac=None):
     shutil.copy2(src, f)
     s = stav()
     for k, v in list(s.get("dni", {}).items()):
-        if not (isinstance(v, dict) and v.get("zaloha") and v["zaloha"] >= src.name):
+        zal = v.get("zaloha") if isinstance(v, dict) else None
+        if not (zal and zal.startswith(f"{f.stem}-2") and zal >= src.name):  # only this month's writes
             continue
         # the day as it was before that write; rows he deleted stay deleted
         pred = dict(v.get("pred") or {})
@@ -545,7 +548,7 @@ def vrat(mesiac=None):
 def stav_vypis():
     s = stav().get("dni", {})
     for d, v in sorted(s.items())[-14:]:
-        rows = v["riadky"] if isinstance(v, dict) else v
+        rows = v.get("riadky", []) if isinstance(v, dict) else v
         print(d, f"{len(rows)} riadkov")
         for r in rows:
             print("   ", r)
