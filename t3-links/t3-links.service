@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew the T3 links between Karchi's machines before they expire
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/t3-links
+TimeoutStartSec=60min

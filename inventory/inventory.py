@@ -75,6 +75,7 @@ PY
 CLAUDE = "Claude (administrativa@esyst.sk)"
 KNOWN = {
     ("asus", "limit-ping"): ("áno", CLAUDE + ", Codex (moj, infowork)", "Haiku 5.5, gpt-6-luna", "drží 5-hodinové okná za sebou: Claude resety 06/11/16/21 h, Codex moj 3/4 a infowork 1/2 okna Claude"),
+    ("asus", "t3-links"): ("nie", "", "", "každý deň 12:30 obnoví T3 prepojenia strojov, ktorým ostáva menej ako 7 dní"),
     ("asus", "reboot-when-idle"): ("nie", "", "", "reštart po aktualizácii, len keď nič nebeží"),
     ("asus", "diktovanie"): ("áno", CLAUDE, "Whisper lokálne + Haiku 5.5", "prepis reči pre voxtype na x270, text čistí Haiku"),
     ("asus", "spevnik-audio"): ("áno", CLAUDE, "Whisper, demucs lokálne + Haiku 5.5", "import piesne z nahrávky (akordy, text, tagy)"),

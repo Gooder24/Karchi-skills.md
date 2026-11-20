@@ -122,6 +122,17 @@ if [ "$(uname -n)" = asus-vivobook-x1504v ] && command -v systemctl >/dev/null; 
     systemctl --user daemon-reload && systemctl --user enable --now limit-ping.timer && echo "ok limit-ping.timer"
   fi
 fi
+# t3-links: len na asuse každý deň obnoví T3 prepojenia medzi strojmi, kým nevypršia (30-dňové tokeny T3 neobnovuje).
+if [ "$(uname -n)" = asus-vivobook-x1504v ] && command -v systemctl >/dev/null; then
+  mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
+  ln -sfn "$R/t3-links/t3-links" "$HOME/.local/bin/t3-links"
+  if ! cmp -s "$R/t3-links/t3-links.service" "$HOME/.config/systemd/user/t3-links.service" ||
+     ! cmp -s "$R/t3-links/t3-links.timer" "$HOME/.config/systemd/user/t3-links.timer" ||
+     ! systemctl --user is-enabled -q t3-links.timer 2>/dev/null; then
+    cp "$R"/t3-links/t3-links.{service,timer} "$HOME/.config/systemd/user/"
+    systemctl --user daemon-reload && systemctl --user enable --now t3-links.timer && echo "ok t3-links.timer"
+  fi
+fi
 # vykaz: výkaz práce pre eSYST z T3 vlákien a okien Outlook/Teams; súbory a okná sú na x270, inde len príkaz cez ssh.
 ln -sfn "$R/vykaz/vykaz" "$HOME/.local/bin/vykaz"
 if [ "$(uname -n)" = karchi ] && command -v systemctl >/dev/null; then

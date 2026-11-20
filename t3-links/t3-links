@@ -1,0 +1,241 @@
+#!/usr/bin/env python3
+"""Keeps Karchi's T3 environments linked to each other over Tailscale HTTPS, so the links never run out.
+
+A T3 link is a 30-day token that T3 does not renew, and its expiry is kept in T3's own database, so no proxy
+can stretch it. A daily timer on asus (12:30, never caught up at night) therefore links each pair again (a
+fresh pairing code from the target, `t3 environment link` on the source) once fewer than RENEW_DAYS are left,
+the link is missing, or its last use failed (a revoked token). A machine that does not answer (x270 asleep)
+is tried again the next day.
+
+A pair that is fewer than WARN_DAYS from expiring, or failed WARN_DAYS + 1 days in a row with an unknown
+expiry, is an ALARM: the run exits 1, so t3-links.service shows as failed (`systemctl --user --failed`), and
+`t3-links status` lists it. Nothing goes to Karchi's inbox.
+
+  t3-links           renew what is due (the timer)
+  t3-links --all     link every pair again now
+  t3-links status    each link, when it expires and any alarm, from the last run
+Needs on every machine: Tailscale Serve for T3 (T3CODE_TAILSCALE_SERVE=true in ~/.t3/service.env, on x270
+Settings → Connections → Tailscale HTTPS). Pairing codes never leave the commands that use them.
+State and log: ~/.local/state/t3-links/{state.json,log}
+"""
+import json, os, re, shlex, subprocess, sys, time
+from datetime import datetime, timedelta, timezone
+
+MACHINES = {  # alias: (node name, T3 address over Tailscale HTTPS)
+    "dell": ("dell-latitude-e5440", "https://dell-latitude-e5440.taila3702d.ts.net"),
+    "asus": ("asus-vivobook-x1504v", "https://asus-vivobook-x1504v.taila3702d.ts.net"),
+    "e540": ("thinkpad-e540", "https://thinkpad-e540.taila3702d.ts.net"),
+    "x270": ("karchi", "https://karchi-1.taila3702d.ts.net"),
+}
+RENEW_DAYS, WARN_DAYS = 7, 2
+TRIES, RETRY_WAIT = 3, 20  # per pair: a busy T3 database ("database is locked") passes within a minute
+STATE = os.path.expanduser("~/.local/state/t3-links")
+# Prints the t3 CLI of exactly the version the T3 server there runs: another version refuses its database or
+# would migrate it. Headless machines keep it in ~/.t3/runtime/versions. On x270 the desktop app keeps running
+# its old version after a nightly package update, while ~/.t3/bin/t3 already runs the new one; then the CLI of
+# the running version comes from its GitHub release (checked against SHA256SUMS) into ~/.local/share/t3-links/cli,
+# which keeps only the running version.
+CLI = r"""
+set -eu
+v=$(python3 -c 'import json,os;print(json.load(open(os.path.expanduser("~/.t3/userdata/server-runtime.json")))["serverVersion"])')
+case $v in *[!0-9A-Za-z.-]*|"") echo "unexpected server version '$v'" >&2; exit 1;; esac
+d=~/.local/share/t3-links/cli
+for old in "$d"/*/; do [ -d "$old" ] && [ "$old" != "$d/$v/" ] && rm -rf "$old"; done
+for c in ~/.t3/runtime/versions/$v/t3 ~/.t3/bin/t3 $d/$v/t3; do
+  if [ -x "$c" ] && "$c" --version 2>/dev/null | grep -qxF "t3 v$v"; then echo "$c"; exit 0; fi
+done
+case $(uname -m) in x86_64) a=linux-x64;; aarch64) a=linux-arm64;; *) echo "no t3 CLI build for $(uname -m)" >&2; exit 1;; esac
+f=t3-$v-$a.tar.gz u=https://github.com/pingdotgg/t3code/releases/download/v$v
+mkdir -p "$d"; tmp=$(mktemp -d "$d/.download-XXXXXX"); trap 'rm -rf "$tmp"' EXIT
+curl -fsSL --retry 2 -o "$tmp/SHA256SUMS" "$u/SHA256SUMS"
+curl -fsSL --retry 2 -o "$tmp/$f" "$u/$f"
+sum=$(awk -v f="$f" '$2 == f {print $1}' "$tmp/SHA256SUMS")
+[ -n "$sum" ] && echo "$sum  $tmp/$f" | sha256sum -c --quiet || { echo "$f does not match SHA256SUMS of v$v" >&2; exit 1; }
+tar xzf "$tmp/$f" -C "$tmp"
+"$tmp/t3-$v-$a/t3" --version | grep -qxF "t3 v$v" || { echo "the downloaded t3 is not v$v" >&2; exit 1; }
+rm -rf "$d/$v"; mv "$tmp/t3-$v-$a" "$d/$v"
+echo "$d/$v/t3"
+"""
+
+
+def access(target):
+    return "approval-required" if target == "x270" else "full-access"  # x270 is Karchi's live desktop
+
+
+def on(host, cmd, timeout=120):
+    """(exit code, stdout, stderr) of a bash command on host, locally when it is this machine."""
+    if MACHINES[host][0] == os.uname().nodename:
+        args = ["bash", "-c", cmd]
+    else:  # bash explicitly: the login shell there may be another one
+        args = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, "bash -c " + shlex.quote(cmd)]
+    for attempt in range(2):  # a Tailscale path that is just being set up can time out once
+        try:
+            r = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return 124, "", "timed out"
+        if not (r.returncode == 255 and r.stderr.startswith("ssh: ")) or attempt:
+            return r.returncode, r.stdout, r.stderr
+        time.sleep(10)
+
+
+def log(msg):
+    with open(f"{STATE}/log", "a") as f:
+        f.write(f"{datetime.now().astimezone().isoformat(timespec='seconds')} {msg}\n")
+    print(msg)
+
+
+def parse(t):
+    return datetime.fromisoformat(t.replace("Z", "+00:00"))
+
+
+def load():
+    try:
+        return json.load(open(f"{STATE}/state.json"))
+    except (OSError, ValueError):
+        return {}
+
+
+def save(state):
+    tmp = f"{STATE}/state.json.tmp"
+    json.dump(state, open(tmp, "w"), indent=1, sort_keys=True)
+    os.replace(tmp, f"{STATE}/state.json")
+
+
+def message(text, secret=""):
+    """What went wrong, without stack frames, QR art or the pairing code."""
+    keep = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith(("at ", "Token:")) or line in "{}" or not re.search(r"[A-Za-z]{3}", line):
+            continue
+        keep.append(line.replace(secret, "<code>") if secret else line)
+    return " ".join(keep)[:300]
+
+
+def link(s, t, t3):
+    """Links s to t again: (new expiry, None) or (None, error)."""
+    rc, out, err = on(t, f"{t3[t]} pair --ttl 5m --label {s}-t3-links")
+    code = next((l.split("Token: ", 1)[1].strip() for l in out.splitlines() if l.startswith("Token: ")), "")
+    if rc or not code:
+        return None, f"no pairing code from {t}: " + (message(err + "\n" + out) or f"exit {rc}")
+    rc, out, err = on(s, f"{t3[s]} environment link {MACHINES[t][1]} --pairing-code {shlex.quote(code)} "
+                         f"--access {access(t)}")
+    until = re.search(r"^Linked .* until (\S+?)\.?$", out, re.M)
+    if rc == 0 and until:
+        return until[1], None
+    return None, message(out + "\n" + err, code) or f"exit {rc}"
+
+
+def list_links(s, t3):
+    """s's links as `t3 environment list --json` prints them: (links, None) or (None, error)."""
+    for i in range(TRIES):
+        rc, out, err = on(s, f"{t3[s]} environment list --json")
+        try:
+            if rc == 0:
+                return json.loads(out), None
+        except ValueError:
+            pass
+        error = message(err + "\n" + out) or f"exit {rc}"
+        if i < TRIES - 1:
+            time.sleep(RETRY_WAIT)
+    return None, f"{s} cannot list its links: {error}"
+
+
+def link_retrying(s, t, t3):
+    """Each try takes a fresh pairing code."""
+    for i in range(TRIES):
+        until, error = link(s, t, t3)
+        if until or i == TRIES - 1:
+            return until, error
+        log(f"{s}->{t} try {i + 1} failed, again in {RETRY_WAIT} s: {error[:120]}")
+        time.sleep(RETRY_WAIT)
+
+
+def run(everything):
+    now = datetime.now(timezone.utc)
+    state = load()
+    expires = state.setdefault("expires", {})  # "s->t": expiry as of the last run; missing = not linked
+    since = state.setdefault("failing_since", {})  # "s->t": first failed run in a row
+    t3, why_not = {}, {}
+    for h in MACHINES:
+        rc, out, err = on(h, CLI, timeout=900)  # a CLI download takes a while on x270's Wi-Fi
+        if rc == 0 and out.strip():
+            t3[h] = out.strip()
+        else:
+            why_not[h] = message(err + "\n" + out) or "does not answer"
+    failed = {}
+    for s in MACHINES:
+        links, error = list_links(s, t3) if s in t3 else (None, f"{s}: {why_not[s]}")
+        if links is None:
+            for t in MACHINES:
+                if t != s:
+                    failed[f"{s}->{t}"] = error
+            continue
+        by_url = {u: l for l in links for u in l.get("urls", [])}
+        for t in MACHINES:
+            if t == s:
+                continue
+            pair, have = f"{s}->{t}", by_url.get(MACHINES[t][1])
+            if have:
+                expires[pair] = have["expiresAt"]
+            else:
+                expires.pop(pair, None)
+            healthy = have and not have.get("lastError") and have.get("status") != "expired"
+            if not everything and healthy and parse(have["expiresAt"]) - now > timedelta(days=RENEW_DAYS):
+                continue
+            if t not in t3:
+                failed[pair] = f"{t}: {why_not[t]}"
+                continue
+            until, error = link_retrying(s, t, t3)
+            if error:
+                failed[pair] = error
+                continue
+            expires[pair] = until
+            log(f"{pair} linked until {until}")
+    for pair in [p for p in since if p not in failed]:
+        del since[pair]
+    alarms = {}
+    for pair, error in sorted(failed.items()):
+        log(f"{pair} FAIL {error}")
+        exp = expires.get(pair)
+        first = parse(since.setdefault(pair, now.isoformat(timespec="seconds")))
+        # Expiry unknown (the source never answered, or the link is gone): alarm after WARN_DAYS + 1 days.
+        if (parse(exp) - now < timedelta(days=WARN_DAYS)) if exp else (now - first >= timedelta(days=WARN_DAYS + 1)):
+            alarms[pair] = (f"expires {parse(exp).astimezone():%Y-%m-%d %H:%M}" if exp else "not linked") + f": {error}"
+            log(f"{pair} ALARM {alarms[pair]}")
+    state["alarms"] = alarms
+    if not failed:
+        log(f"all {len(MACHINES) * (len(MACHINES) - 1)} links ok")
+    state["last_run"] = now.isoformat(timespec="seconds")
+    save(state)
+    return 1 if alarms else 0
+
+
+def status():
+    state = load()
+    print(f"last run {state.get('last_run', 'never')}")
+    for pair in [f"{s}->{t}" for s in MACHINES for t in MACHINES if s != t]:
+        exp = state.get("expires", {}).get(pair)
+        line = f"{pair:12} " + (f"expires {parse(exp).astimezone():%Y-%m-%d %H:%M}" if exp else "not linked")
+        if pair in state.get("failing_since", {}):
+            line += f", failing since {parse(state['failing_since'][pair]).astimezone():%Y-%m-%d %H:%M}"
+        print(line)
+    for pair, why in state.get("alarms", {}).items():
+        print(f"ALARM {pair}: {why}")
+
+
+def main():
+    os.makedirs(STATE, exist_ok=True)
+    if sys.argv[1:] == ["status"]:
+        return status()
+    import fcntl
+    lock = open(f"{STATE}/.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        sys.exit("t3-links already runs")
+    sys.exit(run("--all" in sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    main()
