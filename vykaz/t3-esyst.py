@@ -18,8 +18,7 @@ SKIP = ("<", "Stop hook", "Delegated task", "Context handoff", "[Request interru
 def main(od, do):
     db = os.path.expanduser("~/.t3/userdata/statev2.sqlite")
     if not os.path.exists(db):
-        print("[]")
-        return
+        sys.exit(f"{db} chýba")  # a failure, not a day without work
     con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=30)
     rows = con.execute(
         """select m.thread_id, m.created_at, coalesce(p.title, ''), t.title, json_extract(m.payload_json, '$.text')

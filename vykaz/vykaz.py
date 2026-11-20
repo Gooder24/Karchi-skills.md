@@ -96,19 +96,24 @@ def t3_spravy(d):
 
 def okna(d):
     """Focus intervals of Outlook/Teams/eSYST T3 that day: [(start, end, druh, titul)]."""
-    f = OKNA / f"{d}.tsv"
-    if not f.exists():
-        return []
-    rows = []
-    for line in f.read_text().splitlines():
-        p = line.split("\t")
-        if len(p) >= 2:
-            rows.append((datetime.fromtimestamp(int(p[0]), TZ), p[1], p[2] if len(p) > 2 else ""))
+    def citaj(x):
+        f = OKNA / f"{x}.tsv"
+        rows = []
+        for line in (f.read_text().splitlines() if f.exists() else []):
+            p = line.split("\t")
+            if len(p) >= 2:
+                rows.append((datetime.fromtimestamp(int(p[0]), TZ), p[1], p[2] if len(p) > 2 else ""))
+        return rows
+    # a focus that runs over midnight: the day before's last line starts it, the next day's first line ends it
+    rows = citaj(d - timedelta(days=1))[-1:] + citaj(d) + citaj(d + timedelta(days=1))[:1]
+    zac = datetime.combine(d, datetime.min.time(), TZ)
+    kon = zac + timedelta(days=1)
     out = []
     for (t, k, title), nxt in zip(rows, rows[1:] + [None]):
         if k == "-":
             continue
-        end = min(nxt[0] if nxt else t, t + timedelta(minutes=OKNO_MAX))
+        end = min(nxt[0] if nxt else t, t + timedelta(minutes=OKNO_MAX), kon)
+        t = max(t, zac)
         if (end - t).total_seconds() >= 60:
             out.append((t, end, k, title))
     return out
@@ -208,6 +213,41 @@ def ciel():
     return t.split("## Čo sa ráta", 1)[1].split("\n## ", 1)[0].strip()
 
 
+def haiku(prompt, n):
+    """Numbered answers 1..n from Haiku; any gap, empty answer or error stops the run before anything is written."""
+    try:
+        r = subprocess.run([str(CLAUDE), "-p", "--model", "claude-haiku-5-5", prompt],
+                           capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        sys.exit(f"Haiku zlyhal: {e}")
+    got = {}
+    for line in r.stdout.splitlines():
+        m = re.match(r"\s*(\d+)\s*[:.)]\s*(\S.*)", line)
+        if m:
+            got[int(m[1])] = m[2].strip().rstrip(".")
+    if r.returncode != 0 or any(not got.get(i) for i in range(1, n + 1)):
+        sys.exit(f"Haiku zlyhal ({r.returncode}): {r.stdout[:300]} {r.stderr[:300]}")
+    return [got[i] for i in range(1, n + 1)]
+
+
+def firemne(d, spravy):
+    """Only his messages that are eSYST work, judged one by one, so that an unrelated thread in between does not
+    make one long paid sitting out of them."""
+    if not spravy:
+        return []
+    zoznam = "\n".join(f"{i + 1}: {hm(r['t'])} [{r['projekt']} / {r['vlakno']}] {r['text'][:220]}"
+                       for i, r in enumerate(spravy))
+    prompt = f"""Karol pracuje popri škole pre firmu eSYST s.r.o. a vedie si výkaz odpracovaných hodín. Pri každej jeho správe AI agentovi z {d.day}.{d.month}.{d.year} rozhodni, či je to práca pre eSYST.
+
+{ciel()}
+
+Odpovedz presne {len(spravy)} riadkami v tvare „ČÍSLO: A“ (práca pre eSYST) alebo „ČÍSLO: N“ (nie), ničím iným. Krátka správa bez obsahu („ok“, „pokračuj“, „/compact“) patrí k vláknu, v ktorom je.
+
+{zoznam}"""
+    ano = haiku(prompt, len(spravy))
+    return [r for r, a in zip(spravy, ano) if a.upper().startswith("A")]
+
+
 def popisy(d, sed):
     """One line per sitting from Haiku, '' for a sitting that is not eSYST work."""
     if not sed:
@@ -224,19 +264,7 @@ Pre každé sedenie napíš jeden riadok do stĺpca popisu: podstatné mená zo 
 Ak sedenie nie je firemná práca, napíš NIC. Odpovedz presne {len(sed)} riadkami v tvare „ČÍSLO: text“ a ničím iným.
 
 {bloky}"""
-    try:
-        r = subprocess.run([str(CLAUDE), "-p", "--model", "claude-haiku-5-5", prompt],
-                           capture_output=True, text=True, timeout=300)
-    except (OSError, subprocess.TimeoutExpired) as e:
-        sys.exit(f"popis sa nepodaril: {e}")
-    got = {}
-    for line in r.stdout.splitlines():
-        m = re.match(r"\s*(\d+)\s*[:.)]\s*(.+)", line)
-        if m:
-            got[int(m[1])] = m[2].strip().rstrip(".")
-    if r.returncode != 0 or len(got) != len(sed):
-        sys.exit(f"popis sa nepodaril ({r.returncode}): {r.stdout[:300]} {r.stderr[:300]}")
-    return ["" if got[i + 1].upper().startswith("NIC") else got[i + 1] for i in range(len(sed))]
+    return ["" if t.upper().startswith("NIC") else t for t in haiku(prompt, len(sed))]
 
 
 def navrh(d, ws):
@@ -245,7 +273,7 @@ def navrh(d, ws):
     p = prax(d)
     if p:
         vynechat.append(p)
-    sed = sedenia(d, spravy, okna(d), vynechat)
+    sed = sedenia(d, firemne(d, spravy), okna(d), vynechat)
     txt = popisy(d, sed)
     rows = [(t, s) for t, s in zip(txt, sed) if t]
     return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hm(s['od'])}-{hm(s['do'])}",
@@ -311,7 +339,7 @@ def zaloha(f):
     if not f.exists():
         return None
     ZALOHY.mkdir(parents=True, exist_ok=True)
-    z = ZALOHY / f"{f.stem}-{datetime.now():%Y%m%d-%H%M%S}.xlsx"
+    z = ZALOHY / f"{f.stem}-{datetime.now():%Y%m%d-%H%M%S-%f}.xlsx"
     shutil.copy2(f, z)
     return z
 
@@ -332,6 +360,7 @@ def zapis_den(d, sucho=False, aj_bez=False):
     if otvoreny(f) and not sucho:
         print(f"{f.name} je otvorený, {d} zapíšem nabudúce")
         return None
+    pred = f.stat().st_mtime_ns if f.exists() else None
     wb = nacitaj(f)
     nove, chyby, n = navrh(d, wb.active)
     if sucho:
@@ -343,12 +372,18 @@ def zapis_den(d, sucho=False, aj_bez=False):
         # a sleeping machine would lose its part of the day: try again next run
         print(f"{d}: nedostupné {', '.join(chyby)}, skúsim nabudúce")
         return None
+    if otvoreny(f) or (f.stat().st_mtime_ns if f.exists() else None) != pred:
+        # he opened or saved the file while the model was writing: never write over his edit
+        print(f"{f.name} sa medzitým otvoril alebo zmenil, {d} zapíšem nabudúce")
+        return None
     s = stav()
+    z = None
     if nove:
         z = zaloha(f)
         celkom = zapis_riadky(f, wb, nove)
         print(f"{d}: +{len(nove)} riadkov, spolu {trvanie(celkom)} (záloha {z})")
-    s.setdefault("dni", {})[str(d)] = [r["cas"] + " " + r["popis"] for r in nove]
+    s.setdefault("dni", {})[str(d)] = {"riadky": [r["cas"] + " " + r["popis"] for r in nove],
+                                       "zaloha": z.name if z else None}
     uloz_stav(s)
     return nove
 
@@ -359,7 +394,7 @@ def auto():
     hotove = stav().get("dni", {})
     d, today = START, datetime.now(TZ).date()
     pridane = 0
-    while d < today:
+    while d < today and datetime.now(TZ).hour in ZOBUDENY:
         if str(d) not in hotove:
             # after two days dell or e540 asleep is left out, so the day gets written; without asus
             # (most of his threads) or the network nothing is written and the next run tries again
@@ -373,18 +408,27 @@ def auto():
 
 
 def vrat(mesiac=None):
+    """Back to the file before the last write; that write's days count as not written again."""
     f = PLAT / f"{mesiac}.xlsx" if mesiac else subor(datetime.now(TZ).date() - timedelta(days=1))
-    z = sorted(ZALOHY.glob(f"{f.stem}-*.xlsx"))
+    z = sorted(p for p in ZALOHY.glob(f"{f.stem}-2*.xlsx"))
     if not z:
         sys.exit(f"žiadna záloha {f.name}")
-    zaloha(f)
-    shutil.copy2(z[-1], f)
-    print(f"{f} <- {z[-1]}")
+    src = z[-1]
+    ZALOHY.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(f, ZALOHY / f"pred-vratenim-{f.stem}-{datetime.now():%Y%m%d-%H%M%S-%f}.xlsx")
+    shutil.copy2(src, f)
+    s = stav()
+    s["dni"] = {k: v for k, v in s.get("dni", {}).items()
+                if not (isinstance(v, dict) and v.get("zaloha") and v["zaloha"] >= src.name)}
+    src.rename(src.with_name("vratene-" + src.name))  # the next vrat goes one write further back
+    uloz_stav(s)
+    print(f"{f} <- {src}")
 
 
 def stav_vypis():
     s = stav().get("dni", {})
-    for d, rows in sorted(s.items())[-14:]:
+    for d, v in sorted(s.items())[-14:]:
+        rows = v["riadky"] if isinstance(v, dict) else v
         print(d, f"{len(rows)} riadkov")
         for r in rows:
             print("   ", r)
