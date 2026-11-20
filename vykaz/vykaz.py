@@ -177,6 +177,8 @@ def sedenia(d, spravy, okn, vynechat):
             spojene.append({"od": s, "do": e, "veci": [x]})
     out = []
     for sd in spojene:
+        if sd["do"] - sd["od"] < timedelta(minutes=MIN_SEDENIE):
+            continue  # before rounding, so a lone quick reply never grows past the minimum by its clock minute
         # round to 5 minutes outward, then cut out practice and what the sheet already has
         a = sd["od"].replace(minute=sd["od"].minute // 5 * 5, second=0, microsecond=0)
         b = sd["do"] + timedelta(minutes=(-sd["do"].minute) % 5)
