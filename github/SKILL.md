@@ -38,7 +38,8 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
   takes it away). The runner's hook `reject-forks.sh` fails a fork's job even when its workflow asks
   for asus.
 - Jobs that need another OS (kalendarix `release.yml`: Windows, macOS) stay on GitHub. The eSYST repos
-  spotrex and eSYSTAK have their own runners on asus from before.
+  spotrex and eSYSTAK have their own runners on asus from before; partsheet uses `asus-runner.sh` (Karchi,
+  2026-11-20: GitHub stopped starting its jobs over a failed payment).
 
 ## Commits
 
