@@ -20,12 +20,15 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
 
 - Utorková prax (dochadzka, 7 h) do výkazu nepatrí: je to výkaz nadčasov, preto sa jej čas vynecháva.
 - Čas počas vyučovania sa ráta len vtedy, keď v ňom robil prácu pre eSYST; škola sama nie (pozri vyššie).
-- Sedenie: správa = 5 min pred a 10 min po, krátka odpoveď (kratšia než 30 znakov, „skús znova“) 2 min pred a 3 po,
-  aktívne okno najviac 20 min, do 5 min od seba je to jedno sedenie (dlhšia pauza nie je práca; Karchi 20. 11.:
-  odpoveď na chvíľu sa rátala ako 20 min), zaokrúhlené na 5 min, kratšie než 10 min (pred zaokrúhlením) sa neráta;
-  okno zaostrené dlhšie než 20 min sa ráta 20 min a zvyšok je pauza, aj keď potom prepne priamo do Teams (konštanty
-  na začiatku `vykaz.py`). Najprv Haiku posúdi každú správu zvlášť a sedenia sa skladajú len z firemných, aby
-  osobné vlákno medzi nimi nenafúklo čas.
+- Ráta sa čas, keď je vo vlákne: číta odpoveď agenta, rozmýšľa a píše (Karchi 20. 11.: to je základ výkazu; „skús
+  znova“ sa predtým rátalo ako 15 až 20 min, hoci na x270 trvalo 21 s). Pred jeho správou: od chvíle, keď bola
+  odpoveď agenta hotová, alebo od jeho poslednej správy kdekoľvek, najviac 1 min + 1 min na 1000 znakov odpovede +
+  1 min na 40 znakov jeho správy, nanajvýš 10 min; po odoslaní 1 min. Kým agent pracuje, to nie je jeho práca.
+  Zaostrené okno eSYST vlákna, Outlooku či Teams na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od
+  seba sú jedno sedenie, kratšie než 5 min vypadne, okraje sa zaokrúhlia na najbližších 5 min (konštanty na
+  začiatku `vykaz.py`). Keď sa pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní pri ďalšom
+  behu prepočíta sám; riadky, ktoré Karchi napísal alebo upravil, ostanú. Najprv Haiku posúdi každú správu zvlášť a
+  sedenia sa skladajú len z firemných, aby osobné vlákno medzi nimi nenafúklo čas.
 - Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom.
 - Zdroje: T3 na asuse, x270, delle a e540. Rodinný PC (Windows, Codex) sa nečíta, eSYST tam nerobí.
 

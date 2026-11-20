@@ -20,9 +20,10 @@ október vyplnil ručne). Riadok je jedno sedenie: A popis, B `D.M.RRRR H:MM-H:M
   Hurbanova, alebo vlákno či správa, ktorá spomína eSYST, SPOTREX, CRS 40, EUCF, Gondžára, firemné….
 - `vykaz.py` (`vykaz.timer` na x270, 12:00 a 20:00, po prebudení dobehne, medzi 23:00 a 7:00 nič nerobí):
   za každý dokončený deň od 1. 11. 2026, ktorý ešte nie je v `~/.local/share/vykaz/zapisane.json`, zoberie
-  správy zo všetkých strojov (x270 lokálne, asus, dell, e540 cez ssh) a okná. Správa = 5 min pred a 10 min po,
-  okno najviac 20 min, udalosti do 20 min od seba sú jedno sedenie, zaokrúhlené na 5 min, kratšie než 10 min
-  vypadnú. Vynechá čas utorkovej praxe (`~/Work/dual/dochadzka/zaznamy/<deň>.json`) a čas, ktorý už v súbore
+  správy zo všetkých strojov (x270 lokálne, asus, dell, e540 cez ssh) a okná. Ráta čas, keď bol vo vlákne
+  (čítanie odpovede, rozmýšľanie, písanie pred správou, najviac 10 min; kým pracuje agent, nie), zaostrené okno
+  najviac 20 min, sedenie kratšie než 5 min vypadne (presne v `predpoklady.md`). Deň zapísaný starším pravidlom
+  (`PRAVIDLA` vo `vykaz.py`) prepočíta sám a nahradí len svoje nezmenené riadky. Vynechá čas utorkovej praxe (`~/Work/dual/dochadzka/zaznamy/<deň>.json`) a čas, ktorý už v súbore
   je. Popis sedenia napíše Haiku (`claude -p`); sedenie, ktoré nie je práca pre eSYST, vynechá. Čo sa ráta,
   komu súbor ide a ďalšie predpoklady sú v `predpoklady.md` (oprav tam). Bez siete alebo asusu nezapíše nič a
   skúsi to nabudúce; spiaci dell či e540 deň pozdrží, po dvoch dňoch sa zapíše bez neho.
@@ -33,14 +34,15 @@ október vyplnil ručne). Riadok je jedno sedenie: A popis, B `D.M.RRRR H:MM-H:M
 
 ```
 vykaz                 zapíše dokončené dni, ktoré ešte nie sú zapísané (to robí timer)
-vykaz ukaz DÁTUM      čo by za deň zapísal, nič nemení
+vykaz ukaz DÁTUM      čo by za deň zapísal teraz, nič nemení
 vykaz zapis DÁTUM     deň znova: pridá len sedenia, ktoré v súbore ešte nie sú
+vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky nahradí novým výpočtom, jeho riadky ostanú
 vykaz vrat [MESIAC]   vráti súbor do stavu pred posledným zápisom
 vykaz stav            zapísané dni, zálohy, dnešné okná a stav jednotiek
 ```
 
 Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore: deň je už v `zapisane.json`, takže sa
-znova nepridá. Celý deň nanovo: zmaž jeho riadky v súbore a `vykaz zapis DÁTUM`.
+znova nepridá. Celý deň nanovo: `vykaz znova DÁTUM`.
 
 Inštaluje to `install.sh` (len na x270, `uname -n` = `karchi`): venv s openpyxl v
 `~/.local/share/vykaz/venv`, jednotky v `~/.config/systemd/user`, `~/.local/bin/vykaz` na každom stroji.

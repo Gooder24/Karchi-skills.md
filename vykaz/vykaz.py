@@ -2,8 +2,9 @@
 """Výkaz práce pre eSYST (duálne štúdium, plat): ~/Work/dual/1.plat/<mesiac>.xlsx na x270.
 
   vykaz                 zapíše dokončené dni, ktoré ešte zapísané nie sú (vykaz.timer cez deň)
-  vykaz ukaz DÁTUM      čo by zapísal za deň, nič nemení
+  vykaz ukaz DÁTUM      čo by za deň zapísal teraz (ako znova), nič nemení
   vykaz zapis DÁTUM     zapíše jeden deň (aj už zapísaný: pridá len sedenia, ktoré v súbore ešte nie sú)
+  vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky toho dňa nahradí novým výpočtom (jeho riadky ostanú)
   vykaz vrat [MESIAC]   vráti súbor mesiaca do stavu pred posledným zápisom (záloha)
   vykaz stav            zapísané dni, posledné zálohy, stav zberu okien
 
@@ -32,11 +33,17 @@ CLAUDE = next((p for p in [Path.home() / ".local/share/mise/installs/claude/late
                            Path.home() / ".local/bin/claude"] if p.exists()), "claude")
 MESIACE = {1: "januar", 2: "februar", 3: "marec", 4: "april", 5: "maj", 6: "jun", 7: "jul", 8: "august",
            9: "September", 10: "oktober", 11: "november", 12: "december"}
-SPRAVA = 5, 10   # minutes of work before and after one of his messages
-KRATKA = 30, (2, 3)  # a reply shorter than this many characters ("skús znova", "vykonaj") is a moment's work
+# Work is the time he spends in a thread: reading the agent's answer, thinking, typing. Before one of his
+# messages that is the time since the answer was ready or since his last message anywhere, at most what reading
+# and writing it can take; the agent working afterwards is not his work. Focused windows on x270 count as they are.
+CITANIE = 1000   # characters of the agent's answer he reads in a minute
+PISANIE = 40     # characters he writes (and thinks over) in a minute
+NAD_SPRAVOU = 1, 10  # minutes before one message: at least, at most
+PO_SPRAVE = 1    # minutes after sending it
 OKNO_MAX = 20    # one focused Outlook/Teams/T3 interval counts at most this long (he may have walked away)
-MEDZERA = 5      # events closer than this are one sitting; a longer pause is not worked time
-MIN_SEDENIE = 10  # shorter sittings are dropped
+MEDZERA = 2      # events closer than this are one sitting
+MIN_SEDENIE = 5  # shorter sittings are dropped
+PRAVIDLA = 2     # raise when the counting changes: days written by older rules are counted again (auto)
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 
 
@@ -162,10 +169,28 @@ def odober(iv, dier):
     return iv
 
 
-def sedenia(d, spravy, okn, vynechat):
-    okolo = lambda r: KRATKA[1] if len(r["text"]) < KRATKA[0] else SPRAVA
-    iv = [(r["t"] - timedelta(minutes=okolo(r)[0]), r["t"] + timedelta(minutes=okolo(r)[1]), ("sprava", r))
-          for r in spravy]
+def pred_spravou(r, vsetky):
+    """When the work on message r began: reading and writing it, not before the answer it replies to or his
+    previous message anywhere (on any machine)."""
+    t = r["t"]
+    m = NAD_SPRAVOU[0] + r.get("odpoved", 0) / CITANIE + r.get("dlzka", len(r["text"])) / PISANIE
+    od = t - timedelta(minutes=min(NAD_SPRAVOU[1], m))
+    hore = [x["t"] for x in vsetky if x["t"] < t]
+    if r.get("pripravene"):
+        hore.append(datetime.fromisoformat(r["pripravene"].replace("Z", "+00:00")).astimezone(TZ))
+    hore = [h for h in hore if h < t]
+    return max([od] + hore)
+
+
+def na5(t):
+    """Nearest 5 minutes."""
+    h = t.replace(minute=0, second=0, microsecond=0)
+    return h + timedelta(minutes=5 * int(((t - h).total_seconds() + 150) // 300))
+
+
+def sedenia(d, spravy, okn, vynechat, vsetky=None):
+    vsetky = spravy if vsetky is None else vsetky
+    iv = [(pred_spravou(r, vsetky), r["t"] + timedelta(minutes=PO_SPRAVE), ("sprava", r)) for r in spravy]
     iv += [(s, e, ("okno", (k, title))) for s, e, k, title in okn]
     iv.sort(key=lambda x: x[0])
     spojene = []
@@ -178,15 +203,13 @@ def sedenia(d, spravy, okn, vynechat):
     out = []
     for sd in spojene:
         if sd["do"] - sd["od"] < timedelta(minutes=MIN_SEDENIE):
-            continue  # before rounding, so a lone quick reply never grows past the minimum by its clock minute
-        # round to 5 minutes outward, then cut out practice and what the sheet already has
-        a = sd["od"].replace(minute=sd["od"].minute // 5 * 5, second=0, microsecond=0)
-        b = sd["do"] + timedelta(minutes=(-sd["do"].minute) % 5)
-        b = b.replace(second=0, microsecond=0)
+            continue  # before rounding, so a quick reply never grows past the minimum by its clock minute
+        # round to the nearest 5 minutes, then cut out practice and what the sheet already has
+        a, b = na5(sd["od"]), na5(sd["do"])
         a = max(a, datetime.combine(d, datetime.min.time(), TZ))
         b = min(b, datetime.combine(d + timedelta(days=1), datetime.min.time(), TZ))
         for s, e, _ in odober([(a, b, None)], vynechat):
-            if (e - s).total_seconds() / 60 >= MIN_SEDENIE:
+            if (e - s).total_seconds() / 60 >= 5:
                 out.append({"od": s, "do": e, "veci": sd["veci"]})
     return out
 
@@ -280,7 +303,7 @@ def navrh(d, ws):
     p = prax(d)
     if p:
         vynechat.append(p)
-    sed = sedenia(d, firemne(d, spravy), okna(d), vynechat)
+    sed = sedenia(d, firemne(d, [r for r in spravy if r.get("esyst", True)]), okna(d), vynechat, spravy)
     txt = popisy(d, sed)
     rows = [(t, s) for t, s in zip(txt, sed) if t]
     return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hm(s['od'])}-{hm(s['do'])}",
@@ -362,13 +385,28 @@ def notify(text):
     print(text)
 
 
-def zapis_den(d, sucho=False, aj_bez=False):
+def odober_svoje(ws, d):
+    """Clear the rows vykaz wrote for day d that he has not changed since; his own and edited rows stay."""
+    v = stav().get("dni", {}).get(str(d))
+    svoje = set((v["riadky"] if isinstance(v, dict) else v or []))
+    n = 0
+    for r in range(1, ws.max_row + 1):
+        a, b = ws.cell(r, 1).value, ws.cell(r, 2).value
+        if a and b and f"{b} {a}" in svoje:
+            for c in range(1, 7):
+                ws.cell(r, c).value = None
+            n += 1
+    return n
+
+
+def zapis_den(d, sucho=False, aj_bez=False, znova=False):
     f = subor(d)
     if otvoreny(f) and not sucho:
         print(f"{f.name} je otvorený, {d} zapíšem nabudúce")
         return None
     pred = f.stat().st_mtime_ns if f.exists() else None
     wb = nacitaj(f)
+    prec = odober_svoje(wb.active, d) if znova or sucho else 0  # ukaz shows what znova would write
     nove, chyby, n = navrh(d, wb.active)
     if sucho:
         for r in nove:
@@ -385,12 +423,13 @@ def zapis_den(d, sucho=False, aj_bez=False):
         return None
     s = stav()
     z = None
-    if nove:
+    if nove or prec:
         z = zaloha(f)
         celkom = zapis_riadky(f, wb, nove)
-        print(f"{d}: +{len(nove)} riadkov, spolu {trvanie(celkom)} (záloha {z})")
+        print(f"{d}: {'-' + str(prec) + ' starých, ' if prec else ''}+{len(nove)} riadkov, spolu {trvanie(celkom)}"
+              f" (záloha {z})")
     s.setdefault("dni", {})[str(d)] = {"riadky": [r["cas"] + " " + r["popis"] for r in nove],
-                                       "zaloha": z.name if z else None}
+                                       "zaloha": z.name if z else None, "pravidla": PRAVIDLA}
     uloz_stav(s)
     return nove
 
@@ -402,10 +441,12 @@ def auto():
     d, today = START, datetime.now(TZ).date()
     pridane = 0
     while d < today and datetime.now(TZ).hour in ZOBUDENY:
-        if str(d) not in hotove:
+        v = hotove.get(str(d))
+        stare = v is not None and (not isinstance(v, dict) or v.get("pravidla", 1) != PRAVIDLA)
+        if v is None or stare:
             # after two days dell or e540 asleep is left out, so the day gets written; without asus
             # (most of his threads) or the network nothing is written and the next run tries again
-            r = zapis_den(d, aj_bez=d < today - timedelta(days=2))
+            r = zapis_den(d, aj_bez=d < today - timedelta(days=2), znova=stare)
             if r is None:
                 break
             pridane += len(r)
@@ -454,6 +495,8 @@ if __name__ == "__main__":
         zapis_den(date.fromisoformat(a[1]), sucho=True)
     elif a[0] == "zapis":
         zapis_den(date.fromisoformat(a[1]))
+    elif a[0] == "znova":
+        zapis_den(date.fromisoformat(a[1]), znova=True)
     elif a[0] == "vrat":
         vrat(*a[1:2])
     elif a[0] == "stav":
