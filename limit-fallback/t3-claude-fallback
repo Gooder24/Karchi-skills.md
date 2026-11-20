@@ -27,7 +27,8 @@ def codex(instance):
 
 
 def week_used_up(lane, now):
-    """Last weekly limit limit-ping saw for this Codex account: True only when it is used up and not yet reset."""
+    """Last weekly limit limit-ping saw for this Codex account: True when it is used up and not yet reset, None when
+    its state cannot be read (asus unreachable)."""
     if not lane:
         return False
     try:
@@ -40,13 +41,18 @@ def week_used_up(lane, now):
         week = json.loads(text)["week"]
         return float(week["used"]) >= 100 and float(week["resets"]) > now
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
-        return False
+        return None
 
 
-def pick():
+def pick(cur):
+    """The first Codex account whose week is not used up. While a state is unknown, a Codex account this automation
+    already chose stays (it is not swapped back to one last seen used up)."""
     now = time.time()
-    for instance, lane in ACCOUNTS.items():
-        if not week_used_up(lane, now):
+    seen = {instance: week_used_up(lane, now) for instance, lane in ACCOUNTS.items()}
+    if cur and None in seen.values():
+        return cur
+    for instance, used_up in seen.items():
+        if not used_up:
             return codex(instance)
     return codex(next(iter(ACCOUNTS)))
 
@@ -118,18 +124,23 @@ def main():
         raise ValueError("Usage must be between 0 and 100")
     s = json.loads(SETTINGS.read_text())
     cur = s.get("defaultModelSelection") or {}
-    saved = json.loads(STATE.read_text()) if STATE.exists() else None
-    ours = cur in [codex(i) for i in ACCOUNTS]  # a selection this automation installed
-    if used >= PRAH and (not saved and cur.get("instanceId", "claudeAgent") == "claudeAgent" or saved and ours):
-        target = pick()
+    # State: {"saved": the selection before the switch, "installed": what this automation put there}. The state of
+    # the first version held only the saved selection, and it always installed Infowork with gpt-6.1-sol.
+    state = json.loads(STATE.read_text()) if STATE.exists() else None
+    if state and "saved" not in state:
+        state = {"saved": state, "installed": {"instanceId": "codex_infowork", "model": "gpt-6.1-sol",
+                                               "options": [{"id": "reasoningEffort", "value": "high"}]}}
+    saved = state and state["saved"]
+    ours = bool(state) and cur == state["installed"]  # only the exact selection this automation installed
+    if used >= PRAH and (not state and cur.get("instanceId", "claudeAgent") == "claudeAgent" or ours):
+        target = pick(cur if ours else None)
         if target == cur:
             return
-        if not saved:
-            write(STATE, cur)
+        write(STATE, {"saved": saved if state else cur, "installed": target})
         s["defaultModelSelection"] = target
         write(SETTINGS, s)
         print(f"{datetime.now():%F %T} týždeň {used:.0f} % >= {PRAH:.0f} %: default -> {target['instanceId']} {target['model']}")
-    elif used < PRAH and saved:
+    elif used < PRAH and state:
         if ours:  # Restore only a selection this automation installed.
             s["defaultModelSelection"] = saved
             write(SETTINGS, s)
