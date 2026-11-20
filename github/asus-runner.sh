@@ -26,6 +26,7 @@ if [ -n "$remove" ]; then
   sudo systemctl disable --now "$unit"
   sudo rm -f "/etc/systemd/system/$unit"
   sudo systemctl daemon-reload
+  as_runner rm -f .service  # left by the runner's own svc.sh; config.sh refuses to remove while it exists
   as_runner ./config.sh remove --token "$token"
   sudo -u github-runner rm -rf "$dir"
   echo "removed $name from Gooder24/$repo"
