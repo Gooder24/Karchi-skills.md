@@ -15,6 +15,7 @@ keď mal na x270 aktívny Outlook, Teams alebo eSYST vlákno T3 (okna.py). Čas 
 vynechá. Pred každou zmenou zálohuje súbor do ~/.local/share/vykaz/zalohy/.
 """
 import json, os, re, shutil, subprocess, sys
+from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -97,7 +98,7 @@ def t3_spravy(d):
             continue
         for r in rows:
             t = datetime.fromisoformat(r["ts"].replace("Z", "+00:00")).astimezone(TZ)
-            if t.date() == d:
+            if t.date() in (d, d - timedelta(days=1)):  # the evening before only bounds work after midnight
                 out.append({"t": t, "stroj": m, **r})
     return sorted(out, key=lambda r: r["t"]), chyby
 
@@ -139,16 +140,19 @@ def prax(d):
     return c(z["od"]), c(z["do"])
 
 
+def interval(cas, d):
+    """'19.11.2026 13:40-13:50' -> (start, end) when it is day d, else None."""
+    m = re.match(r"\s*(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)\s*-\s*(\d+):(\d+)", str(cas or ""))
+    if not (m and date(int(m[3]), int(m[2]), int(m[1])) == d):
+        return None
+    a = datetime(d.year, d.month, d.day, int(m[4]), int(m[5]), tzinfo=TZ)
+    b = datetime(d.year, d.month, d.day, int(m[6]), int(m[7]), tzinfo=TZ)
+    return a, b if b > a else b + timedelta(days=1)
+
+
 def v_subore(ws, d):
     """Intervals already in the sheet for day d (his own rows and earlier writes)."""
-    out = []
-    for r in ws.iter_rows(min_col=2, max_col=2):
-        m = re.match(r"\s*(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)\s*-\s*(\d+):(\d+)", str(r[0].value or ""))
-        if m and date(int(m[3]), int(m[2]), int(m[1])) == d:
-            a = datetime(d.year, d.month, d.day, int(m[4]), int(m[5]), tzinfo=TZ)
-            b = datetime(d.year, d.month, d.day, int(m[6]), int(m[7]), tzinfo=TZ)
-            out.append((a, b if b > a else b + timedelta(days=1)))
-    return out
+    return [iv for r in ws.iter_rows(min_col=2, max_col=2) if (iv := interval(r[0].value, d))]
 
 
 # --- sittings ---------------------------------------------------------------
@@ -297,13 +301,18 @@ Ak sedenie nie je firemná práca, napíš NIC. Odpovedz presne {len(sed)} riadk
     return ["" if t.upper().startswith("NIC") else t for t in haiku(prompt, len(sed))]
 
 
-def navrh(d, ws):
+def navrh(d, ws, zmazane=()):
+    """zmazane: times of rows vykaz wrote and he deleted; that time is not proposed again."""
     spravy, chyby = t3_spravy(d)
-    vynechat = v_subore(ws, d) if ws is not None else []
+    zm = [iv for c in zmazane if (iv := interval(c, d))]
+    vynechat = (v_subore(ws, d) if ws is not None else []) + zm
     p = prax(d)
     if p:
         vynechat.append(p)
-    sed = sedenia(d, firemne(d, [r for r in spravy if r.get("esyst", True)]), okna(d), vynechat, spravy)
+    # a message inside a row he deleted is work he rejected, also when newer rules would count it earlier
+    dna = [r for r in spravy if r["t"].date() == d and r.get("esyst", True)
+           and not any(a <= r["t"] <= b for a, b in zm)]
+    sed = sedenia(d, firemne(d, dna), okna(d), vynechat, spravy)
     txt = popisy(d, sed)
     rows = [(t, s) for t, s in zip(txt, sed) if t]
     return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hm(s['od'])}-{hm(s['do'])}",
@@ -393,17 +402,18 @@ def svoje_riadky(d):
 def odober_svoje(ws, d):
     """Clear the rows vykaz wrote for day d exactly as it wrote them (text, time, duration, no note in D-F);
     a row he wrote or touched in any way stays. Returns the keys cleared."""
-    svoje, prec = set(svoje_riadky(d)), []
+    svoje, prec = Counter(svoje_riadky(d)), []
     for r in range(1, ws.max_row + 1):
         a, b, c = (ws.cell(r, i).value for i in (1, 2, 3))
         m = re.match(r"\s*\d+\.\d+\.\d{4}\s+(\d+):(\d+)-(\d+):(\d+)\s*$", str(b or ""))
-        if not (a and m and f"{b} {a}" in svoje) or any(ws.cell(r, i).value is not None for i in (4, 5, 6)):
+        if not (a and m and svoje[f"{b} {a}"] > 0) or any(ws.cell(r, i).value is not None for i in (4, 5, 6)):
             continue
         dlzka = (int(m[3]) * 60 + int(m[4]) - int(m[1]) * 60 - int(m[2])) % (24 * 60)
         if str(c or "").strip() != trvanie(dlzka):
             continue  # he corrected the duration
         for i in range(1, 7):
             ws.cell(r, i).value = None
+        svoje[f"{b} {a}"] -= 1  # his copy of a row it wrote once stays
         prec.append(f"{b} {a}")
     return prec
 
@@ -415,8 +425,14 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         return None
     pred = f.stat().st_mtime_ns if f.exists() else None
     wb = nacitaj(f)
+    # rows it wrote that are gone from the sheet he deleted: that time is not his work, never propose it again
+    v_liste = {f"{wb.active.cell(r, 2).value} {wb.active.cell(r, 1).value}" for r in range(1, wb.active.max_row + 1)}
+    stary = stav().get("dni", {}).get(str(d))
+    zmazane = list(stary.get("zmazane", [])) if isinstance(stary, dict) else []
+    zmazane += [k.split(" ", 2)[0] + " " + k.split(" ", 2)[1] for k in svoje_riadky(d) if k not in v_liste]
+    zmazane = sorted(set(zmazane))
     prec = odober_svoje(wb.active, d) if znova or sucho else []  # ukaz shows what znova would write
-    nove, chyby, n = navrh(d, wb.active)
+    nove, chyby, n = navrh(d, wb.active, zmazane)
     if sucho:
         for r in nove:
             print(f"{r['cas']:24} {trvanie(r['min']):8} {r['popis']}")
@@ -431,7 +447,6 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         print(f"{f.name} sa medzitým otvoril alebo zmenil, {d} zapíšem nabudúce")
         return None
     s = stav()
-    stary = s.get("dni", {}).get(str(d))
     kluce = [r["cas"] + " " + r["popis"] for r in nove]
     z = None
     if sorted(kluce) == sorted(prec):
@@ -449,6 +464,8 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         dni = {"riadky": svoje_riadky(d) + kluce,
                "pravidla": stary.get("pravidla", 1) if isinstance(stary, dict) else 1}
     dni["zaloha"] = z.name if z else (stary.get("zaloha") if isinstance(stary, dict) else None)
+    if zmazane:
+        dni["zmazane"] = zmazane
     s.setdefault("dni", {})[str(d)] = dni
     uloz_stav(s)
     return nove

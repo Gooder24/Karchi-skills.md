@@ -41,8 +41,9 @@ vykaz vrat [MESIAC]   vráti súbor do stavu pred posledným zápisom
 vykaz stav            zapísané dni, zálohy, dnešné okná a stav jednotiek
 ```
 
-Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore: deň je už v `zapisane.json`, takže sa
-znova nepridá. Celý deň nanovo: `vykaz znova DÁTUM`.
+Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore. Zmazaný riadok si výkaz pamätá
+(`zmazane` v `zapisane.json`) a jeho čas ani správy už nenavrhne, ani pri prepočítaní; prepísaný riadok
+(text, čas, trvanie, poznámka v D–F) je jeho a ostane. Celý deň nanovo: `vykaz znova DÁTUM`.
 
 Inštaluje to `install.sh` (len na x270, `uname -n` = `karchi`): venv s openpyxl v
 `~/.local/share/vykaz/venv`, jednotky v `~/.config/systemd/user`, `~/.local/bin/vykaz` na každom stroji.
