@@ -30,7 +30,8 @@ def main(od, do):
            left join projection_projects p on p.project_id = t.project_id
            left join orchestration_v2_projection_messages a on a.message_id = (
              select x.message_id from orchestration_v2_projection_messages x
-             where x.thread_id = m.thread_id and x.role = 'assistant' and x.updated_at < m.created_at
+             where x.thread_id = m.thread_id and x.role = 'assistant' and x.streaming = 0
+               and x.updated_at < m.created_at
              order by x.updated_at desc limit 1)
            where m.role = 'user' and m.streaming = 0
              and coalesce(json_extract(m.payload_json, '$.createdBy'), 'user') = 'user'

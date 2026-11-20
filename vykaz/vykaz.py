@@ -122,7 +122,7 @@ def okna(d):
             continue
         end = min(nxt[0] if nxt else t, t + timedelta(minutes=OKNO_MAX), kon)
         t = max(t, zac)
-        if (end - t).total_seconds() >= 60:
+        if end > t:  # even a few seconds: the sitting minimum decides what counts
             out.append((t, end, k, title))
     return out
 
@@ -385,18 +385,27 @@ def notify(text):
     print(text)
 
 
-def odober_svoje(ws, d):
-    """Clear the rows vykaz wrote for day d that he has not changed since; his own and edited rows stay."""
+def svoje_riadky(d):
     v = stav().get("dni", {}).get(str(d))
-    svoje = set((v["riadky"] if isinstance(v, dict) else v or []))
-    n = 0
+    return list(v["riadky"] if isinstance(v, dict) else v or [])
+
+
+def odober_svoje(ws, d):
+    """Clear the rows vykaz wrote for day d exactly as it wrote them (text, time, duration, no note in D-F);
+    a row he wrote or touched in any way stays. Returns the keys cleared."""
+    svoje, prec = set(svoje_riadky(d)), []
     for r in range(1, ws.max_row + 1):
-        a, b = ws.cell(r, 1).value, ws.cell(r, 2).value
-        if a and b and f"{b} {a}" in svoje:
-            for c in range(1, 7):
-                ws.cell(r, c).value = None
-            n += 1
-    return n
+        a, b, c = (ws.cell(r, i).value for i in (1, 2, 3))
+        m = re.match(r"\s*\d+\.\d+\.\d{4}\s+(\d+):(\d+)-(\d+):(\d+)\s*$", str(b or ""))
+        if not (a and m and f"{b} {a}" in svoje) or any(ws.cell(r, i).value is not None for i in (4, 5, 6)):
+            continue
+        dlzka = (int(m[3]) * 60 + int(m[4]) - int(m[1]) * 60 - int(m[2])) % (24 * 60)
+        if str(c or "").strip() != trvanie(dlzka):
+            continue  # he corrected the duration
+        for i in range(1, 7):
+            ws.cell(r, i).value = None
+        prec.append(f"{b} {a}")
+    return prec
 
 
 def zapis_den(d, sucho=False, aj_bez=False, znova=False):
@@ -406,7 +415,7 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         return None
     pred = f.stat().st_mtime_ns if f.exists() else None
     wb = nacitaj(f)
-    prec = odober_svoje(wb.active, d) if znova or sucho else 0  # ukaz shows what znova would write
+    prec = odober_svoje(wb.active, d) if znova or sucho else []  # ukaz shows what znova would write
     nove, chyby, n = navrh(d, wb.active)
     if sucho:
         for r in nove:
@@ -422,14 +431,25 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         print(f"{f.name} sa medzitým otvoril alebo zmenil, {d} zapíšem nabudúce")
         return None
     s = stav()
+    stary = s.get("dni", {}).get(str(d))
+    kluce = [r["cas"] + " " + r["popis"] for r in nove]
     z = None
-    if nove or prec:
+    if sorted(kluce) == sorted(prec):
+        nove = []  # znova came to the same rows: the file stays as it is
+    elif nove or prec:
         z = zaloha(f)
         celkom = zapis_riadky(f, wb, nove)
-        print(f"{d}: {'-' + str(prec) + ' starých, ' if prec else ''}+{len(nove)} riadkov, spolu {trvanie(celkom)}"
-              f" (záloha {z})")
-    s.setdefault("dni", {})[str(d)] = {"riadky": [r["cas"] + " " + r["popis"] for r in nove],
-                                       "zaloha": z.name if z else None, "pravidla": PRAVIDLA}
+        print(f"{d}: {'-' + str(len(prec)) + ' starých, ' if prec else ''}+{len(nove)} riadkov, "
+              f"spolu {trvanie(celkom)} (záloha {z})")
+    if znova or stary is None:
+        # its rows now are what it just wrote; a row it could not replace because he changed it is his
+        dni = {"riadky": kluce, "pravidla": PRAVIDLA}
+    else:
+        # zapis adds to a day: the older rows stay its own and keep the rules they were counted by
+        dni = {"riadky": svoje_riadky(d) + kluce,
+               "pravidla": stary.get("pravidla", 1) if isinstance(stary, dict) else 1}
+    dni["zaloha"] = z.name if z else (stary.get("zaloha") if isinstance(stary, dict) else None)
+    s.setdefault("dni", {})[str(d)] = dni
     uloz_stav(s)
     return nove
 
@@ -446,7 +466,11 @@ def auto():
         if v is None or stare:
             # after two days dell or e540 asleep is left out, so the day gets written; without asus
             # (most of his threads) or the network nothing is written and the next run tries again
-            r = zapis_den(d, aj_bez=d < today - timedelta(days=2), znova=stare)
+            # counting a written day again waits for every machine, so no machine's rows get lost
+            r = zapis_den(d, aj_bez=not stare and d < today - timedelta(days=2), znova=stare)
+            if r is None and stare:
+                d += timedelta(days=1)
+                continue  # an older day that cannot be counted again now does not hold up the new ones
             if r is None:
                 break
             pridane += len(r)
