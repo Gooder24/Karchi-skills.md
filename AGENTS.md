@@ -52,6 +52,18 @@ Nočný worker je zrušený (Karchi, 2026-11-09): žiadne plánované úlohy, kt
 
 Karchi sa nesmie spoliehať na „hotové“ od agenta, ktorý zmenu robil. Každá odpoveď po ťahu, ktorý niečo zmenil, končí jedným riadkom: `Overenie: <cesta k …/overenie/verdikt.md z tohto ťahu>` (skill overenie, nezávislý verifikátor; spúšťaj ho len cez `overenie/verify.sh`, nikdy ako subagenta ani `delegate_task`, aby nemíňal Claude limit), alebo `Overenie: neoverené – <čo má skúsiť a čo má vidieť>`, alebo `Overenie: netreba – <prečo>`, alebo `Overenie: prebieha – <čo beží>` (len pre prácu mimo tohto vlákna, nikdy pre overovateľa: na ten ťah počká, aby vlákno neskočilo do Done nedokončené). Pri `neoverené` nikde nepíš hotové ani funguje. V Claude Code stop hook `overenie-gate.py` ťah bez tohto riadku raz vráti. Súbory overenia patria do `overenie/` v projekte: ten je v globálnom gitignore na každom stroji, takže sa neukážu v zozname zmien v T3 ani v commite; nikdy ich nedávaj do gitu (`git add -f`). Overovať v prehliadači smieš vždy (skill overenie), len nikdy nie na Karchiho živej obrazovke.
 
+# Koniec odpovede: celý stav (Karchi, 2026-11-20)
+
+Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna (každý bod, ktorý Karchi vo vlákne chcel, nielen tento ťah), aby z nej bez čítania histórie videl, čo je spravené a čo nie. Poradie:
+
+1. Jedna veta: kde je celá úloha.
+2. **Hotové:** odrážky, každá s dôkazom (číslo, commit, verdikt). Neoverené sem nepatrí.
+3. **Nehotové:** tabuľka `| Čo | Prečo nie | Ako to opraviť | Kto |`, kde „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem aj neoverené a čo overovateľ označil ako chybu. Keď nič nechýba, napíš „Nič nechýba“.
+4. **Od teba:** len keď niečo musí spraviť alebo rozhodnúť Karchi: očíslované kroky alebo jedna jasná otázka (vkus v skille `taste`).
+5. Riadok `Overenie:` ako posledný.
+
+Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
+
 # Prezentácie (Karchi, 2026-11-17)
 
 Každá prezentácia (slajdy, deck, Claude Slides, PowerPoint, HTML, PDF), školská aj pracovná, nová aj upravovaná, sa začína skillom `prezentacie`. Vzhľad a obsah určujú skilly z GitHubu `frontend-slides` a `academic-pptx`; štýl si Karchi vyberá z troch ukážok. Bez neho prezentáciu nestavaj ani neprerábaj, ani keď ju vyrába iný skill alebo typ artefaktu.
