@@ -32,7 +32,10 @@ if [ -n "$remove" ]; then
   exit
 fi
 
-sudo tee "$home/reject-forks.sh" >/dev/null <<'EOF'
+# The hook lives outside $home, where CI jobs cannot replace it or redirect these root writes.
+hook=/usr/local/lib/github-runner/reject-forks.sh
+sudo install -d -o root -g root -m 755 "${hook%/*}"
+sudo tee "$hook" >/dev/null <<'EOF'
 #!/bin/sh
 # Job-started hook of every runner on asus: a pull request from a fork is someone else's code,
 # so it fails here (the workflows send such jobs to GitHub's own machines).
@@ -44,7 +47,7 @@ if pr and ((pr.get("head") or {}).get("repo") or {}).get("full_name") != event["
     sys.exit("A pull request from a fork does not run on asus; route it to a GitHub-hosted runner.")
 PY
 EOF
-sudo chmod 755 "$home/reject-forks.sh"
+sudo chmod 755 "$hook"
 
 if ! sudo test -x "$dir/run.sh"; then
   url=$(gh api repos/actions/runner/releases/latest \
@@ -58,7 +61,7 @@ if ! as_runner test -f .runner; then
   as_runner ./config.sh --unattended --replace --url "https://github.com/Gooder24/$repo" \
     --token "$token" --name "$name" --labels asus
 fi
-printf 'LANG=C.UTF-8\nACTIONS_RUNNER_HOOK_JOB_STARTED=%s\n' "$home/reject-forks.sh" | as_runner tee .env >/dev/null
+printf 'LANG=C.UTF-8\nACTIONS_RUNNER_HOOK_JOB_STARTED=%s\n' "$hook" | as_runner tee .env >/dev/null
 sudo tee "/etc/systemd/system/$unit" >/dev/null <<EOF
 [Unit]
 Description=GitHub Actions Runner (Gooder24-$repo.$name)
