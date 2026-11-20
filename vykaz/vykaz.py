@@ -33,8 +33,9 @@ CLAUDE = next((p for p in [Path.home() / ".local/share/mise/installs/claude/late
 MESIACE = {1: "januar", 2: "februar", 3: "marec", 4: "april", 5: "maj", 6: "jun", 7: "jul", 8: "august",
            9: "September", 10: "oktober", 11: "november", 12: "december"}
 SPRAVA = 5, 10   # minutes of work before and after one of his messages
+KRATKA = 30, (2, 3)  # a reply shorter than this many characters ("skús znova", "vykonaj") is a moment's work
 OKNO_MAX = 20    # one focused Outlook/Teams/T3 interval counts at most this long (he may have walked away)
-MEDZERA = 20     # events closer than this are one sitting
+MEDZERA = 5      # events closer than this are one sitting; a longer pause is not worked time
 MIN_SEDENIE = 10  # shorter sittings are dropped
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 
@@ -162,7 +163,9 @@ def odober(iv, dier):
 
 
 def sedenia(d, spravy, okn, vynechat):
-    iv = [(r["t"] - timedelta(minutes=SPRAVA[0]), r["t"] + timedelta(minutes=SPRAVA[1]), ("sprava", r)) for r in spravy]
+    okolo = lambda r: KRATKA[1] if len(r["text"]) < KRATKA[0] else SPRAVA
+    iv = [(r["t"] - timedelta(minutes=okolo(r)[0]), r["t"] + timedelta(minutes=okolo(r)[1]), ("sprava", r))
+          for r in spravy]
     iv += [(s, e, ("okno", (k, title))) for s, e, k, title in okn]
     iv.sort(key=lambda x: x[0])
     spojene = []

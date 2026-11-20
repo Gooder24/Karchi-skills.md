@@ -20,8 +20,9 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
 
 - Utorková prax (dochadzka, 7 h) do výkazu nepatrí: je to výkaz nadčasov, preto sa jej čas vynecháva.
 - Čas počas vyučovania sa ráta len vtedy, keď v ňom robil prácu pre eSYST; škola sama nie (pozri vyššie).
-- Sedenie: správa = 5 min pred a 10 min po, aktívne okno najviac 20 min, do 20 min od seba je to jedno sedenie,
-  zaokrúhlené na 5 min, kratšie než 10 min sa neráta (konštanty na začiatku `vykaz.py`). Najprv Haiku posúdi
+- Sedenie: správa = 5 min pred a 10 min po, krátka odpoveď (do 30 znakov, „skús znova“) 2 min pred a 3 po,
+  aktívne okno najviac 20 min, do 5 min od seba je to jedno sedenie (dlhšia pauza nie je práca; Karchi 20. 11.:
+  odpoveď na chvíľu sa rátala ako 20 min), zaokrúhlené na 5 min, kratšie než 10 min sa neráta (konštanty na začiatku `vykaz.py`). Najprv Haiku posúdi
   každú správu zvlášť a sedenia sa skladajú len z firemných, aby osobné vlákno medzi nimi nenafúklo čas.
 - Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom.
 - Zdroje: T3 na asuse, x270, delle a e540. Rodinný PC (Windows, Codex) sa nečíta, eSYST tam nerobí.
