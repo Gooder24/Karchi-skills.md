@@ -42,9 +42,10 @@ if (ahead.out !== "0") die(`${main} má ${ahead.out} nepushnutých commitov, kto
 const dirs = files.filter((f) => existsSync(f) && statSync(f).isDirectory());
 if (dirs.length) die(`vymenuj súbory, nie priečinky: ${dirs.join(", ")}`);
 // Something already staged outside FILE... would ride along in the commit: refuse before touching the index.
-const extra = sh("git", ["diff", "--cached", "--name-only", "--", ":/", ...files.map((f) => `:(exclude)${f}`)]).out;
+const extra = sh("git", ["diff", "--cached", "--name-only", "--", ":/", ...files.map((f) => `:(exclude,literal)${f}`)]).out;
 if (extra) die(`v indexe sú aj iné súbory: ${extra.split("\n").join(", ")}; odstráň ich (git restore --staged) alebo ich vymenuj`);
-sh("git", ["add", "--", ...files]);
+// literal: a glob like 'd/*' must not pull in untracked files the agent never named.
+sh("git", ["add", "--", ...files.map((f) => `:(literal)${f}`)]);
 const staged = sh("git", ["diff", "--cached", "--name-only"]).out.split("\n").filter(Boolean);
 if (!staged.length) die("žiadna zmena na commit v týchto súboroch");
 

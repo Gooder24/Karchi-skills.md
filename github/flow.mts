@@ -53,11 +53,19 @@ type Check = { name: string; bucket: string; link: string };
 // For a pull request: every check GitHub shows on it (Actions and third-party statuses), not just Actions runs.
 export function waitForPrChecks(repo: string, pr: string, minutes: number): boolean {
   const deadline = Date.now() + minutes * 60_000;
-  const appearBy = Date.now() + 90_000;
+  const appearBy = Date.now() + 180_000;
   const sleep = (s: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, s * 1000);
+  let errors = 0;
   for (;;) {
     const r = sh("gh", ["pr", "checks", pr, "-R", repo, "--json", "name,bucket,link"], { allowFail: true });
-    const checks = r.out.startsWith("[") ? (JSON.parse(r.out) as Check[]) : [];
+    // gh says "no checks reported" for a PR without checks; anything else unreadable is an error, never "no CI".
+    const none = /no checks reported/i.test(r.err);
+    if (!r.out.startsWith("[") && !none) {
+      if (++errors >= 3) { console.log(`CI: gh pr checks zlyháva: ${r.err || r.out}`); return false; }
+      sleep(15); continue;
+    }
+    errors = 0;
+    const checks = none ? [] : (JSON.parse(r.out) as Check[]);
     if (!checks.length && Date.now() > appearBy) { console.log("CI: PR nemá žiadne checky"); return true; }
     const bad = checks.filter((c) => c.bucket === "fail" || c.bucket === "cancel");
     if (bad.length) {
