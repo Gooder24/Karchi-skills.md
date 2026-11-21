@@ -5,13 +5,15 @@
   citacka https://github.com/o/r        # any web page
   citacka page.html --mode headings,links
   citacka --terminal 'karchi-doctor'    # a command's output in a terminal (lxterminal)
+  citacka page.html --mode keys --keys 'Tab Return'   # what Orca says after each of these keys
 
 Orca runs in its own Xvfb display and D-Bus session; speech-dispatcher's generic module writes every
 utterance to a file instead of a sound card, so the transcript is the text the synthesizer received.
 Each line of the transcript is one key press and what Orca said after it.
 
 Modes for a page: lines (Down arrow through the page, the default), headings (H), links (K),
-tables (T, then every cell with Alt+Shift+arrows), sayall (Orca's Say All). For a terminal: live (what
+tables (T, then every cell with Alt+Shift+arrows), sayall (Orca's Say All), keys (the keys given with --keys,
+from the page as it loads: xdotool key names separated by spaces, type:TEXT types TEXT). For a terminal: live (what
 Orca says while the output appears) and review (flat review, line by line upwards from the prompt).
 
 Runs here when Orca is installed, otherwise over ssh on --host (default e540). Writes
@@ -23,7 +25,7 @@ from pathlib import Path
 
 SELF = Path(__file__).resolve()
 NEEDS = ["orca", "Xvfb", "xdotool", "speech-dispatcher", "dbus-run-session"]
-PAGE_MODES = ["lines", "headings", "links", "tables", "sayall"]
+PAGE_MODES = ["lines", "headings", "links", "tables", "sayall", "keys"]
 TERM_MODES = ["live", "review"]
 
 
@@ -265,7 +267,17 @@ def read_tables(s, t, max_n):
         s.key("Escape")
 
 
-def read_page(s, t, url, modes, max_n):
+def press_keys(s, t, keys):
+    """Each key name as xdotool knows it, or type:TEXT to type TEXT; what Orca said after each."""
+    for k in keys.split():
+        if k.startswith("type:"):
+            subprocess.run(["xdotool", "type", "--delay", "40", k[5:]], check=True)
+            t.add(k, s.settle())
+        else:
+            t.add(k, s.key(k, quiet=1.2))
+
+
+def read_page(s, t, url, modes, max_n, keys=""):
     profile = s.w / "chromium"
     s.start("chromium", "--force-renderer-accessibility", "--no-first-run", "--no-default-browser-check",
             "--disable-gpu", "--password-store=basic", "--disable-features=Translate", "--lang=en-US",
@@ -277,9 +289,14 @@ def read_page(s, t, url, modes, max_n):
     t.add("load", s.settle(quiet=1.5, first=4))
     titles = {"lines": "lines: Down arrow from the top", "headings": "headings: H from the top",
               "links": "links: K from the top", "tables": "tables: T, then each cell with Alt+Shift+arrows",
-              "sayall": "sayall: Orca's Say All (KP_Add) from the top"}
-    for mode in modes:
+              "sayall": "sayall: Orca's Say All (KP_Add) from the top",
+              "keys": "keys: the given keys, from the page as it loaded"}
+    # keys first: the other modes move the caret and the focus away from where the page put them
+    for mode in sorted(modes, key=lambda m: m != "keys"):
         t.section(titles[mode])
+        if mode == "keys":
+            press_keys(s, t, keys)
+            continue
         t.add("Control+Home", s.key("Control+Home"))
         if mode == "lines":
             step_until_end(s, t, "Down", "Down", max_n)
@@ -329,7 +346,7 @@ def inner(a):
         if a.terminal:
             read_terminal(s, t, a.terminal, a.modes, a.max)
         else:
-            read_page(s, t, a.target, a.modes, a.max)
+            read_page(s, t, a.target, a.modes, a.max, a.keys or "")
     finally:
         s.stop()
     out = Path(a.out)
@@ -351,6 +368,7 @@ def main():
     p.add_argument("--terminal", metavar="COMMAND", help="read a command's output in a terminal instead")
     p.add_argument("--mode", default=None, help="comma list; page: " + ",".join(PAGE_MODES)
                    + " (default lines); terminal: " + ",".join(TERM_MODES) + " (default live,review)")
+    p.add_argument("--keys", help="for --mode keys: xdotool key names separated by spaces, type:TEXT types TEXT")
     p.add_argument("--host", help="run Orca there over ssh (default: here if Orca is installed, else e540)")
     p.add_argument("--out", default="citacka", help="output folder (default ./citacka)")
     p.add_argument("--name", help="transcript file name without .txt")
@@ -366,6 +384,8 @@ def main():
     a.modes = (a.mode or ("live,review" if a.terminal else "lines")).split(",")
     if bad := [m for m in a.modes if m not in allowed]:
         p.error(f"unknown mode {bad}; choose from {allowed}")
+    if ("keys" in a.modes) != bool(a.keys):
+        p.error("--mode keys and --keys go together")
 
     if a.inner:
         return inner(a)
@@ -391,7 +411,8 @@ def main():
         out = Path(a.out).resolve() / f"{name}.txt"
         mode = ",".join(a.modes)
         local = not a.host and all(shutil.which(c) for c in NEEDS)
-        rest = ["--mode", mode, "--max", str(a.max), "--label", label or ""] + (["--keep"] if a.keep else [])
+        rest = (["--mode", mode, "--max", str(a.max), "--label", label or ""] + (["--keep"] if a.keep else [])
+                + (["--keys", a.keys] if a.keys else []))
         if local:
             target = ["--terminal", a.terminal] if a.terminal else [page.as_uri() if page else a.target]
             cmd = ["dbus-run-session", "--", sys.executable, "-I", str(SELF), "--inner", "--out", str(out)] + rest + target

@@ -14,9 +14,11 @@ Each line is one key press and what Orca said after it.
 citacka README.md                          GitHub's rendering of the local file (gh api markdown), in Chromium
 citacka https://github.com/o/r/blob/main/README.md   any page, with the whole github.com page around it
 citacka page.html --mode headings,links    a local HTML file
+citacka page.html --mode keys --keys 'Tab Return Escape'   what Orca says after each key (focus, dialogs, live regions)
 citacka --terminal 'karchi-doctor'         a command typed into lxterminal; Orca reads the output as it appears
   --mode   page: lines (Down arrow, default), headings (H), links (K), tables (T, then every cell with
-           Alt+Shift+arrows), sayall; terminal: live,review (default both; review is flat review upwards)
+           Alt+Shift+arrows), sayall, keys (--keys: xdotool key names from the page as it loads, type:TEXT
+           types TEXT); terminal: live,review (default both; review is flat review upwards)
   --out DIR (default ./citacka)  --name NAME  --host HOST  --keep (keep Orca's debug log)
 ```
 
