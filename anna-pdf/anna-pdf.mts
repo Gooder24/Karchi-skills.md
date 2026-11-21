@@ -200,7 +200,7 @@ Nijaký súbor neupravuj okrem overenie/verdikt.md; sám nič neposielaj. Pri ka
 }
 
 function send(key: string) {
-  if (process.env.ANNA_PDF_ROOT) fail("ANNA_PDF_ROOT je testovací režim: send v ňom nikdy neposiela");
+  if (process.env.ANNA_PDF_ROOT !== undefined) fail("ANNA_PDF_ROOT je testovací režim: send v ňom nikdy neposiela");
   const pair = pairOf(key);
   const dir = dirOf(pair);
   const [t, w] = docsOf(pair);
