@@ -177,7 +177,8 @@ function verify(key: string) {
   const dir = dirOf(pair);
   const built = join(dir, "overenie", "build.json");
   const pdfs = docsOf(pair).map((d) => d.pdf);
-  if (!existsSync(built) || JSON.parse(readFileSync(built, "utf8")).sha !== sha(pdfs)) fail(`najprv anna-pdf build ${key} (PDF sa od buildu zmenili)`);
+  const checked = sha(pdfs);
+  if (!existsSync(built) || JSON.parse(readFileSync(built, "utf8")).sha !== checked) fail(`najprv anna-pdf build ${key} (PDF sa od buildu zmenili)`);
   const total = pdfs.reduce((n, f) => n + pages(f), 0);
   writeFileSync(join(dir, "overenie", "brief.md"), `Over preklady dvojice Experience ${pair.number} pred odoslaním Anne (WA). Hĺbka: dôkladná, sú to súbory určené skutočnému človeku.
 Projekt je tento priečinok: originály v src/, ich text v theory-source.txt a worksheet-source.txt, preklady teoria.html a pracovny-list.html a dva PDF v koreni. Mechanické kontroly (počet strán, päta, orezanie, pomlčky, DOI/URL/roky) už prešli cez anna-pdf build; snímky všetkých ${total} strán sú overenie/all-pages.png a jednotlivé PNG.
@@ -193,11 +194,13 @@ Nijaký súbor neupravuj okrem overenie/verdikt.md; sám nič neposielaj. Pri ka
     console.log(`Verdikt: ${overall}. Nálezy:\n${verdict.split("\n").filter((l) => /failed|unverifiable/i.test(l)).join("\n")}\nOprav HTML, potom anna-pdf build ${key} a anna-pdf verify ${key}.`);
     process.exit(1);
   }
-  writeFileSync(join(dir, "overenie", "passed.json"), JSON.stringify({ sha: sha(pdfs) }) + "\n");
+  if (sha(pdfs) !== checked) fail("PDF sa zmenili počas overovania; znova anna-pdf build a verify");
+  writeFileSync(join(dir, "overenie", "passed.json"), JSON.stringify({ sha: checked }) + "\n");
   console.log(`Verdikt: passed (${verdictFile}). Ďalej: anna-pdf send ${key}`);
 }
 
 function send(key: string) {
+  if (process.env.ANNA_PDF_ROOT) fail("ANNA_PDF_ROOT je testovací režim: send v ňom nikdy neposiela");
   const pair = pairOf(key);
   const dir = dirOf(pair);
   const [t, w] = docsOf(pair);
