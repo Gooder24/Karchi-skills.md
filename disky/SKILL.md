@@ -11,6 +11,13 @@ known disk (serial, filesystem UUID, what it is, where it is, date of the last l
 archívy). The full file list is `zoznam-<date>.jsonl.gz` next to it (`path`, `bytes`); search it with
 `zcat … | rg` when he asks for a specific file or folder.
 
+## What goes where (Karchi, 2026-11-21)
+
+- **Ľuptákovci** is the family's disk: family photos and videos, old family computers, and everything from the
+  old WD rescue. None of Karol's (Karchi's) own files go there, not even as a second copy.
+- Karol's own files (his photos, laptop backups and archives, passwords) go on the Hitachi „Karol-HP“, with
+  their second copy on the Seagate 500 GB.
+
 ## Answering
 
 Read `README.md`, then the disk's `prehlad.md`. Say which disk and folder, in his words, and the date the list
