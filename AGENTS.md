@@ -64,6 +64,16 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 
+# Jazyky (Karchi, 2026-11-21)
+
+Nový projekt, služba, skript aj nástroj sa píše v TypeScripte (`strict`, žiadne `.js` ani JSDoc namiesto typov) a
+v Ruste, keď treba rýchlosť, natívnu appku alebo malú binárku. Python ani JavaScript nie sú predvolené, aj keď
+`python3` je na každom stroji: Bun a Node spúšťajú `.ts` priamo, takže „bez buildu“, „rýchle demo“ ani „len
+skript“ nie je dôvod. Iný jazyk len keď ho vyžaduje platforma (QML v Quickshelli, shell na pár riadkov lepidla,
+SQL) alebo potrebná knižnica existuje len v ňom; vtedy to pred začatím povedz Karchimu jednou vetou s dôvodom.
+Existujúci projekt v JavaScripte alebo Pythone (Weft, Učenie, wristlogic, t3-time, kalendarix-edupage) ostáva
+vo svojom jazyku, kým Karchi nerozhodne o prepise.
+
 # Prezentácie (Karchi, 2026-11-17)
 
 Každá prezentácia (slajdy, deck, Claude Slides, PowerPoint, HTML, PDF), školská aj pracovná, nová aj upravovaná, sa začína skillom `prezentacie`. Vzhľad a obsah určujú skilly z GitHubu `frontend-slides` a `academic-pptx`; štýl si Karchi vyberá z troch ukážok. Bez neho prezentáciu nestavaj ani neprerábaj, ani keď ju vyrába iný skill alebo typ artefaktu.
