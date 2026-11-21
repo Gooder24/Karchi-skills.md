@@ -165,6 +165,8 @@ fi
 if [ "$(uname -n)" = asus-vivobook-x1504v ]; then
   mkdir -p "$HOME/.hermes/scripts" "$HOME/.hermes/skills/productivity"
   cp "$R/anna-pdf/watch.py" "$HOME/.hermes/scripts/anna-pdf.py"
+  # anna-pdf: download, render, checks and sending without a model; the job's model only translates.
+  mkdir -p "$HOME/.local/bin" && ln -sfn "$R/anna-pdf/anna-pdf.mts" "$HOME/.local/bin/anna-pdf"
   ln -sfn "$R/anna-pdf" "$HOME/.hermes/skills/productivity/anna-pdf"
   # anna-pdf-watch: bez modelu, nezávisle od Hermes cronu; po 30 minútach bez doručenia napíše do Hermes miestnosti.
   if command -v systemctl >/dev/null; then

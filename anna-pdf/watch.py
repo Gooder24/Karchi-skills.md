@@ -103,7 +103,12 @@ def main():
     parser.add_argument("--sending")
     parser.add_argument("--done")
     parser.add_argument("--watch", action="store_true")
+    parser.add_argument("--pairs", action="store_true", help="every known pair with its delivery state, without reading the chat")
     args = parser.parse_args()
+    if args.pairs:
+        state = json.loads(STATE.read_text())
+        print(json.dumps([dict(p, delivery=state["delivery"].get(p["key"])) for p in pairs(state["sources"])], ensure_ascii=False))
+        return
     if args.sending or args.done:
         state = json.loads(STATE.read_text())
         key = args.sending or args.done
