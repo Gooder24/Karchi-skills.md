@@ -47,3 +47,29 @@ export function waitForCi(repo: string, sha: string, minutes: number): boolean {
     sleep(15);
   }
 }
+
+type Check = { name: string; bucket: string; link: string };
+
+// For a pull request: every check GitHub shows on it (Actions and third-party statuses), not just Actions runs.
+export function waitForPrChecks(repo: string, pr: string, minutes: number): boolean {
+  const deadline = Date.now() + minutes * 60_000;
+  const appearBy = Date.now() + 90_000;
+  const sleep = (s: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, s * 1000);
+  for (;;) {
+    const r = sh("gh", ["pr", "checks", pr, "-R", repo, "--json", "name,bucket,link"], { allowFail: true });
+    const checks = r.out.startsWith("[") ? (JSON.parse(r.out) as Check[]) : [];
+    if (!checks.length && Date.now() > appearBy) { console.log("CI: PR nemá žiadne checky"); return true; }
+    const bad = checks.filter((c) => c.bucket === "fail" || c.bucket === "cancel");
+    if (bad.length) {
+      for (const c of bad) {
+        console.log(`CI: ${c.name} ${c.bucket}: ${c.link}`);
+        const run = /\/actions\/runs\/(\d+)/.exec(c.link)?.[1];
+        if (run) console.log(sh("gh", ["run", "view", run, "-R", repo, "--log-failed"], { allowFail: true }).out.split("\n").slice(-40).join("\n"));
+      }
+      return false;
+    }
+    if (checks.length && checks.every((c) => c.bucket !== "pending")) { console.log(`CI: zelené (${checks.length} checkov)`); return true; }
+    if (Date.now() > deadline) { console.log(`CI: po ${minutes} min ešte beží: ${checks.filter((c) => c.bucket === "pending").map((c) => c.name).join(", ")}`); return false; }
+    sleep(15);
+  }
+}

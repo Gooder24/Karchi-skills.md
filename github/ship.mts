@@ -7,7 +7,7 @@
 // and waits for CI on the pushed commit. Exit 0: pushed and CI green or absent. 1: pushed but CI failed or still
 // runs (the failed log tail is printed). 2: nothing pushed (refused or a git step failed).
 // --yes-work: an eSYST work repo, after Karchi said yes in the thread.
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { die, repoOf, sh, waitForCi, WORK_REPOS } from "./flow.mts";
 
@@ -35,6 +35,12 @@ const branch = sh("git", ["branch", "--show-current"]).out;
 const main = sh("git", ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"], { allowFail: true }).out.replace(/^origin\//, "") || "main";
 if (branch !== main) die(`si na vetve ${branch || "(detached)"}, ship ide len do ${main}; PR dokonči cez land`);
 
+// Only this change goes out: no local commits waiting to be pushed, and no folders (they would add untracked files).
+const ahead = sh("git", ["rev-list", "--count", "@{upstream}..HEAD"], { allowFail: true });
+if (!ahead.ok) die(`${main} nemá upstream; nastav ho (git branch -u origin/${main})`);
+if (ahead.out !== "0") die(`${main} má ${ahead.out} nepushnutých commitov, ktoré nie sú táto zmena; najprv ich vyrieš (git log @{u}..HEAD)`);
+const dirs = files.filter((f) => existsSync(f) && statSync(f).isDirectory());
+if (dirs.length) die(`vymenuj súbory, nie priečinky: ${dirs.join(", ")}`);
 // Something already staged outside FILE... would ride along in the commit: refuse before touching the index.
 const extra = sh("git", ["diff", "--cached", "--name-only", "--", ":/", ...files.map((f) => `:(exclude)${f}`)]).out;
 if (extra) die(`v indexe sú aj iné súbory: ${extra.split("\n").join(", ")}; odstráň ich (git restore --staged) alebo ich vymenuj`);

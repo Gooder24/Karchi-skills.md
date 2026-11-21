@@ -9,7 +9,7 @@
 // 1: not merged because CI failed, the branch conflicts or the wait ran out. 2: refused or bad arguments.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { die, repoOf, sh, waitForCi, WORK_REPOS } from "./flow.mts";
+import { die, repoOf, sh, waitForPrChecks, WORK_REPOS } from "./flow.mts";
 
 const args = process.argv.slice(2);
 let pr = "", repo = "", method = "", yesWork = false, wait = 30;
@@ -51,7 +51,7 @@ for (let round = 0; ; round++) {
     p = view();
     continue;
   }
-  if (!waitForCi(repo, p.headRefOid, wait)) process.exit(1);
+  if (!waitForPrChecks(repo, pr, wait)) process.exit(1);
   const again = view();
   if (again.headRefOid === p.headRefOid) break;
   p = again; // someone pushed while CI ran: test the new head
