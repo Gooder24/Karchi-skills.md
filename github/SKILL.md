@@ -27,6 +27,19 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
   merge button: it merges only when CI passed on the PR's current head. On a private repo without
   GitHub Pro nothing else stops a merge on red CI.
 
+## ship and land (Karchi, 2026-11-21)
+
+The routine steps are commands, not hand-typed git and gh calls (each hand step costs a model round trip):
+
+- `ship -m "<title>" [-m "<body>"] FILE...` is the default way: on `main` of a full-send repo it stages
+  exactly those files (it refuses when anything else is staged), commits, `git pull --rebase --autostash`,
+  pushes and waits for CI on that commit. Exit 0 pushed and green (or no CI), 1 pushed but CI failed (the
+  failed log tail is printed: fix it in the next `ship`), 2 nothing pushed.
+- `land <pr|url>` is way 2: it updates a branch that is behind, waits for CI on the current head, merges with
+  `--match-head-commit`, deletes the branch and pulls the local base. It uses `scripts/land.sh` where one
+  exists. Exit 0 merged, 1 not merged (CI red, conflict, timeout), 2 refused.
+- Both refuse the eSYST work repos until Karchi says yes in the thread; then add `--yes-work`.
+
 ## CI runs on asus (Karchi, 2026-11-20)
 
 - Every job of Karchi's personal repos runs on asus, not on GitHub's minutes: `runs-on` is
