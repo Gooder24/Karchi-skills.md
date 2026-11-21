@@ -25,6 +25,7 @@ citacka --terminal 'karchi-doctor'         a command typed into lxterminal; Orca
 - **Where it runs.** Here when `orca`, `Xvfb`, `xdotool` and `speech-dispatcher` are installed (the
   `karchi-headless` package has them from 2026.11.19), otherwise over `ssh e540`; the page or Markdown is
   rendered here and copied there. One run takes 1 to 10 minutes and one Chromium: look at `free -h` first.
+  Orca starts only once per user, so runs of one user take turns ("waiting for another citacka run").
 - **Settings.** Orca 48 with its defaults, desktop keyboard layout, key echo off. Orca's own debug log stays
   with `--keep`.
 - **What it is not.** Orca on Linux with Chromium, not NVDA or VoiceOver. Write the screen reader, its version

@@ -19,7 +19,7 @@ Orca says while the output appears) and review (flat review, line by line upward
 Runs here when Orca is installed, otherwise over ssh on --host (default e540). Writes
 <out>/<name>.txt (default out: ./citacka) and prints its path. See SKILL.md next to this file.
 """
-import argparse, json, os, re, shutil, signal, socket, subprocess, sys, tempfile, time, urllib.parse
+import argparse, fcntl, json, os, re, shutil, signal, socket, subprocess, sys, tempfile, time, urllib.parse
 from datetime import datetime
 from pathlib import Path
 
@@ -329,7 +329,24 @@ def read_terminal(s, t, command, modes, max_n):
         step_until_end(s, t, "KP_Home", "KP_Home", max_n, ("File Edit Tabs Help",))
 
 
+def wait_turn():
+    """Orca refuses to start while another Orca of this user runs (any display), so runs of this user take
+    turns: the lock is held until this process exits. Also waits out an Orca still closing from a run before."""
+    lock = open(f"/tmp/citacka-{os.getuid()}.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("citacka: waiting for another citacka run of this user to finish", file=sys.stderr)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+    for _ in range(40):
+        if subprocess.run(["pgrep", "-u", str(os.getuid()), "-x", "orca"], stdout=subprocess.DEVNULL).returncode:
+            return lock
+        time.sleep(0.5)
+    die("another Orca of this user is running outside citacka; Orca starts only once per user")
+
+
 def inner(a):
+    _lock = wait_turn()
     work = Path(tempfile.mkdtemp(prefix="citacka-"))
     s = Session(work)
     t = Transcript()
