@@ -142,7 +142,7 @@ class Session:
                                      "enableKeyEcho": False}},
             "pronunciations": {}, "keybindings": {}}))
         self.start("orca", "--debug-file", str(w / "orca-debug.log"), "-u", str(w / "orca-prefs"), log="orca.log")
-        if not self.wait_for("Screen reader on", 20):
+        if not self.wait_for("Screen reader on", 60):  # slow to start on a busy machine
             die("Orca did not start; see " + str(w / "orca.log"))
 
     # Speech arrives asynchronously; a reply is done when spoken.txt has not grown for `quiet` seconds.
