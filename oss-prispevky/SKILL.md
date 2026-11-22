@@ -23,13 +23,17 @@ správcu súborov“ on asus, its folder `~/.t3/scratch/2026-11-15-https-github-
    (screenshots or video for UI, numbers for performance). "Tests pass" is not proof.
 3. **Issue or discussion first**, unless the project's CONTRIBUTING invites PRs for obvious bugs and the bug is one,
    or the PR fixes red CI on the default branch. Features always start as an issue or discussion (Zed: "If there isn't
-   a GitHub issue with staff confirmation that we want it, start a discussion").
+   a GitHub issue with staff confirmation that we want it, start a discussion"). Our own tooling (a VM test harness,
+   performance numbers, packaging for another distro) stays in the fork unless a maintainer asks for it: merged, it is
+   code he has to keep working (Atlas #24 Nix flake, #31 harness of 1 644 lines).
 4. **No batches.** At most three open PRs in a new project until the first one merges, and only in a project that
    regularly merges outside PRs; otherwise one. Each is a small, independent bug fix with its own issue (or a failure
    anyone can see, such as red CI on the default branch) and its own evidence, so any one can be merged or closed
    alone; never a stack of features or cleanups. Never above the project's limit (Zed: three). Atlas lesson: five PRs
    in two days to a project that had never merged an outside PR, zero replies after two days, and the owner's habit is
-   to reimplement outside fixes himself (#4, #11).
+   to reimplement outside fixes himself (#4, #11). Two of Karchi's open PRs never change the same file; when one fix
+   needs another, it waits until that one is merged (Atlas #35 clashed with #23 and #27 in `ops.rs` and was held back).
+   Count before every new one: `gh pr list -R owner/repo --author Gooder24 --state open`.
 5. **Disclose AI the way the project asks, and at the top.** Name the tools (Claude Code, Codex) and the extent. A
    project that bans AI-generated content is skipped entirely, not worked around (list below).
 6. **Karchi understands every line and speaks for himself.** Before a PR goes out he has read its `obhajoba` (below)
@@ -166,6 +170,10 @@ points his reply should make. He writes and posts the reply. Bot findings (CI, C
 `github` says. When a PR is closed unmerged, write down why in `progress.md` and in this skill's lessons if it
 teaches something.
 
+When a release ships his code, watch the project's new issues for two weeks (`gh issue list -R owner/repo --search
+"created:>=<release date>"`) and give Karchi any that touch his changes first, with the fix ready: a regression fixed
+the same week is what makes a maintainer trust a large contribution he merged without reading every line.
+
 ## Lessons (append one line each with date and evidence)
 
 - 2026-11-18 arboard INCR (X11 clipboard): three council rounds found three real races the builder's tests missed (two
@@ -184,3 +192,8 @@ teaches something.
   in step 2 before scoring a project. Same day: Smithay's `AI.md` and Tauri's policy were missed too, because `rg`
   skips the hidden `.github_*` files `fetchpolicy.sh` saves (now `rg --hidden`, and it fetches `AI.md` and the org's
   `.github` defaults).
+- 2026-11-22 Atlas outcome: the owner did take outside work after all. 13 of the 14 PRs (#23 to #36, about 6 700 lines,
+  nine of them filed on 18. 11. after this skill's limit of three existed) went into 0.1.6-beta.4 "as-is" (8e05818a,
+  changelog thanks Gooder24), nine merged within 47 minutes, so most of it was trusted, not read; #35 held back for
+  clashing with #23 and #27. Only #23 had an issue. A written limit did not stop the batch: count open PRs before
+  each one (rule 4), and treat the merged features (#24, #29, #30, #31, #36) as code to answer for in step 8.
