@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Installs or updates these skills on this machine: pulls the repo and links every skill folder
-# into ~/.claude/skills (and ~/.codex/skills where Codex is installed). Safe to run again; the
-# karchi-skills-update.timer runs it every 3 minutes, and the SessionStart hook in ~/.claude/settings.json at
+# into ~/.claude/skills (and ~/.codex/skills where Codex is installed, ~/.gemini/config/skills where Antigravity
+# is). Safe to run again; the karchi-skills-update.timer runs it every 3 minutes, and the SessionStart hook in
+# ~/.claude/settings.json at
 # the start of every session (that hook is async: the session has already read the old AGENTS.md).
 set -e
 R="$HOME/.work/karchi-skills"
@@ -12,7 +13,7 @@ else mkdir -p "$HOME/.work" && git clone -q https://github.com/Gooder24/Karchi-s
 for d in "$R"/*/; do
   [ -f "$d/SKILL.md" ] || continue
   n=$(basename "$d")
-  for t in "$HOME/.claude/skills" "$HOME/.codex/skills"; do
+  for t in "$HOME/.claude/skills" "$HOME/.codex/skills" "$HOME/.gemini/config/skills"; do
     [ -d "$(dirname "$t")" ] || continue
     mkdir -p "$t"
     if [ -e "$t/$n" ] && [ ! -L "$t/$n" ]; then echo "SKIP $t/$n: real folder exists"; continue; fi
@@ -85,6 +86,21 @@ new = line + "".join(rest)
 if new != old:
     open(p, "w").write(new)  # in place, so links to it stay
     print("ok Codex config: auto-compact 350k")
+PY
+fi
+# Antigravity CLI (agy) asks before reading files outside the workspace, so a skill it picks would wait for a
+# yes (and headless `agy -p` drops it). Reading the skills is always allowed.
+if [ -d "$HOME/.gemini/antigravity-cli" ]; then
+  python3 -I - "$HOME/.gemini/antigravity-cli/settings.json" "$HOME" <<'PY' || true
+import json, os, sys
+p, h = sys.argv[1], sys.argv[2]
+s = json.load(open(p)) if os.path.exists(p) and os.path.getsize(p) else {}
+allow = s.setdefault("permissions", {}).setdefault("allow", [])
+need = [f"read_file({h}/.gemini/config/skills/)", f"read_file({h}/.work/karchi-skills/)"]
+if any(r not in allow for r in need):
+    allow += [r for r in need if r not in allow]
+    json.dump(s, open(p + ".tmp", "w"), indent=2); os.replace(p + ".tmp", p)
+    print("ok Antigravity settings: skills readable")
 PY
 fi
 # Verification files (skill overenie) stay out of every repo, so they never show in T3's changed files or in a commit.
