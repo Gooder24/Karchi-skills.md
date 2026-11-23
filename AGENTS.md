@@ -70,22 +70,24 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 
-# Jazyky (Karchi, 2026-11-21)
+# Jazyky (Karchi, 2026-11-21 a 2026-11-23)
 
-Appka (webová, desktopová, mobilná, CLI nástroj, skript a služba alebo most, ktorý nejaká appka používa) sa píše
+Appka (webová, desktopová, mobilná, CLI nástroj), skript, služba, most a API, ktoré appka volá, sa píše
 v TypeScripte (`strict`, žiadne `.js` ani JSDoc namiesto typov) a v Ruste, keď treba rýchlosť, málo pamäte,
-natívnu appku alebo malú binárku. Python ani JavaScript tam nie sú predvolené, aj keď `python3` je na každom
-stroji: Bun a Node spúšťajú `.ts` priamo, takže „bez buildu“, „rýchle demo“ ani „len skript“ nie je dôvod.
-Webová stránka, teda server, ktorý skladá HTML (Django a podobné, napr. SPOTREX), smie byť v Pythone. Iný jazyk
-len keď ho vyžaduje platforma (QML v Quickshelli, shell na pár riadkov lepidla, SQL) alebo potrebná knižnica
-existuje len v ňom (napr. `edupage-api`); vtedy to pred začatím povedz Karchimu jednou vetou s dôvodom.
-Existujúci projekt v JavaScripte alebo Pythone (Weft, Učenie, wristlogic, t3-time, kalendarix-edupage) ostáva
-vo svojom jazyku, kým Karchi nerozhodne o prepise.
+natívnu appku alebo malú binárku. Služby a CLI v TypeScripte bežia v Buni, nie v Node (prázdna služba 28 MB
+oproti 77 MB). Python ani JavaScript nie sú predvolené, aj keď `python3` je na každom stroji: Bun spúšťa `.ts`
+priamo, takže „bez buildu“, „rýchle demo“ ani „len skript“ nie je dôvod. Výnimka je webová stránka, teda server,
+ktorý skladá HTML (Django a podobné: portál, formuláre, SPOTREX): tá smie byť v Pythone, ale jej klientský kód
+nad pár riadkov je v TypeScripte. Iný jazyk len keď ho vyžaduje platforma (QML v Quickshelli, shell na pár
+riadkov lepidla, SQL) alebo udržiavaná knižnica, ktorú treba, existuje len v ňom (napr. Pythonové `edupage-api`;
+to v npm je od 2022 opustené); vtedy to pred začatím povedz Karchimu jednou vetou s dôvodom. Existujúci projekt
+v JavaScripte alebo Pythone (Weft, Učenie, wristlogic, t3-time, kalendarix-edupage) ostáva vo svojom jazyku,
+kým Karchi nerozhodne o prepise.
 
 # Databázy (Karchi, 2026-11-23)
 
 Predvolene SQLite (v Buni `bun:sqlite`, v Ruste `rusqlite`): jeden súbor, žiadna služba navyše, záloha je kópia
-súboru. Postgres len keď do databázy naraz zapisuje viac služieb alebo strojov cez sieť, ide o webovú appku pre
+súboru. Postgres len keď do databázy naraz zapisuje viac služieb alebo strojov cez sieť, ide o web alebo appku pre
 viac ľudí, treba jeho funkcie (pgvector, PostGIS, LISTEN/NOTIFY, oprávnenia po riadkoch) alebo ide o pracovný
 projekt, ktorý ho už má (SPOTREX). Pri Postgrese patrí k projektu aj záloha (`pg_dump`) a postup pri novej verzii.
 
