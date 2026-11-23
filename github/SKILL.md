@@ -103,7 +103,26 @@ The body (use the repo's template; without one, these headings):
   change before/after screenshots, and a short video for motion or timing). "Tests pass" is not evidence.
   End with **Not checked:** and what you could not run.
 - End with the model and harness that did the work.
-- Upload images to GitHub (PR body or comment); never commit assets that only the PR needs.
+- Upload images to GitHub (PR body or comment); never commit assets that only the PR needs into the PR's branch
+  or `main`.
+
+## UI changes: every screen in the PR (Karchi, 2026-11-23)
+
+A PR that changes anything a person sees (a page, a form, a layout, a dialog, a phone view) shows in its
+description every screen the diff changes, before and after, so Karchi sees the whole UI change on GitHub
+without running it. Every screen, not a selection: go through the diff's components and routes and shoot each
+place they show up, plus a phone width when the app has one.
+
+1. Take the same steps on the base and on the branch (a script: two builds, the same data, the same clicks),
+   one PNG per screen named `01-<what>.png` … in the order he would walk through them, phone widths last.
+   A screen the base does not have is shot as what its address shows there (a 404 is the honest "before").
+2. `pr-shots <pr> <after-dir> --before <before-dir>` from the PR checkout puts each pair side by side, pushes the
+   images to the orphan branch `pr-shots` (`pr<N>/<head sha>/`) and writes a **How it looks** section into the
+   PR body between `<!-- pr-shots -->` markers. Captions come from `<after-dir>/captions.tsv`
+   (`01-noty<TAB>what changed there`), else from the file names.
+3. Run it again after every push that changes the UI: the section names the head it shows.
+4. Look at the pairs yourself before handing over; a pair that shows a broken page is a finding, not proof.
+   No private data (chats, real names other than his, passwords) in a screenshot that goes to GitHub.
 
 T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node <skill>/capture.mjs …`
 from the PR checkout starts an isolated dev server, captures this branch, swaps in `origin/main`'s copies

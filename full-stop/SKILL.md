@@ -31,6 +31,8 @@ cannot prevent automatic merging, report the blocker before proceeding.
 When the change is something Karchi sees (a UI, a page, a layout, a desktop look), the handoff shows him how it
 looks before he merges (Karchi, 2026-11-23):
 
+0. The PR body on GitHub shows every changed screen before and after (`github` skill, "UI changes",
+   `pr-shots`); the frames below are the same screens for T3.
 1. Take the proof's screenshots as a sequence, in the order he would see them (the start, each step or key, the
    end; a phone width last: the GIF fits it into the first frame's size), named `01-<what>.png`, `02-<what>.png`.
    The proof harness usually makes them already.

@@ -34,6 +34,7 @@ ln -sfn "$R/stroj/stroj.mts" "$HOME/.local/bin/stroj"
 # ship and land: commit+push+CI and merge-on-green in one call (see github/SKILL.md).
 ln -sfn "$R/github/ship.mts" "$HOME/.local/bin/ship"
 ln -sfn "$R/github/land.mts" "$HOME/.local/bin/land"
+ln -sfn "$R/github/pr-shots.mts" "$HOME/.local/bin/pr-shots"
 # One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md,
 # Antigravity as ~/.gemini/AGENTS.md.
 # A real file there is kept once as <name>.bak-<date>, then replaced by the link.

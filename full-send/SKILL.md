@@ -73,8 +73,9 @@ reproduction, a screenshot. Use the most direct proof the change allows:
 - Add one focused test that fails without the fix, when the behavior has none
   and the repo has a test setup.
 - For UI and runtime behavior, run the app and look at the change. Green mocked
-  tests do not prove that the user experience works. Attach screenshots to the
-  PR when they help and you have a way to upload them.
+  tests do not prove that the user experience works. A change to anything a
+  person sees puts every changed screen, before and after, into the PR body
+  (`github` skill, "UI changes", `pr-shots`).
 
 When you cannot find a way to prove a change, you do not have full confidence.
 Ask the user.
