@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # ucenie: Učenie for agents (see `ucenie --help`). Runs on asus; elsewhere over ssh.
-if [ -d "$HOME/ucenie/venv" ]; then
-  cd "$HOME/ucenie/src/server" && UCENIE_DATA="$HOME/ucenie/data" exec "$HOME/ucenie/venv/bin/python" -m ucenie.cli "$@"
+src=$HOME/ucenie/src
+if [ -f "$src/server/src/cli.ts" ]; then
+  bun=$HOME/.local/share/vite-plus/bin/bun
+  [ -x "$bun" ] || bun=$(command -v bun)
+  UCENIE_DATA="$HOME/ucenie/data" exec "$bun" run "$src/server/src/cli.ts" "$@"
+fi
+if [ -d "$HOME/ucenie/venv" ]; then  # the Python server, until the TypeScript one is deployed
+  cd "$src/server" && UCENIE_DATA="$HOME/ucenie/data" exec "$HOME/ucenie/venv/bin/python" -m ucenie.cli "$@"
 fi
 exec ssh -o BatchMode=yes asus "ucenie $(printf '%q ' "$@")"
