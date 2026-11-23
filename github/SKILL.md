@@ -48,7 +48,8 @@ The routine steps are commands, not hand-typed git and gh calls (each hand step 
   gets this line; a step that needs `sudo` gets `if: runner.environment == 'github-hosted'` and its
   packages are installed on asus once by hand.
 - A repo with CI gets its runner with `github/asus-runner.sh <repo>` (from any machine; `--remove`
-  takes it away). It runs as the user `github-ci`, which has no Docker and so no way to root. The
+  takes it away). It runs as the user `github-ci`, which has no Docker and so no way to root: a job on
+  asus cannot use `services:` or `container:` (a database comes from an embedded one, e.g. embedded-postgres). The
   runner's hook `reject-forks.sh` fails a fork's job even when its workflow asks for asus.
 - Jobs that need another OS (kalendarix `release.yml`: Windows, macOS) stay on GitHub. The eSYST repos
   spotrex and eSYSTAK have their own runners on asus from before, as `github-runner`, which is in the
