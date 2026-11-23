@@ -50,11 +50,14 @@ function requestedModel(message: Json): unknown {
 
 function runAcp(args: string[]) {
   const agy = spawn(REAL_AGY, args, { stdio: ["pipe", "pipe", "inherit"] });
-  agy.on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  let exitCode = 0;
+  agy.on("exit", (code, signal) => (exitCode = code ?? (signal ? 1 : 0)));
+  agy.stdin.on("error", () => {}); // agy gone: its exit ends the guard
   process.on("SIGTERM", () => agy.kill("SIGTERM"));
   process.on("SIGINT", () => agy.kill("SIGINT"));
 
-  createInterface({ input: agy.stdout }).on("line", (line) => {
+  // Ends after agy's last line is written, not at its exit event, so no answer is lost.
+  createInterface({ input: agy.stdout }).on("close", () => process.exit(exitCode)).on("line", (line) => {
     let message: Json;
     try {
       message = JSON.parse(line);
@@ -71,7 +74,8 @@ function runAcp(args: string[]) {
       message = JSON.parse(line);
     } catch {}
     const model = message === undefined ? undefined : requestedModel(message);
-    if (model !== undefined && !allowed(model) && isObject(message) && message.id !== undefined) {
+    if (model !== undefined && !allowed(model) && isObject(message)) {
+      if (message.id === undefined) return; // a notification gets no answer, and agy never sees it
       const error = {
         code: -32602,
         message: `Model '${String(model)}' is not allowed here. Allowed: ${ALLOWED.join(", ")}.`,
@@ -84,14 +88,15 @@ function runAcp(args: string[]) {
 }
 
 function runCli(args: string[]) {
-  const at = args.findIndex((arg) => arg === "--model" || arg.startsWith("--model="));
-  if (at !== -1) {
-    const model = args[at].startsWith("--model=") ? args[at].slice("--model=".length) : args[at + 1];
+  // Every --model counts: agy takes the last one.
+  args.forEach((arg, at) => {
+    if (arg !== "--model" && !arg.startsWith("--model=")) return;
+    const model = arg === "--model" ? args[at + 1] : arg.slice("--model=".length);
     if (!allowed(model)) {
       process.stderr.write(`agy-guard: model '${model ?? ""}' is not allowed. Allowed: ${ALLOWED.join(", ")}.\n`);
       process.exit(2);
     }
-  }
+  });
   const agy = spawn(REAL_AGY, args, { stdio: "inherit" });
   agy.on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
 }
