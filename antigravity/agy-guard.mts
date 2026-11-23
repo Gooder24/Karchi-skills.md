@@ -56,7 +56,10 @@ function failedToStart(error: Error) {
 function runAcp(args: string[]) {
   // "close" comes after agy has exited and its output is drained, so no answer is lost and its code stays.
   const agy = spawn(REAL_AGY, args, { stdio: ["pipe", "pipe", "inherit"] });
-  agy.on("error", failedToStart).on("close", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  agy.on("error", failedToStart).on("close", (code, signal) => {
+    // Exits once the client has taken every line still queued for it.
+    process.stdout.end(() => process.exit(code ?? (signal ? 1 : 0)));
+  });
   agy.stdin.on("error", () => {}); // agy gone: its close ends the guard
   process.on("SIGTERM", () => agy.kill("SIGTERM"));
   process.on("SIGINT", () => agy.kill("SIGINT"));
