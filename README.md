@@ -39,6 +39,7 @@ The [Claude Code](#claude-code) section says what it does.
 | [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
 | [`ucenie`](ucenie/SKILL.md) | Karchi's learning app Učenie and the `ucenie` command: cards and packs, homework drafts, the learn harness, Anki import and export; points to the e540 thread that built it |
 | [`weft`](weft/SKILL.md) | The `weft` command on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
+| [`stylizacia`](stylizacia/SKILL.md) | Slovak business texts the way his OBK teacher corrects them, for eSYST customers and school, and `pevne-medzery.ts`, which puts in the non-breaking spaces (Ctrl+Shift+Space) |
 | [`citacka`](citacka/SKILL.md) | The `citacka` command: a transcript of what the Orca screen reader says on a page, a README or a command's output, for screen reader checks |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
