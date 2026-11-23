@@ -48,16 +48,20 @@ function requestedModel(message: Json): unknown {
   return undefined;
 }
 
+function failedToStart(error: Error) {
+  process.stderr.write(`agy-guard: cannot run ${REAL_AGY}: ${error.message}\n`);
+  process.exit(127);
+}
+
 function runAcp(args: string[]) {
+  // "close" comes after agy has exited and its output is drained, so no answer is lost and its code stays.
   const agy = spawn(REAL_AGY, args, { stdio: ["pipe", "pipe", "inherit"] });
-  let exitCode = 0;
-  agy.on("exit", (code, signal) => (exitCode = code ?? (signal ? 1 : 0)));
-  agy.stdin.on("error", () => {}); // agy gone: its exit ends the guard
+  agy.on("error", failedToStart).on("close", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  agy.stdin.on("error", () => {}); // agy gone: its close ends the guard
   process.on("SIGTERM", () => agy.kill("SIGTERM"));
   process.on("SIGINT", () => agy.kill("SIGINT"));
 
-  // Ends after agy's last line is written, not at its exit event, so no answer is lost.
-  createInterface({ input: agy.stdout }).on("close", () => process.exit(exitCode)).on("line", (line) => {
+  createInterface({ input: agy.stdout }).on("line", (line) => {
     let message: Json;
     try {
       message = JSON.parse(line);
@@ -98,7 +102,7 @@ function runCli(args: string[]) {
     }
   });
   const agy = spawn(REAL_AGY, args, { stdio: "inherit" });
-  agy.on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  agy.on("error", failedToStart).on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
 }
 
 const args = process.argv.slice(2);
