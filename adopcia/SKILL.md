@@ -28,9 +28,10 @@ the thread, plans, research notes, the code's README. The README has:
    legal limits, what was never tested).
 6. The date it stopped.
 
-Long research goes into files beside the README (translated, not summarised away): the research is the point.
-When the project has its own repo that goes public, put the files in its `idea/` folder and link them from
-`napady` instead of copying them.
+Long research goes into files beside the README (translated, not summarised away: compare section by section with
+the original, every claim and number stays): the research is the point. Keep it in `napady` even when the project
+has its own public repo, and link the code from there: a dropped repo often gets archived, and then nothing in it
+can be fixed.
 
 Then add one row to the table in `~/napady/README.md`, and one line to the project's own README (and plan, if it has
 one) that it is no longer pursued, with a link.
@@ -43,7 +44,8 @@ The write-up says "the author" and leaves out his machines, Tailscale addresses 
 Kalendarix, Hermes): they are noise to a stranger, though not secret.
 
 ```sh
-rg -n 'esyst|@gmail|\+421|token|password|secret|serial' <files>
+rg -n 'esyst|@gmail|\+421|token|password|secret|serial|\b100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' <files>
+rg -n '<serial of each of his devices, from the project data>' <files>
 ```
 
 For a code repo going public, check its whole history, not only the tree: `git log -p --all | rg -n '<same pattern>'`
@@ -70,11 +72,10 @@ submissions as abuse; Reddit removes automated posts from new accounts as spam).
   there (skill `oss-prispevky`), never as an email.
 
 ```sh
-python3 -c 'import sys,urllib.parse as u; t,url,text=sys.argv[1:4]
-print("https://news.ycombinator.com/submitlink?"+u.urlencode({"u":url,"t":t}))
-print("https://old.reddit.com/r/SomebodyMakeThis/submit?"+u.urlencode({"selftext":"true","title":t,"text":text+"\n\n"+url}))' \
-  '<title>' '<url>' '<two short paragraphs>'
+bun ~/.work/karchi-skills/adopcia/odkazy.ts '<title>' '<url>' '<two short paragraphs>' [subreddit]
 ```
+
+Show HN only when there is code; drop that line otherwise. Run it again with the niche subreddit as the last argument.
 
 Titles say what the thing does, no hype: "Show HN: <name> – <what it does>, up for adoption".
 
