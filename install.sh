@@ -10,6 +10,8 @@ if [ -d "$R/.git" ]; then git -C "$R" pull -q --ff-only
 else mkdir -p "$HOME/.work" && git clone -q https://github.com/Gooder24/Karchi-skills.md.git "$R"; fi
 # A pull that changed this script: run the new version, not the rest of the old one bash already reads.
 [ -z "${KS_FRESH:-}" ] && KS_FRESH=1 exec bash "$R/install.sh"
+# Antigravity reads its skills from ~/.gemini/config/skills, also before agy has made ~/.gemini/config.
+if [ -d "$HOME/.gemini/antigravity-cli" ]; then mkdir -p "$HOME/.gemini/config"; fi
 for d in "$R"/*/; do
   [ -f "$d/SKILL.md" ] || continue
   n=$(basename "$d")
