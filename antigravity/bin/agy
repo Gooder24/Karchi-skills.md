@@ -1,0 +1,6 @@
+#!/bin/sh
+# Antigravity for T3 with only Karchi's models (agy-guard.mts). Named agy because T3 accepts a custom
+# Antigravity executable only under that name. T3's PATH has no ~/.local/bin, where node lives on the
+# headless machines.
+node=$(command -v node || echo "$HOME/.local/bin/node")
+exec "$node" "$(dirname "$(readlink -f "$0")")/../agy-guard.mts" "$@"

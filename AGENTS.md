@@ -22,6 +22,10 @@ Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodi
 
 „Na všetky stroje“ (nástroj, prihlásenie, nastavenie) znamená `asus`, `x270`, `dell` a `e540` (Karchi, 2026-11-23). `rodinnypcl` ostáva bokom, Karchi ho potrebuje len keď nastane problém; `vps` je ostrá stránka. Na tieto dva len na jeho výslovný pokyn.
 
+Antigravity (Karchi, 2026-11-23): len modely Gemini 4 Neon, Gemini 4 Hydrogen a Orchestrator (Neon). T3 ho na
+každom stroji spúšťa cez `~/.work/karchi-skills/antigravity/bin/agy` (agy-guard), ktorý iné modely skryje aj odmietne;
+povolené modely sa menia len v `ALLOWED` v `antigravity/agy-guard.mts`.
+
 # SPOTREX (Karchi, 2026-11-16)
 
 SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
