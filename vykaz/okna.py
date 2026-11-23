@@ -1,16 +1,32 @@
 #!/usr/bin/env python3
-"""Logs when Outlook, Teams or an eSYST thread in T3 Code is the focused window on x270 (Hyprland).
+"""Logs when Outlook, Teams, a T3 Code thread or a work file is the focused window on x270 (Hyprland).
 
 Stdlib only, event-driven: it sleeps on Hyprland's event socket and writes one line per focus change, so it
 costs nothing while he works. vykaz-okna.service runs it; vykaz turns the lines into work time.
-Lines: ~/.local/share/vykaz/okna/YYYY-MM-DD.tsv  "epoch<TAB>druh<TAB>titul", druh = outlook|teams|t3|-
-("-" = something else got focus, which ends the interval before it; other titles are not stored).
+Lines: ~/.local/share/vykaz/okna/YYYY-MM-DD.tsv  "epoch<TAB>druh<TAB>titul", druh = outlook|teams|t3|subor|-
+t3 is every thread ("project / thread"): vykaz decides which are eSYST work and subtracts the others (his own
+projects) from a sitting. subor is a window whose title names a document under ~/Work/projekty.
+"-" = something else got focus, which ends the interval before it; its title is not stored.
 """
 import json, os, re, socket, subprocess, sys, time
 from pathlib import Path
 
 OUT = Path.home() / ".local/share/vykaz/okna"
-T3_ESYST = re.compile(r"spotrex|obhajoba|esyst|hurbanov|eucf|crs ?40|firemn|zamestnanc", re.I)
+PROJEKTY = Path.home() / "Work/projekty"
+DOKUMENTY = (".xlsx", ".xls", ".docx", ".doc", ".pptx", ".odt", ".ods", ".odp", ".pdf", ".csv", ".excalidraw")
+_subory = (0.0, frozenset())
+
+
+def subory():
+    """Names of the documents under ~/Work/projekty, read again at most every 10 minutes."""
+    global _subory
+    if time.time() - _subory[0] > 600:
+        mena = set()
+        for _, dirs, files in os.walk(PROJEKTY):
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "node_modules"]
+            mena.update(f for f in files if f.lower().endswith(DOKUMENTY))
+        _subory = (time.time(), frozenset(mena))
+    return _subory[1]
 
 
 def druh(cls, title):
@@ -19,8 +35,10 @@ def druh(cls, title):
         return "outlook"
     if re.search(r"Microsoft Teams|\| Teams\b", t) or "teams" in cls.lower():
         return "teams"
-    if cls == "com.t3tools.T3Code" and T3_ESYST.search(t):
+    if cls == "com.t3tools.T3Code" and " / " in t:
         return "t3"
+    if any(m in t for m in subory()):
+        return "subor"
     return "-"
 
 

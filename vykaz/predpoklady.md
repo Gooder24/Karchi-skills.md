@@ -25,12 +25,20 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   odpoveď agenta hotová, alebo od jeho poslednej správy kdekoľvek, najviac 1 min + 1 min na 1000 znakov odpovede +
   1 min na 40 znakov jeho správy, nanajvýš 10 min; po odoslaní 1 min. Kým agent pracuje, to nie je jeho práca.
   Správa vnútri riadku, ktorý už v súbore je (jeho, upravený, zmazaný), ďalší čas nepridá. Zaostrené okno eSYST
-  vlákna, Outlooku či Teams na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od seba sú jedno sedenie,
-  kratšie než 5 min vypadne, okraje sa zaokrúhlia na najbližších 5 min (konštanty na začiatku `vykaz.py`). Keď sa
-  pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní pri ďalšom behu prepočíta sám; riadky,
-  ktoré Karchi napísal alebo upravil, ostanú. Najprv Haiku posúdi každú správu zvlášť a sedenia sa skladajú len z
-  firemných, aby osobné vlákno medzi nimi nenafúklo čas.
-- Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom.
+  vlákna, Outlooku, Teams či pracovného súboru na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od
+  seba sú jedno sedenie. Najprv Haiku posúdi každú správu a každé otvorené vlákno zvlášť a sedenia sa skladajú len z
+  firemných.
+- Vlastná práca popri firemnej (Karchi 21. 11.): čas, keď mal na x270 otvorené vlastné vlákno (nie eSYST), sa zo
+  sedenia odráta, aj keby trval pár sekúnd. Do 15 min vlastného vlákna sedenie nepreruší: riadok ostane jeden, B je
+  od-do celého sedenia a C čistý čas bez vlastného vlákna (C je preto niekedy menej ako B).
+- Presnosť (Karchi 23. 11.): začiatok, koniec aj trvanie sa zaokrúhľujú na pol minúty, nie na 5 min. Čas, ktorý nie
+  je na celú minútu, má sekundy: „13:40:30-14:02“, „0.21.30 h“. Sedenie kratšie než 5 min čistého času vypadne
+  (konštanty na začiatku `vykaz.py`). Keď sa pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní
+  pri ďalšom behu prepočíta sám; riadky, ktoré Karchi napísal alebo upravil, ostanú.
+- Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom (vlákno v projekte Obhajoba práce
+  posúdi Haiku ako správu), pracovný súbor, keď titul okna nesie meno dokumentu z `~/Work/projekty` (xlsx, docx,
+  pptx, pdf, csv, excalidraw a pod.). Ostatné okná sa neukladajú a nerátajú.
+- Či sedí pri počítači, výkaz zatiaľ nevie (na x270 nie je hypridle): zaostrené okno sa preto ráta najviac 20 min.
 - Zdroje: T3 na asuse, x270, delle a e540. Rodinný PC (Windows, Codex) sa nečíta, eSYST tam nerobí.
 
 ## Súbor

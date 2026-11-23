@@ -8,10 +8,11 @@
   vykaz vrat [MESIAC]   vráti súbor mesiaca do stavu pred posledným zápisom (záloha)
   vykaz stav            zapísané dni, posledné zálohy, stav zberu okien
 
-Riadok súboru je jedno sedenie: popis | "D.M.RRRR H:MM-H:MM" | "H.MM h" (hodiny.minúty); posledný riadok
-"H.MM h | spolu". Sedenia skladá z jeho správ v eSYST vláknach T3 na všetkých strojoch (t3-esyst.py) a z času,
-keď mal na x270 aktívny Outlook, Teams alebo eSYST vlákno T3 (okna.py). Čas na utorkovej praxi
-(dochadzka) a čas, ktorý už v súbore je, vynechá. Popis napíše Haiku; sedenie, ktoré nie je práca pre eSYST,
+Riadok súboru je jedno sedenie: popis | "D.M.RRRR H:MM-H:MM" | "H.MM h" (hodiny.minúty); čas, ktorý nie je na
+celú minútu, má aj sekundy ("13:40:30", "1.05.30 h", vždy po pol minúte). Posledný riadok "H.MM h | spolu".
+Sedenia skladá z jeho správ v eSYST vláknach T3 na všetkých strojoch (t3-esyst.py) a z času, keď mal na x270
+aktívny Outlook, Teams, eSYST vlákno T3 alebo pracovný súbor (okna.py). Čas vo vlastnom vlákne uprostred
+sedenia odráta: B je od-do, C čistý čas. Čas na utorkovej praxi (dochadzka) a čas, ktorý už v súbore je, vynechá. Popis napíše Haiku; sedenie, ktoré nie je práca pre eSYST,
 vynechá. Pred každou zmenou zálohuje súbor do ~/.local/share/vykaz/zalohy/.
 """
 import json, os, re, shutil, subprocess, sys
@@ -43,8 +44,10 @@ NAD_SPRAVOU = 1, 10  # minutes before one message: at least, at most
 PO_SPRAVE = 1    # minutes after sending it
 OKNO_MAX = 20    # one focused Outlook/Teams/T3 interval counts at most this long (he may have walked away)
 MEDZERA = 2      # events closer than this are one sitting
-MIN_SEDENIE = 5  # shorter sittings are dropped
-PRAVIDLA = 2     # raise when the counting changes: days written by older rules are counted again (auto)
+OSOBNE_MOST = 15  # minutes in his own (non-eSYST) threads that still keep one sitting together; they are subtracted
+MIN_SEDENIE = 5  # shorter sittings (their time without his own threads) are dropped
+KROK = 30        # seconds: start, end and duration are rounded to the nearest half minute
+PRAVIDLA = 3     # raise when the counting changes: days written by older rules are counted again (auto)
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 
 
@@ -65,16 +68,23 @@ def hm(t):
     return f"{t.hour}:{t.minute:02d}"
 
 
-def trvanie(minuty):
-    return f"{minuty // 60}.{minuty % 60:02d} h"
+def hms(t):
+    """'13:40', or '13:40:30' when it is not a whole minute."""
+    return hm(t) + (f":{t.second:02d}" if t.second else "")
 
 
-def minuty_bunky(v):
-    """'1.3h', '2.09h', '2.30 h' or 1.3 -> minutes; the part after the dot is minutes (1.3 = 1:30)."""
-    m = re.match(r"\s*(\d+)(?:[.,](\d{1,2}))?", str(v or ""))
+def trvanie(sekundy):
+    """'1.05 h', or '1.05.30 h' with the seconds when it is not whole minutes."""
+    h, m, s = sekundy // 3600, sekundy // 60 % 60, sekundy % 60
+    return f"{h}.{m:02d}" + (f".{s:02d}" if s else "") + " h"
+
+
+def sekundy_bunky(v):
+    """'1.3h', '2.09h', '2.30 h', '1.05.30 h' or 1.3 -> seconds; after the dot minutes (1.3 = 1:30), then seconds."""
+    m = re.match(r"\s*(\d+)(?:[.,](\d{1,2})(?:[.:](\d{1,2}))?)?", str(v or ""))
     if not m:
         return 0
-    return int(m[1]) * 60 + int((m[2] or "0").ljust(2, "0"))
+    return int(m[1]) * 3600 + int((m[2] or "0").ljust(2, "0")) * 60 + int(m[3] or 0)
 
 
 # --- sources ----------------------------------------------------------------
@@ -104,7 +114,7 @@ def t3_spravy(d):
 
 
 def okna(d):
-    """Focus intervals of Outlook/Teams/eSYST T3 that day: [(start, end, druh, titul)]."""
+    """Focus intervals of Outlook, Teams, T3 threads and work files that day: [(start, end, druh, titul)]."""
     def citaj(x):
         f = OKNA / f"{x}.tsv"
         rows = []
@@ -140,13 +150,16 @@ def prax(d):
     return c(z["od"]), c(z["do"])
 
 
+CAS = re.compile(r"\s*(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)(?::(\d+))?\s*-\s*(\d+):(\d+)(?::(\d+))?")
+
+
 def interval(cas, d):
-    """'19.11.2026 13:40-13:50' -> (start, end) when it is day d, else None."""
-    m = re.match(r"\s*(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)\s*-\s*(\d+):(\d+)", str(cas or ""))
+    """'19.11.2026 13:40-13:50' or '19.11.2026 13:40:30-13:50' -> (start, end) when it is day d, else None."""
+    m = CAS.match(str(cas or ""))
     if not (m and date(int(m[3]), int(m[2]), int(m[1])) == d):
         return None
-    a = datetime(d.year, d.month, d.day, int(m[4]), int(m[5]), tzinfo=TZ)
-    b = datetime(d.year, d.month, d.day, int(m[6]), int(m[7]), tzinfo=TZ)
+    a = datetime(d.year, d.month, d.day, int(m[4]), int(m[5]), int(m[6] or 0), tzinfo=TZ)
+    b = datetime(d.year, d.month, d.day, int(m[7]), int(m[8]), int(m[9] or 0), tzinfo=TZ)
     return a, b if b > a else b + timedelta(days=1)
 
 
@@ -186,35 +199,48 @@ def pred_spravou(r, vsetky):
     return max([od] + hore)
 
 
-def na5(t):
-    """Nearest 5 minutes."""
+def zaokruhli(t):
+    """Nearest half minute (KROK)."""
     h = t.replace(minute=0, second=0, microsecond=0)
-    return h + timedelta(minutes=5 * int(((t - h).total_seconds() + 150) // 300))
+    return h + timedelta(seconds=KROK * int(((t - h).total_seconds() + KROK / 2) // KROK))
 
 
-def sedenia(d, spravy, okn, vynechat, vsetky=None):
+def prekryv(a, b, ivs):
+    """Seconds of the intervals ivs inside a..b."""
+    return sum(max(0.0, (min(b, e) - max(a, s)).total_seconds()) for s, e in ivs)
+
+
+def sedenia(d, spravy, okn, vynechat, vsetky=None, osobne=()):
+    """Sittings from his eSYST messages and focused work windows. osobne: when one of his own threads had focus;
+    that time keeps a sitting together (up to OSOBNE_MOST) but is subtracted from it ("sek")."""
     vsetky = spravy if vsetky is None else vsetky
     iv = [(pred_spravou(r, vsetky), r["t"] + timedelta(minutes=PO_SPRAVE), ("sprava", r)) for r in spravy]
     iv += [(s, e, ("okno", (k, title))) for s, e, k, title in okn]
     iv.sort(key=lambda x: x[0])
     spojene = []
     for s, e, x in iv:
-        if spojene and s - spojene[-1]["do"] <= timedelta(minutes=MEDZERA):
-            spojene[-1]["do"] = max(spojene[-1]["do"], e)
-            spojene[-1]["veci"].append(x)
-        else:
-            spojene.append({"od": s, "do": e, "veci": [x]})
+        if spojene:
+            medzera = (s - spojene[-1]["do"]).total_seconds()
+            vlastne = prekryv(spojene[-1]["do"], s, osobne)
+            if medzera - vlastne <= MEDZERA * 60 and vlastne <= OSOBNE_MOST * 60:
+                spojene[-1]["do"] = max(spojene[-1]["do"], e)
+                spojene[-1]["veci"].append(x)
+                continue
+        spojene.append({"od": s, "do": e, "veci": [x]})
     out = []
     for sd in spojene:
-        if sd["do"] - sd["od"] < timedelta(minutes=MIN_SEDENIE):
-            continue  # before rounding, so a quick reply never grows past the minimum by its clock minute
-        # round to the nearest 5 minutes, then cut out practice and what the sheet already has
-        a, b = na5(sd["od"]), na5(sd["do"])
+        if (sd["do"] - sd["od"]).total_seconds() - prekryv(sd["od"], sd["do"], osobne) < MIN_SEDENIE * 60:
+            continue  # before rounding, so a quick reply never grows past the minimum by rounding
+        # round to the nearest half minute, then cut out practice and what the sheet already has
+        a, b = zaokruhli(sd["od"]), zaokruhli(sd["do"])
         a = max(a, datetime.combine(d, datetime.min.time(), TZ))
         b = min(b, datetime.combine(d + timedelta(days=1), datetime.min.time(), TZ))
         for s, e, _ in odober([(a, b, None)], vynechat):
-            if (e - s).total_seconds() / 60 >= 5:
-                out.append({"od": s, "do": e, "veci": sd["veci"]})
+            sek = (e - s).total_seconds() - prekryv(s, e, osobne)
+            sek = KROK * int((sek + KROK / 2) // KROK)
+            if sek < MIN_SEDENIE * 60:
+                continue  # what is left of it beside rows already in the sheet
+            out.append({"od": s, "do": e, "sek": sek, "veci": sd["veci"]})
     return out
 
 
@@ -264,22 +290,25 @@ def haiku(prompt, n):
     return [got[i] for i in range(1, n + 1)]
 
 
-def firemne(d, spravy):
-    """Only his messages that are eSYST work, judged one by one, so that an unrelated thread in between does not
-    make one long paid sitting out of them."""
-    if not spravy:
-        return []
-    zoznam = "\n".join(f"{i + 1}: {hm(r['t'])} [{r['projekt']} / {r['vlakno']}] {r['text'][:220]}"
-                       for i, r in enumerate(spravy))
-    prompt = f"""Karol pracuje popri škole pre firmu eSYST s.r.o. a vedie si výkaz odpracovaných hodín. Pri každej jeho správe AI agentovi z {d.day}.{d.month}.{d.year} rozhodni, či je to práca pre eSYST.
+def firemne(d, spravy, vlakna=()):
+    """His messages that are eSYST work, judged one by one, so that an unrelated thread in between does not make
+    one long paid sitting out of them; and which of the T3 threads he had focused on x270 ("project / thread")
+    are eSYST work. Returns (messages, set of thread titles)."""
+    vlakna = sorted(set(vlakna))
+    if not spravy and not vlakna:
+        return [], set()
+    zoznam = [f"{hm(r['t'])} [{r['projekt']} / {r['vlakno']}] {r['text'][:220]}" for r in spravy]
+    zoznam += [f"(otvorené vlákno, bez správy) [{v}]" for v in vlakna]
+    n = len(zoznam)
+    prompt = f"""Karol pracuje popri škole pre firmu eSYST s.r.o. a vedie si výkaz odpracovaných hodín. Pri každej jeho správe AI agentovi z {d.day}.{d.month}.{d.year} a pri každom vlákne, ktoré mal otvorené, rozhodni, či je to práca pre eSYST.
 
 {ciel()}
 
-Odpovedz presne {len(spravy)} riadkami v tvare „ČÍSLO: A“ (práca pre eSYST) alebo „ČÍSLO: N“ (nie), ničím iným. Krátka správa bez obsahu („ok“, „pokračuj“, „/compact“) patrí k vláknu, v ktorom je.
+Odpovedz presne {n} riadkami v tvare „ČÍSLO: A“ (práca pre eSYST) alebo „ČÍSLO: N“ (nie), ničím iným. Krátka správa bez obsahu („ok“, „pokračuj“, „/compact“) patrí k vláknu, v ktorom je.
 
-{zoznam}"""
-    ano = haiku(prompt, len(spravy))
-    return [r for r, a in zip(spravy, ano) if a.upper().startswith("A")]
+""" + "\n".join(f"{i + 1}: {z}" for i, z in enumerate(zoznam))
+    ano = [a.upper().startswith("A") for a in haiku(prompt, n)]
+    return [r for r, a in zip(spravy, ano) if a], {v for v, a in zip(vlakna, ano[len(spravy):]) if a}
 
 
 def popisy(d, sed):
@@ -313,11 +342,16 @@ def navrh(d, ws, zmazane=()):
     # deleted is work he rejected: neither adds time around it, even where newer rules would start it earlier
     dna = [r for r in spravy if r["t"].date() == d and r.get("esyst", True)
            and not any(a <= r["t"] <= b for a, b in vynechat)]
-    sed = sedenia(d, firemne(d, dna), okna(d), vynechat, spravy)
+    okn = okna(d)
+    dna_spravy, vlakna = firemne(d, dna, [t for _, _, k, t in okn if k == "t3"])
+    # a focused thread that is not eSYST work is his own: subtracted from the sitting around it
+    osobne = [(s, e) for s, e, k, t in okn if k == "t3" and t not in vlakna]
+    praca = [o for o in okn if o[2] != "t3" or o[3] in vlakna]
+    sed = sedenia(d, dna_spravy, praca, vynechat, spravy, osobne)
     txt = popisy(d, sed)
     rows = [(t, s) for t, s in zip(txt, sed) if t]
-    return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hm(s['od'])}-{hm(s['do'])}",
-             "min": int((s["do"] - s["od"]).total_seconds() // 60)} for t, s in rows], chyby, len(sed)
+    return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hms(s['od'])}-{hms(s['do'])}",
+             "sek": int(s["sek"])} for t, s in rows], chyby, len(sed)
 
 
 # --- the sheet --------------------------------------------------------------
@@ -356,7 +390,7 @@ def zapis_riadky(f, wb, nove):
     for n in nove:
         m = re.match(r"(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)", n["cas"])
         k = (date(int(m[3]), int(m[2]), int(m[1])), int(m[4]), int(m[5]))
-        out.append((k, len(out), [n["popis"], n["cas"], trvanie(n["min"]), None, None, None]))
+        out.append((k, len(out), [n["popis"], n["cas"], trvanie(n["sek"]), None, None, None]))
     out.sort(key=lambda x: (x[0], x[1]))
     for r in range(1, max(ws.max_row, len(out) + 2) + 1):
         for c in range(1, 7):
@@ -366,7 +400,7 @@ def zapis_riadky(f, wb, nove):
             ws.cell(i, c).value = x
     # spolu keeps its old place when the rows still fit above it (row 9 in his files)
     rs = max(spolu or 0, len(out) + 1)
-    celkom = sum(minuty_bunky(v[2]) for _, _, v in out)
+    celkom = sum(sekundy_bunky(v[2]) for _, _, v in out)
     ws.cell(rs, 3).value, ws.cell(rs, 4).value = trvanie(celkom), "spolu"
     ws.cell(rs, 5).value, ws.cell(rs, 6).value = navyse
     tmp = f.with_name(f".{f.name}.tmp")
@@ -405,7 +439,7 @@ def spolu_sedi(ws):
     rs = next((r for r in range(1, ws.max_row + 1) if str(ws.cell(r, 4).value or "").strip() == "spolu"), None)
     if rs is None:
         return True
-    return minuty_bunky(ws.cell(rs, 3).value) == sum(minuty_bunky(ws.cell(r, 3).value) for r in range(1, rs))
+    return sekundy_bunky(ws.cell(rs, 3).value) == sum(sekundy_bunky(ws.cell(r, 3).value) for r in range(1, rs))
 
 
 def svoje_riadky(d):
@@ -417,13 +451,16 @@ def odober_svoje(ws, d):
     """Clear the rows vykaz wrote for day d exactly as it wrote them (text, time, duration, no note in D-F);
     a row he wrote or touched in any way stays. Returns the keys cleared."""
     svoje, prec = Counter(svoje_riadky(d)), []
+    v = stav().get("dni", {}).get(str(d))
+    zapisane = v.get("trvania", {}) if isinstance(v, dict) else {}
     for r in range(1, ws.max_row + 1):
         a, b, c = (ws.cell(r, i).value for i in (1, 2, 3))
-        m = re.match(r"\s*\d+\.\d+\.\d{4}\s+(\d+):(\d+)-(\d+):(\d+)\s*$", str(b or ""))
-        if not (a and m and svoje[f"{b} {a}"] > 0) or any(ws.cell(r, i).value is not None for i in (4, 5, 6)):
+        iv = interval(b, d) if CAS.fullmatch(str(b or "").strip()) else None
+        if not (a and iv and svoje[f"{b} {a}"] > 0) or any(ws.cell(r, i).value is not None for i in (4, 5, 6)):
             continue
-        dlzka = (int(m[3]) * 60 + int(m[4]) - int(m[1]) * 60 - int(m[2])) % (24 * 60)
-        if str(c or "").strip() != trvanie(dlzka):
+        # the duration it wrote: stored since it subtracts his own threads, else the whole time from B
+        cakane = zapisane.get(f"{b} {a}") or trvanie(int((iv[1] - iv[0]).total_seconds()))
+        if str(c or "").strip() != cakane:
             continue  # he corrected the duration
         for i in range(1, 7):
             ws.cell(r, i).value = None
@@ -451,7 +488,7 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
     nove, chyby, n = navrh(d, wb.active, zmazane)
     if sucho:
         for r in nove:
-            print(f"{r['cas']:24} {trvanie(r['min']):8} {r['popis']}")
+            print(f"{r['cas']:30} {trvanie(r['sek']):11} {r['popis']}")
         print(f"({n} sedení, {len(nove)} firemných{'; nedostupné: ' + ', '.join(chyby) if chyby else ''})")
         return nove
     if "asus" in chyby or "x270" in chyby or (chyby and not aj_bez):
@@ -472,13 +509,15 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         celkom = zapis_riadky(f, wb, nove)
         print(f"{d}: {'-' + str(len(prec)) + ' starých, ' if prec else ''}+{len(nove)} riadkov, "
               f"spolu {trvanie(celkom)} (záloha {z})")
+    trvania = {k: trvanie(r["sek"]) for k, r in zip(kluce, nove)}
     if znova or novy_den(stary):
         # its rows now are what it just wrote; a row it could not replace because he changed it is his
-        dni = {"riadky": kluce, "pravidla": PRAVIDLA}
+        dni = {"riadky": kluce, "pravidla": PRAVIDLA, "trvania": trvania}
     else:
         # zapis adds to a day: the older rows stay its own and keep the rules they were counted by
         dni = {"riadky": svoje_riadky(d) + kluce,
-               "pravidla": stary.get("pravidla", 1) if isinstance(stary, dict) else 1}
+               "pravidla": stary.get("pravidla", 1) if isinstance(stary, dict) else 1,
+               "trvania": {**(stary.get("trvania", {}) if isinstance(stary, dict) else {}), **trvania}}
     dni["zaloha"] = z.name if z else (stary.get("zaloha") if isinstance(stary, dict) else None)
     if z and not novy_den(stary):
         dni["pred"] = stary if isinstance(stary, dict) else {"riadky": stary}  # for vrat
