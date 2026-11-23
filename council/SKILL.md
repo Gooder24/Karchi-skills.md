@@ -12,26 +12,33 @@ relevant checks. Give council the updated implementation; do not defer known
 fixes until reviews return. If the user wants to discard the implementation
 and explore new ideas, skip fixes to code being replaced.
 
-## Members (Karchi, 2026-11-17)
+## Members (Karchi, 2026-11-23)
 
 Unless Karchi names other members in his request, the council is exactly these
-three, one per provider:
+four, one per provider:
 
 | Member | `providerInstanceId` | `model` | `options` |
 | --- | --- | --- | --- |
 | Claude Opus 5.5 | `claudeAgent` | `claude-opus-5-5` | `{effort: "high"}` |
 | GPT Sol 6.2 | `codex` (or `codex_infowork`) | `gpt-6.2-sol` | `{reasoningEffort: "high"}` |
-| Kimi K3.1 Pro | `opencode` | `opencode-go/kimi-k3.1-pro` | `{variant: "high"}` |
+| DeepSeek V4.1 Flash | `opencode` | `opencode/deepseek-v4.1-flash-free`, else `opencode-go/deepseek-v4.1-flash` | `{variant: "high"}` |
+| Gemini 4 Neon | `antigravity_m_j` | `gemini-4-neon` | `{thought_level: "medium"}` |
 
 Check the IDs with `orchestrator_capabilities` (`search` finds a model the
 short list omits). The two Codex instances are two accounts; when one is
-disabled or out of limit, use the other. Kimi runs on Karchi's OpenCode Go
-subscription (account karollupi6, logged in on dell, asus and e540).
+disabled or out of limit, use the other. DeepSeek runs free first; when
+OpenCode answers "Free usage limit reached" (one limit for the home public IP),
+run the paid one on Karchi's OpenCode Go subscription (account karollupi6,
+logged in on dell, asus and e540) and say so in the report. The paid one needs
+Global selected in the OpenCode console's privacy regions; until then it
+answers "hosted outside Europe and the United States". Neon runs through
+Antigravity (`agy`, only the models agy-guard allows); its instance id can
+differ per machine, `orchestrator_capabilities` names it.
 
 ## Where each member runs
 
 1. This machine: `delegate_task` with `target` from the table, `role: "review"`,
-   all three in parallel. Members are side threads under your thread: never
+   all four in parallel. Members are side threads under your thread: never
    `t3_thread_launch` or `create_threads` for them (Karchi, 2026-11-18: council
    threads must not land in his sidebar).
 2. A member this machine cannot run (provider disabled, model missing, Codex
@@ -45,8 +52,12 @@ subscription (account karollupi6, logged in on dell, asus and e540).
 
    ```bash
    git diff <base> > /tmp/council.diff && scp /tmp/council.diff asus:/tmp/
-   ssh asus 'opencode run --archived -m "opencode-go/kimi-k3.1-pro#high" -f /tmp/council.diff "<brief>"'
+   ssh asus 'opencode run --archived -m "opencode/deepseek-v4.1-flash-free#high" -f /tmp/council.diff "<brief>"'
+   ssh asus 'cd /tmp && ~/.work/karchi-skills/antigravity/bin/agy --model gemini-4-neon --effort medium -p "<brief, with the diff pasted or its path /tmp/council.diff>"'
    ```
+
+   Paid DeepSeek the same way with `-m "opencode-go/deepseek-v4.1-flash#high"`.
+   In `agy`, `-p` takes the next word as the prompt: keep it last.
 
    Sol the same way with `CODEX_HOME=~/.codex-t3code/infowork codex exec -m gpt-6.2-sol -c
    model_reasoning_effort=high` (T3's logins; `~/.codex` is not logged in; when Infowork's week is used
@@ -57,10 +68,6 @@ If a member cannot run anywhere, report which and why instead of substituting
 another model. The OpenCode Go limit (5 hours, week, month) covers the whole
 account, every model and every home machine: when Go reports it, no other Go
 model or machine helps, report it.
-
-No DeepSeek model, not the Go ones and not the free `opencode/deepseek-*`
-(Karchi, 2026-11-20): they run outside the EU and US, and the Go account stays
-on its EU and US region. When he asks for DeepSeek, tell him that.
 
 ## Running it
 
@@ -91,7 +98,8 @@ Rounds: 2
 | --- | --- | --- |
 | Claude Opus 5.5 | 7/10 | 9/10 |
 | GPT Sol 6.2 | 8/10 | 10/10 |
-| Kimi K3.1 Pro | 7/10 | 9/10 |
+| DeepSeek V4.1 Flash | 7/10 | 9/10 |
+| Gemini 4 Neon | 8/10 | 9/10 |
 ```
 
 If a delegate gives no score, write `no score`. Do not invent one.
