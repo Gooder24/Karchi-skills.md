@@ -10,7 +10,7 @@ Every message comes back, so vykaz knows when he was busy elsewhere; only "esyst
 import json, os, re, sqlite3, sys
 
 # eSYST work: these projects, or a thread whose title or message names eSYST work.
-PROJEKTY = ("SPOTREX", "Obhajoba práce", "eSYST", "Hurbanova", "partsheet", "eSYSTAK", "enex")
+PROJEKTY = ("SPOTREX", "Obhajoba práce", "eSYST", "Hurbanova", "eSYSTAK", "enex")
 SLOVA = re.compile(r"esyst|spotrex|hurbanov|eucf|gondž|gondz|crs ?40|enex|esysťák|esystak|odpoč", re.I)
 TITUL = re.compile(SLOVA.pattern + r"|firemn|zamestnanc", re.I)
 # Agent-made "user" turns that are not his typing.

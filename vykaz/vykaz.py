@@ -48,9 +48,9 @@ OSOBNE_MOST = 15  # minutes in his own (non-eSYST) threads that still keep one s
 MIN_SEDENIE = 5  # shorter sittings (their time without his own threads) are dropped
 # Projects that are eSYST work as a whole: their messages and threads count without asking the model, so the same
 # day always comes out the same. Other projects (Obhajoba práce, No project) are judged message by message.
-FIREMNE = ("SPOTREX", "eSYST", "Hurbanova", "partsheet", "eSYSTAK", "enex")
+FIREMNE = ("SPOTREX", "eSYST", "Hurbanova", "eSYSTAK", "enex")  # not partsheet: his choir songbook (23. 11.)
 KROK = 30        # seconds: start, end and duration are rounded to the nearest half minute
-PRAVIDLA = 4     # raise when the counting changes: days written by older rules are counted again (auto)
+PRAVIDLA = 5     # raise when the counting changes: days written by older rules are counted again (auto)
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 
 
@@ -508,15 +508,20 @@ def zapis_den(d, sucho=False, aj_bez=False, znova=False):
         return None
     s = stav()
     kluce = [r["cas"] + " " + r["popis"] for r in nove]
+    trvania = {k: trvanie(r["sek"]) for k, r in zip(kluce, nove)}
     z = None
-    if sorted(kluce) == sorted(prec) and spolu_ok:
-        nove = []  # znova came to the same rows: the file stays as it is
+    stare_t = stary.get("trvania", {}) if isinstance(stary, dict) else {}
+    bolo = {}  # the durations of the rows it just cleared, as it wrote them
+    for k in prec:
+        iv = interval(k, d)
+        bolo[k] = stare_t.get(k) or trvanie(int((iv[1] - iv[0]).total_seconds()))
+    if sorted(kluce) == sorted(prec) and all(bolo[k] == t for k, t in trvania.items()) and spolu_ok:
+        nove = []  # znova came to the same rows and durations: the file stays as it is
     elif nove or prec or not spolu_ok:
         z = zaloha(f)
         celkom = zapis_riadky(f, wb, nove)
         print(f"{d}: {'-' + str(len(prec)) + ' starých, ' if prec else ''}+{len(nove)} riadkov, "
               f"spolu {trvanie(celkom)} (záloha {z})")
-    trvania = {k: trvanie(r["sek"]) for k, r in zip(kluce, nove)}
     if znova or novy_den(stary):
         # its rows now are what it just wrote; a row it could not replace because he changed it is his
         dni = {"riadky": kluce, "pravidla": PRAVIDLA, "trvania": trvania}

@@ -31,13 +31,13 @@ def subory():
 
 def druh(cls, title):
     t = title or ""
+    if cls == "com.t3tools.T3Code":  # first: his own thread may name Outlook or Teams in its title
+        return "t3" if " / " in t else "-"
     if re.search(r"\bOutlook\b", t) or cls.lower() in ("outlook", "ms-outlook"):
         return "outlook"
     if re.search(r"Microsoft Teams|\| Teams\b", t) or "teams" in cls.lower():
         return "teams"
-    if cls == "com.t3tools.T3Code" and " / " in t:
-        return "t3"
-    if any(m in t for m in subory()):
+    if any(re.search(r"(?<![\w.-])" + re.escape(m) + r"(?![\w.])", t) for m in subory()):
         return "subor"
     return "-"
 

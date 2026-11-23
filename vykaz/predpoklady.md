@@ -13,7 +13,7 @@ eSYST (napr. Hurbanova), EUCF, firemné e-maily a Teams.
 
 Nie je firemná práca: škola (vyučovanie, domáce úlohy, maturita, učenie), samotné písanie školskej práce (SOČ,
 obhajoba, kapitoly, prezentácia pre komisiu), vlastný notebook a jeho vzhľad, osobné aplikácie (Weft, Učenie,
-kalendár), hudba, open source, jeho vlastný výkaz hodín a nástroj, ktorý ho plní (vykaz). Vlákno v projekte „Obhajoba práce“ sa ráta len vtedy, keď v ňom robí niečo pre
+kalendár), hudba (aj partsheet, spevník zboru), open source, jeho vlastný výkaz hodín a nástroj, ktorý ho plní (vykaz). Vlákno v projekte „Obhajoba práce“ sa ráta len vtedy, keď v ňom robí niečo pre
 eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prácu.
 
 ## Čas
@@ -26,7 +26,7 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   1 min na 40 znakov jeho správy, nanajvýš 10 min; po odoslaní 1 min. Kým agent pracuje, to nie je jeho práca.
   Správa vnútri riadku, ktorý už v súbore je (jeho, upravený, zmazaný), ďalší čas nepridá. Zaostrené okno eSYST
   vlákna, Outlooku, Teams či pracovného súboru na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od
-  seba sú jedno sedenie. Správy a vlákna projektov SPOTREX, eSYST…, Hurbanova, partsheet, eSYSTAK a enex sú firemné
+  seba sú jedno sedenie. Správy a vlákna projektov SPOTREX, eSYST…, Hurbanova, eSYSTAK a enex sú firemné
   vždy (`FIREMNE` vo `vykaz.py`, aby ten istý deň vyšiel vždy rovnako); ostatné (Obhajoba práce, bez projektu) posúdi
   Haiku po jednej správe a vlákne. Sedenia sa skladajú len z firemných.
 - Vlastná práca popri firemnej (Karchi 21. 11.): čas, keď mal na x270 otvorené vlastné vlákno (nie eSYST), sa zo
