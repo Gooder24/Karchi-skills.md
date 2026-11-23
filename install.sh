@@ -32,9 +32,10 @@ ln -sfn "$R/citacka/citacka" "$HOME/.local/bin/citacka"
 # ship and land: commit+push+CI and merge-on-green in one call (see github/SKILL.md).
 ln -sfn "$R/github/ship.mts" "$HOME/.local/bin/ship"
 ln -sfn "$R/github/land.mts" "$HOME/.local/bin/land"
-# One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md.
+# One AGENTS.md for every agent: Claude Code reads it as ~/.claude/CLAUDE.md, Codex as ~/.codex/AGENTS.md,
+# Antigravity as ~/.gemini/AGENTS.md.
 # A real file there is kept once as <name>.bak-<date>, then replaced by the link.
-for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md"; do
+for f in "$HOME/.claude/CLAUDE.md" "$HOME/.claude/AGENTS.md" "$HOME/.codex/AGENTS.md" "$HOME/.gemini/AGENTS.md"; do
   [ -d "$(dirname "$f")" ] || continue
   [ "$(readlink "$f")" = "$R/AGENTS.md" ] && continue
   [ -e "$f" ] && [ ! -L "$f" ] && mv "$f" "$f.bak-$(date +%F)"
