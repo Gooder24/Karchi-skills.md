@@ -81,7 +81,7 @@ ktorý skladá HTML (Django a podobné: portál, formuláre, SPOTREX): tá smie 
 nad pár riadkov je v TypeScripte. Iný jazyk len keď ho vyžaduje platforma (QML v Quickshelli, shell na pár
 riadkov lepidla, SQL) alebo udržiavaná knižnica, ktorú treba, existuje len v ňom (napr. Pythonové `edupage-api`;
 to v npm je od 2022 opustené); vtedy to pred začatím povedz Karchimu jednou vetou s dôvodom. Existujúci projekt
-v JavaScripte alebo Pythone (Weft, Učenie, wristlogic, t3-time, kalendarix-edupage) ostáva vo svojom jazyku,
+v JavaScripte alebo Pythone (Weft, kalendarix-edupage) ostáva vo svojom jazyku,
 kým Karchi nerozhodne o prepise.
 
 # Databázy (Karchi, 2026-11-23)
