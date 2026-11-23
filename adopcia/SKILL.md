@@ -7,7 +7,7 @@ description: Give away an idea or side project Karchi will not continue, so some
 
 Karchi's rule (2026-11-23): a side project or idea he drops is not thrown away. Its idea, research and state go
 public in **`Gooder24/napady`** (checkout `~/napady` on asus; clone it elsewhere), where anyone may take it, and he
-gets links to announce it with one click. The first one was Ownbeat (`~/wristlogic/idea/`).
+gets links to announce it with one click. The first one was Ownbeat (`~/napady/ownbeat/`).
 
 His words "daj na adopciu" or "tomuto sa už nebudem venovať" are his yes to publish the write-up in `napady`. Making
 a private code repo public needs its own yes: ask in one line at the end of the reply, unless he already said so
