@@ -38,8 +38,7 @@ looks before he merges (Karchi, 2026-11-23):
    `<dir>/frames.html` (←/→, buttons, a slider, each frame's name as caption). It needs ffmpeg, so on dell run it on
    asus, copy `<dir>` back into the project's `overenie/<date>/` and run `frames.sh --html <dir>` there.
 3. In T3: `html_render` with `path` to `frames.html` above the handoff (no `html_preview`: its picture costs tokens
-   and the size is known: height ≈ 728 × first frame's height / its width + 70,
-   at most 970: a frame is never taller than 900 px there). Put the GIF in the reply as
+   and `frames.sh` prints the height to give it). Put the GIF in the reply as
    `![…](/absolute/path/flow.gif)` and name the folder, so he can open each PNG in T3's file viewer.
 4. Do not read the GIF or the frames back to yourself for this; look only at what the proof needs. Frames stay in
    gitignored `overenie/` on his machines and never go into a commit; into a PR only by full-send's rule and only
