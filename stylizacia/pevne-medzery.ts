@@ -4,13 +4,13 @@
 const NBSP = " ";
 const MONTHS = "januára|februára|marca|apríla|mája|júna|júla|augusta|septembra|októbra|novembra|decembra";
 const UNITS = "eur|€|%|‰|ks|kg|g|t|km|m|cm|mm|m2|m²|m3|m³|l|ml|h|hod\\.|min\\.|sek\\.|dní|dni|dňa|dňoch|rokov|USD|CZK|Kč";
-const TITLES = "Ing\\.|Mgr\\.|Bc\\.|MUDr\\.|JUDr\\.|PhDr\\.|RNDr\\.|Doc\\.|doc\\.|prof\\.|p\\.|č\\.|s\\.|str\\.|tel\\.|ods\\.|čl\\.|písm\\.|§";
+const TITLES = "Ing\\.|Mgr\\.|Bc\\.|MUDr\\.|JUDr\\.|PhDr\\.|RNDr\\.|Doc\\.|doc\\.|prof\\.|p\\.|č\\.|str\\.|tel\\.|ods\\.|čl\\.|písm\\.|§";
 
 // Each rule matches a normal space (or several) that must not break the line.
 const rules: [string, RegExp][] = [
   ["jednopísmenové slovo", /(?<=(?:^|[\s(„"' ])[kKsSvVzZoOuUaAiI]) +(?=\S)/g],
   ["skratka alebo titul pred slovom", new RegExp(`(?<=(?:^|[\\s(„])(?:${TITLES})) +(?=\\S)`, "g")],
-  ["iniciála mena", /(?<=(?:^|[\s(„])\p{Lu}\.) +(?=\p{Lu}\p{Ll})/gu],
+  ["strana", /(?<=(?:^|[\s(„])s\.) +(?=\d)/g],
   ["deň a mesiac", new RegExp(`(?<=\\b\\d{1,2}\\.) +(?=(?:${MONTHS})\\b)`, "g")],
   ["dátum číslami", /(?<=\b\d{1,2}\.) +(?=\d{1,2}\.(?:\s| )*\d{4}\b)|(?<=\b\d{1,2}\.(?:\s| )*\d{1,2}\.) +(?=\d{4}\b)/g],
   ["tisícky v čísle", /(?<=\b\d{1,3}) +(?=\d{3}(?![\d-]))/g],
