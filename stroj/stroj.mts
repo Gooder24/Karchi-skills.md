@@ -44,8 +44,11 @@ const check = (alias: Alias, all: Peer[]) => {
     if (i === 1) {
       const why = s.out.split("\n").pop() || "timeout";
       if (pong) return `${alias}: Tailscale odpovedá (${pong[1]}), ale ssh nie: ${why}`;
-      const seen = peer?.LastSeen && !peer.LastSeen.startsWith("0001") ? `, naposledy videný pred ${ago(peer.LastSeen)}` : "";
-      return `${alias}: nedostupný – neodpovedá na Tailscale ping ani ssh${seen}${peer?.Online === false ? " (Tailscale ho vedie ako offline)" : ""}`;
+      // LastSeen is only fresh once Tailscale has marked the peer offline; while it still says online, the machine just dropped.
+      const state = peer?.Online === false
+        ? peer.LastSeen && !peer.LastSeen.startsWith("0001") ? `, Tailscale ho vedie ako offline, naposledy videný pred ${ago(peer.LastSeen)}` : ", Tailscale ho vedie ako offline"
+        : ", práve zmizol (Tailscale ho ešte vedie ako online: uspatý, zavretý alebo bez siete)";
+      return `${alias}: nedostupný – neodpovedá na Tailscale ping ani ssh${state}`;
     }
   }
   return `${alias}: ?`;
