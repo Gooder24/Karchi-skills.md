@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# A GitHub Actions runner on asus for one of Karchi's repos, under the user github-runner.
+# A GitHub Actions runner on asus for one of Karchi's personal repos, under the user github-ci. That user is
+# not in the docker group (github-runner, which runs the eSYST runners of spotrex and eSYSTAK, is), so a CI
+# job here cannot become root.
 #   asus-runner.sh <repo>            add it; jobs with `runs-on: asus` in that repo then run on asus
 #   asus-runner.sh --remove <repo>   take it away again
 # See them: systemctl list-units 'actions.runner.*' on asus, or the repo's Settings > Actions > Runners.
@@ -13,13 +15,14 @@ fi
 remove=
 [ "${1:-}" = --remove ] && { remove=1; shift; }
 repo=${1:?usage: asus-runner.sh [--remove] <repo>}
-home=/var/lib/github-runner
+user=github-ci
+home=/var/lib/$user
 dir=$home/$(tr 'A-Z.' 'a-z-' <<<"$repo")
 name=asus-$(basename "$dir")
 unit=actions.runner.Gooder24-$repo.$name.service
-# $home is private to github-runner, so everything inside it runs through sudo. Nothing in it runs as
+# $home is private to $user, so everything inside it runs through sudo. Nothing in it runs as
 # root: CI jobs can write there, so the systemd unit is written here instead of by the runner's svc.sh.
-as_runner() { sudo -u github-runner -H bash -c 'cd "$0" && "$@"' "$dir" "$@"; }
+as_runner() { sudo -u "$user" -H bash -c 'cd "$0" && "$@"' "$dir" "$@"; }
 
 if [ -n "$remove" ]; then
   token=$(gh api -X POST "repos/Gooder24/$repo/actions/runners/remove-token" -q .token)
@@ -28,7 +31,7 @@ if [ -n "$remove" ]; then
   sudo systemctl daemon-reload
   as_runner rm -f .service  # left by the runner's own svc.sh; config.sh refuses to remove while it exists
   as_runner ./config.sh remove --token "$token"
-  sudo -u github-runner rm -rf "$dir"
+  sudo -u "$user" rm -rf "$dir"
   echo "removed $name from Gooder24/$repo"
   exit
 fi
@@ -50,10 +53,14 @@ PY
 EOF
 sudo chmod 755 "$hook"
 
+id "$user" >/dev/null 2>&1 ||
+  sudo useradd --system --create-home --home-dir "$home" --shell /bin/bash "$user"
+sudo chmod 700 "$home"
+
 if ! sudo test -x "$dir/run.sh"; then
   url=$(gh api repos/actions/runner/releases/latest \
     -q '.assets[] | select(.name | test("actions-runner-linux-x64-.*\\.tar\\.gz$")) | .browser_download_url')
-  sudo -u github-runner mkdir -p "$dir"
+  sudo -u "$user" mkdir -p "$dir"
   curl -fsSL "$url" | as_runner tar -xz
 fi
 
@@ -70,7 +77,7 @@ After=network-online.target
 
 [Service]
 ExecStart=$dir/bin/runsvc.sh
-User=github-runner
+User=$user
 WorkingDirectory=$dir
 KillMode=process
 KillSignal=SIGTERM

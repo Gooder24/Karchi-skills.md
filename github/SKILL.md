@@ -8,7 +8,7 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 ## Where changes go
 
 - Karchi's personal repos are full send: every repo of Gooder24's own except forks and the eSYST work repos
-  (spotrex, eSYSTAK, partsheet, enex-crz-email-mvp). Commit straight to `main` and push without asking. No
+  (spotrex, eSYSTAK, enex-crz-email-mvp). Partsheet is his own (a songbook for his choir), not eSYST. Commit straight to `main` and push without asking. No
   branches or pull requests; an open PR there is cleaned up at once (AGENTS.md, GitHub).
 - Repos that his machines use by themselves (Karchi, 2026-11-18): karchi-os, karchi-os-headless-debian with
   its parts laptop-server and reboot-when-idle, weft, kalendarix and Karchi-skills.md. A change reaches them
@@ -48,11 +48,11 @@ The routine steps are commands, not hand-typed git and gh calls (each hand step 
   gets this line; a step that needs `sudo` gets `if: runner.environment == 'github-hosted'` and its
   packages are installed on asus once by hand.
 - A repo with CI gets its runner with `github/asus-runner.sh <repo>` (from any machine; `--remove`
-  takes it away). The runner's hook `reject-forks.sh` fails a fork's job even when its workflow asks
-  for asus.
+  takes it away). It runs as the user `github-ci`, which has no Docker and so no way to root. The
+  runner's hook `reject-forks.sh` fails a fork's job even when its workflow asks for asus.
 - Jobs that need another OS (kalendarix `release.yml`: Windows, macOS) stay on GitHub. The eSYST repos
-  spotrex and eSYSTAK have their own runners on asus from before; partsheet uses `asus-runner.sh` (Karchi,
-  2026-11-20: GitHub stopped starting its jobs over a failed payment).
+  spotrex and eSYSTAK have their own runners on asus from before, as `github-runner`, which is in the
+  docker group because their tests run in Docker.
 
 ## Commits
 
