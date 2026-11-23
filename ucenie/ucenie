@@ -6,7 +6,4 @@ if [ -f "$src/server/src/cli.ts" ]; then
   [ -x "$bun" ] || bun=$(command -v bun)
   UCENIE_DATA="$HOME/ucenie/data" exec "$bun" run "$src/server/src/cli.ts" "$@"
 fi
-if [ -d "$HOME/ucenie/venv" ]; then  # the Python server, until the TypeScript one is deployed
-  cd "$src/server" && UCENIE_DATA="$HOME/ucenie/data" exec "$HOME/ucenie/venv/bin/python" -m ucenie.cli "$@"
-fi
 exec ssh -o BatchMode=yes asus "ucenie $(printf '%q ' "$@")"
