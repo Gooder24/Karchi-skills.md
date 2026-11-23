@@ -20,6 +20,8 @@ Karchi ti píše cez T3 Code. Každý stroj nižšie je samostatný T3 environme
 
 Prvé štyri a `rodinnypcl` sú na Tailscale a vidia sa cez `ssh <alias>` (`rodinnypcl` cez OpenSSH len z asusu, Tailscale SSH na Windowse nie je). `vps` dosiahneš z `x270` a z `asus` (kľúč `~/.ssh/id_ed25519_vps`). Na inom stroji konaj iba na Karchiho pokyn; keď neodpovedá, povedz to.
 
+„Na všetky stroje“ (nástroj, prihlásenie, nastavenie) znamená `asus`, `x270`, `dell` a `e540` (Karchi, 2026-11-23). `rodinnypcl` ostáva bokom, Karchi ho potrebuje len keď nastane problém; `vps` je ostrá stránka. Na tieto dva len na jeho výslovný pokyn.
+
 # SPOTREX (Karchi, 2026-11-16)
 
 SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
