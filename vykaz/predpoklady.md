@@ -26,8 +26,9 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   1 min na 40 znakov jeho správy, nanajvýš 10 min; po odoslaní 1 min. Kým agent pracuje, to nie je jeho práca.
   Správa vnútri riadku, ktorý už v súbore je (jeho, upravený, zmazaný), ďalší čas nepridá. Zaostrené okno eSYST
   vlákna, Outlooku, Teams či pracovného súboru na x270 sa ráta celé, najviac 20 min naraz. Udalosti do 2 min od
-  seba sú jedno sedenie. Najprv Haiku posúdi každú správu a každé otvorené vlákno zvlášť a sedenia sa skladajú len z
-  firemných.
+  seba sú jedno sedenie. Správy a vlákna projektov SPOTREX, eSYST…, Hurbanova, partsheet, eSYSTAK a enex sú firemné
+  vždy (`FIREMNE` vo `vykaz.py`, aby ten istý deň vyšiel vždy rovnako); ostatné (Obhajoba práce, bez projektu) posúdi
+  Haiku po jednej správe a vlákne. Sedenia sa skladajú len z firemných.
 - Vlastná práca popri firemnej (Karchi 21. 11.): čas, keď mal na x270 otvorené vlastné vlákno (nie eSYST), sa zo
   sedenia odráta, aj keby trval pár sekúnd. Do 15 min vlastného vlákna sedenie nepreruší: riadok ostane jeden, B je
   od-do celého sedenia a C čistý čas bez vlastného vlákna (C je preto niekedy menej ako B).

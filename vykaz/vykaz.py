@@ -46,8 +46,11 @@ OKNO_MAX = 20    # one focused Outlook/Teams/T3 interval counts at most this lon
 MEDZERA = 2      # events closer than this are one sitting
 OSOBNE_MOST = 15  # minutes in his own (non-eSYST) threads that still keep one sitting together; they are subtracted
 MIN_SEDENIE = 5  # shorter sittings (their time without his own threads) are dropped
+# Projects that are eSYST work as a whole: their messages and threads count without asking the model, so the same
+# day always comes out the same. Other projects (Obhajoba práce, No project) are judged message by message.
+FIREMNE = ("SPOTREX", "eSYST", "Hurbanova", "partsheet", "eSYSTAK", "enex")
 KROK = 30        # seconds: start, end and duration are rounded to the nearest half minute
-PRAVIDLA = 3     # raise when the counting changes: days written by older rules are counted again (auto)
+PRAVIDLA = 4     # raise when the counting changes: days written by older rules are counted again (auto)
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 
 
@@ -294,9 +297,12 @@ def firemne(d, spravy, vlakna=()):
     """His messages that are eSYST work, judged one by one, so that an unrelated thread in between does not make
     one long paid sitting out of them; and which of the T3 threads he had focused on x270 ("project / thread")
     are eSYST work. Returns (messages, set of thread titles)."""
-    vlakna = sorted(set(vlakna))
+    isto = [r for r in spravy if r["projekt"].startswith(FIREMNE)]
+    spravy = [r for r in spravy if not r["projekt"].startswith(FIREMNE)]
+    isto_v = {v for v in vlakna if v.startswith(FIREMNE)}
+    vlakna = sorted(set(vlakna) - isto_v)
     if not spravy and not vlakna:
-        return [], set()
+        return isto, isto_v
     zoznam = [f"{hm(r['t'])} [{r['projekt']} / {r['vlakno']}] {r['text'][:220]}" for r in spravy]
     zoznam += [f"(otvorené vlákno, bez správy) [{v}]" for v in vlakna]
     n = len(zoznam)
@@ -308,7 +314,8 @@ Odpovedz presne {n} riadkami v tvare „ČÍSLO: A“ (práca pre eSYST) alebo �
 
 """ + "\n".join(f"{i + 1}: {z}" for i, z in enumerate(zoznam))
     ano = [a.upper().startswith("A") for a in haiku(prompt, n)]
-    return [r for r, a in zip(spravy, ano) if a], {v for v, a in zip(vlakna, ano[len(spravy):]) if a}
+    ano_s = [r for r, a in zip(spravy, ano) if a]
+    return sorted(isto + ano_s, key=lambda r: r["t"]), isto_v | {v for v, a in zip(vlakna, ano[len(spravy):]) if a}
 
 
 def popisy(d, sed):
@@ -324,7 +331,7 @@ def popisy(d, sed):
 Pre každé sedenie napíš jeden riadok do stĺpca popisu: podstatné mená zo slovies, po slovensky, vecne, najviac 12 slov, bez bodky na konci, v štýle týchto starších riadkov:
 {PRIKLADY}
 
-Ak sedenie nie je firemná práca, napíš NIC. Odpovedz presne {len(sed)} riadkami v tvare „ČÍSLO: text“ a ničím iným.
+Všetko v sedeniach už je firemná práca (osobné vlákna sú vynechané), takže každé sedenie dostane popis. Odpovedz presne {len(sed)} riadkami v tvare „ČÍSLO: text“ a ničím iným.
 
 {bloky}"""
     return ["" if t.upper().startswith("NIC") else t for t in haiku(prompt, len(sed))]
