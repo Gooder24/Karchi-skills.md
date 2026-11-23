@@ -14,11 +14,14 @@ test("one-letter words, invoice numbers, sums and dates", () => {
     "1°800,00°€ a°zľavu 10°% do 7°dní, splatná 10.°10.°2026",
   );
   expect(show("Ing. Novák z firmy eSYST, s. r. o.")).toBe("Ing.°Novák z°firmy eSYST,°s.°r.°o.");
+  expect(show("podľa § 5 ods. 2 a čl. 3, podpísal J. Kováč")).toBe("podľa §°5 ods.°2 a°čl.°3, podpísal J.°Kováč");
 });
 
 test("leaves ordinary spaces alone", () => {
   expect(show("Na základe Vašej ponuky objednávame 2026 kusov.")).toBe("Na základe Vašej ponuky objednávame 2026 kusov.");
   expect(show("Tovar sme odoslali včera.")).toBe("Tovar sme odoslali včera.");
+  expect(show("od roku 2010 spolupracujeme")).toBe("od roku 2010 spolupracujeme");
+  expect(show("Objednávame 3 100-litrové sudy.")).toBe("Objednávame 3 100-litrové sudy.");
 });
 
 test("check finds what fix would change, and nothing after fix", () => {
