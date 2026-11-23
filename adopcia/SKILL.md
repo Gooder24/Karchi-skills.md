@@ -65,7 +65,7 @@ together. Agents cannot post them for him either: Hacker News has no API for pos
 Reddit removes automated posts from new accounts, and both would need his password. Never mail anyone about an idea.
 
 When he later names a place for the collected ideas, check how it takes submissions. Where an agent can submit
-without his login (an API, a public form, a pull request to a list on GitHub), his naming the place is the yes:
+without him typing a password or clicking (an API, a public form, a pull request through `gh`), his naming the place is the yes:
 submit every idea in `napady` that is not there yet and note the place in the idea's README. Where it needs his
 account, tell him so in one sentence.
 
