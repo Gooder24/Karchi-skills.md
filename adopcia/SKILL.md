@@ -1,13 +1,12 @@
 ---
 name: adopcia
-description: Give away an idea or side project Karchi will not continue, so someone else can take it - written up in English in his public repo Gooder24/napady with its research, cleaned of personal data, plus one-click links to announce it. Use when he says adopcia, daj na adopciu, tomuto sa už nebudem venovať, sidequest pre nikoho/pre niekoho iného, nech sa toho niekto ujme, or asks where to put an idea so someone uses it.
+description: Give away an idea or side project Karchi will not continue, so someone else can take it - written up in English in his public repo Gooder24/napady with its research, cleaned of personal data, where it waits until he names a place to send his ideas. Use when he says adopcia, daj na adopciu, tomuto sa už nebudem venovať, sidequest pre nikoho/pre niekoho iného, nech sa toho niekto ujme, asks where to put an idea so someone uses it, or names a place to send the collected ideas.
 ---
 
 # Adopcia: an idea up for adoption
 
 Karchi's rule (2026-11-23): a side project or idea he drops is not thrown away. Its idea, research and state go
-public in **`Gooder24/napady`** (checkout `~/napady` on asus; clone it elsewhere), where anyone may take it, and he
-gets links to announce it with one click. The first one was Ownbeat (`~/napady/ownbeat/`).
+public in **`Gooder24/napady`** (checkout `~/napady` on asus; clone it elsewhere), where anyone may take it. The first one was Ownbeat (`~/napady/ownbeat/`).
 
 His words "daj na adopciu" or "tomuto sa už nebudem venovať" are his yes to publish the write-up in `napady`. Making
 a private code repo public needs its own yes: ask in one line at the end of the reply, unless he already said so
@@ -59,27 +58,23 @@ under a copyleft licence (then that one). Text in `napady` is CC0.
 `napady` and the project repo are personal repos: commit to `main`, `git pull --rebase`, push (skill `github`).
 `gh repo edit <repo> --visibility public --accept-visibility-change-consequences` only after the yes for code.
 
-## 4. Announce: links, never posts
+## 4. Announce: not by default
 
-Never post or mail anything in his name, and never email people about it: nobody asked for it, and that is spam.
-Give him prefilled links; he reads and clicks Submit himself (HN has no API for posting and treats automated
-submissions as abuse; Reddit removes automated posts from new accounts as spam).
+Karchi (2026-11-23): he will not post the ideas himself, so by default the work ends at `napady`, where they wait
+together. Agents cannot post them for him either: Hacker News has no API for posting and bans automated submissions,
+Reddit removes automated posts from new accounts, and both would need his password. Never mail anyone about an idea.
 
-- **r/SomebodyMakeThis**: always (the subreddit exists for giving ideas away).
-- **One niche community** where people who would build it are (for Ownbeat: r/QuantifiedSelf). Read its rules first.
-- **Hacker News "Show HN"**: only when there is working code people can try. A bare idea sinks there.
-- A maintainer of one specific project who would clearly benefit: only with his yes, as an issue or discussion
-  there (skill `oss-prispevky`), never as an email.
+When he later names a place for the collected ideas, check how it takes submissions. Where an agent can submit
+without his login (an API, a public form, a pull request to a list on GitHub), his naming the place is the yes:
+submit every idea in `napady` that is not there yet and note the place in the idea's README. Where it needs his
+account, tell him so in one sentence.
+
+Only when he asks for links to post himself: prefilled submit forms, Show HN only when there is code people can try.
 
 ```sh
 bun ~/.work/karchi-skills/adopcia/odkazy.ts '<title>' '<url>' '<two short paragraphs>' [subreddit]
 ```
 
-Show HN only when there is code; drop that line otherwise. Run it again with the niche subreddit as the last argument.
-
-Titles say what the thing does, no hype: "Show HN: <name> – <what it does>, up for adoption".
-
 ## 5. Reply
 
-The usual end of a reply (AGENTS.md): what is public with its URL, the links to click under **Od teba**, and what
-stayed private and why.
+The usual end of a reply (AGENTS.md): what is public with its URL, and what stayed private and why.
