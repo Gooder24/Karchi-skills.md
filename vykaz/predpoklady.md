@@ -13,7 +13,7 @@ eSYST (napr. Hurbanova), EUCF, firemné e-maily a Teams.
 
 Nie je firemná práca: škola (vyučovanie, domáce úlohy, maturita, učenie), samotné písanie školskej práce (SOČ,
 obhajoba, kapitoly, prezentácia pre komisiu), vlastný notebook a jeho vzhľad, osobné aplikácie (Weft, Učenie,
-kalendár), hudba, open source. Vlákno v projekte „Obhajoba práce“ sa ráta len vtedy, keď v ňom robí niečo pre
+kalendár), hudba, open source, jeho vlastný výkaz hodín a nástroj, ktorý ho plní (vykaz). Vlákno v projekte „Obhajoba práce“ sa ráta len vtedy, keď v ňom robí niečo pre
 eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prácu.
 
 ## Čas
