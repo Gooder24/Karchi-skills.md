@@ -20,8 +20,8 @@ prompt="$(cat "$V" "$brief")"
 out=overenie/verifier-output.txt err=overenie/verifier-stderr.txt
 
 log() {  # <verifier> <start epoch>: one usage line; tokens only where the CLI reports them (Codex, via usage.py)
-  jq -cn --arg v "$1" --arg p "$PWD" --argjson s "$2" --argjson ok "$([ -s "$verdict" ] && echo true || echo false)" \
-    '{time: (now | strftime("%Y-%m-%dT%H:%M:%S%z")), project: $p, verifier: $v, verdict: $ok,
+  jq -cn --arg v "$1" --arg p "$PWD" --arg t "$(date +%FT%T%z)" --argjson s "$2" \
+    --argjson ok "$([ -s "$verdict" ] && echo true || echo false)" '{time: $t, project: $p, verifier: $v, verdict: $ok,
       duration_s: ((now - $s) | round)}' >> ~/.claude/overenie-usage.jsonl
 }
 
