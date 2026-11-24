@@ -26,7 +26,7 @@ Dve dvojice, ktoré sú v učebnici na oboch stranách rovnaké („štandardný
 | dotaz | otázka, dopyt |
 | dotazovaný | opytovaný |
 | horeuvedený | uvedený, spomenutý, predtým uvedený |
-| jedna | jeden (jedna len vtedy, ak nasleduje slovo ženského rodu) |
+| jedna | jeden (jedna len vtedy, ak nasleduje slovo žensk. rodu) |
 | jedná sa o | ide o, je to |
 | jednorázove | jednorazovo |
 | jednorázový | jednorazový |
