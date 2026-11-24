@@ -1,12 +1,12 @@
 ---
 name: stylizacia
-description: How to word a Slovak business text the way Karchi's business-correspondence teacher (OBK, Kubišová) corrects it, for eSYST customers and for school. Use before writing or rewriting any Slovak text a customer or business partner of eSYST will read (e-mail, letter, offer, order confirmation, reply to a complaint, payment reminder, apology), for OBK homework „štylizácia“ or „preštylizuj“, and when he asks for pevné medzery or Ctrl+Shift+Space.
+description: How to word a Slovak business text the way Karchi's business-correspondence teacher (OBK, Kubišová) corrects it, for eSYST customers and for school. Use before writing or rewriting any Slovak text a customer or business partner of eSYST will read (e-mail, letter, offer, order confirmation, reply to a complaint, payment reminder, apology), for OBK homework „štylizácia“ or „preštylizuj“, when he asks for pevné medzery or Ctrl+Shift+Space, and when he asks whether a word is right (správne a nesprávne slová).
 ---
 
 # Štylizácia obchodného textu
 
 The rules come from his OBK class (teacher Andrea Kubišová, 3rd year): her corrections of the class's
-restyled letters (tasks 1–10, November 2026) and STN 01 6910. They hold for eSYST customers too.
+restyled letters (tasks 1–10, November 2026), her table of wrong and right words (slova.md) and STN 01 6910. They hold for eSYST customers too.
 
 ## How the sentence is built
 
@@ -21,8 +21,13 @@ restyled letters (tasks 1–10, November 2026) and STN 01 6910. They hold for eS
   („faktúru … vystavenú za dodávku…“ rather than „ktorú sme Vám vystavili za dodávku…“).
 - Name the fact plainly: „Opakovane Vás upozorňujeme na skutočnosť, že faktúra č. 543/2026 splatná
   10. 10. 2026 nebola k dnešnému dňu uhradená.“
-- Plain standard Slovak: „ak“ (not „v prípade, že“), „o, týkajúce sa“ (not „ohľadom“), „na“ (not
-  „za účelom“), „uhradiť“ (not „zaplatiť“ in a reminder). Comma before „že, ktorý, aby, ak“.
+- Plain standard Slovak: „ak“ (not „v prípade, že“ or „pokiaľ“), „o, týkajúce sa“ (not „ohľadom“),
+  „s cieľom, na účely“ (not „za účelom“), „uhradiť“ (not „zaplatiť“ in a reminder). Comma before „že,
+  ktorý, aby, ak“.
+- No word from the left column of [slova.md](slova.md), her table of wrong and right words (the right,
+  orange column of the textbook is the one to use): „dostať“ not „obdržať“, „začať“ not „zahájiť“,
+  „rokovanie“ not „jednanie“, „vrátane“ not „včetne“, „pre, z dôvodu“ not „kvôli“, „zo dňa“ not „z dňa“.
+  Read the table before you finish the text and check every word of it, in any form („obdržali sme“).
 
 ## Openings by kind of text
 
