@@ -652,14 +652,14 @@ def poslat(teraz=None):
     # the last day (so far), else it would be missing from the file that goes out
     if zapis_den(mesiac) is None:
         notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal: {mesiac:%-d. %-m.} sa nedal zapísať (otvorený súbor alebo "
-               f"nedostupný stroj). Skúsim znova; alebo pošli {f} sám na {EKONOMIKA}.")
+               f"nedostupný stroj). Pošli {f} sám na {EKONOMIKA}.")
         sys.exit(1)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     except (OSError, subprocess.TimeoutExpired) as e:
         r = subprocess.CompletedProcess(cmd, 1, "", str(e))
     if r.returncode:
-        notify(f"Výkaz {MESIACE[mesiac.month]} sa nepodarilo poslať: {(r.stderr or r.stdout).strip()[:160]}")
+        notify(f"Výkaz {MESIACE[mesiac.month]} sa nepodarilo poslať: {(r.stderr or r.stdout).strip()[:160] or f'kód {r.returncode}'}. Pošli {f} sám na {EKONOMIKA}.")
         sys.exit(1)
     odoslane[kluc] = teraz.isoformat(timespec="minutes")
     ODOSLANE.parent.mkdir(parents=True, exist_ok=True)
