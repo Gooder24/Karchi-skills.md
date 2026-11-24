@@ -68,6 +68,14 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 4. **Od teba:** len keď niečo musí spraviť alebo rozhodnúť Karchi: očíslované kroky alebo jedna jasná otázka (vkus v skille `taste`).
 5. Riadok `Overenie:` ako posledný.
 
+Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho má hlavička každý stĺpec inou farbou, aby ich
+rozoznal: `$\textcolor{#3b82f6}{\text{Čo}}$` a ďalšie stĺpce v poradí `#8b5cf6`, `#0d9488`, `#ec4899`, `#64748b` (pri viac stĺpcoch znova od začiatku).
+Bunka „Kto“ má farbu podľa toho, kto je na ťahu: Karchi `#ef4444`, agent čakajúci na jeho áno `#d97706`, agent
+sám hneď `#16a34a`. Farbu v T3 prenesie len vzorec (`<span style>`, `<font>` a `<mark>` zahodí) a kreslí ho len so
+zapnutým Settings → Appearance → Render math. Vždy `\text`, nikdy `\textbf`: tučné písmená s diakritikou T3 obtiahne
+farbou bežného textu. Dlhý text v bunke ostáva bez vzorca, lebo vzorec nezalamuje riadky. Mimo tabuliek farebne zvýrazňujú
+GitHub alerty `> [!TIP]`, `> [!WARNING]`, `> [!CAUTION]`.
+
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 
 # Jazyky (Karchi, 2026-11-21 a 2026-11-23)
