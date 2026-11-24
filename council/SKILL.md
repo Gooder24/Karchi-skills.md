@@ -19,7 +19,7 @@ four, one per provider:
 
 | Member | `providerInstanceId` | `model` | `options` |
 | --- | --- | --- | --- |
-| Claude Fable 5.2 | `claudeAgent` | `claude-fable-5-2` | `{effort: "high"}` |
+| Claude Opus 5.5 | `claudeAgent` | `claude-opus-5-5` | `{effort: "high"}` |
 | GPT Sol 6.2 | `codex` (or `codex_infowork`) | `gpt-6.2-sol` | `{reasoningEffort: "high"}` |
 | DeepSeek V4.1 Flash | `opencode` | `opencode/deepseek-v4.1-flash-free` | `{variant: "high"}` |
 | Gemini 4 Neon | `antigravity_m_j` | `gemini-4-neon` | `{thought_level: "medium"}` |
@@ -59,7 +59,7 @@ differ per machine, `orchestrator_capabilities` names it.
    Sol the same way with `CODEX_HOME=~/.codex-t3code/infowork codex exec -m gpt-6.2-sol -c
    model_reasoning_effort=high` (T3's logins; `~/.codex` is not logged in; when Infowork's week is used
    up, `limit-ping status` on asus shows it, use `~/.codex-t3code/moj`),
-   Fable with `claude -p --model claude-fable-5-2 --effort high`.
+   Opus with `claude -p --model claude-opus-5-5 --effort high`.
 
 If a member cannot run anywhere, report which and why instead of substituting
 another model. The OpenCode free limit covers every home machine (one public
@@ -92,7 +92,7 @@ Rounds: 2
 
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
-| Claude Fable 5.2 | 7/10 | 9/10 |
+| Claude Opus 5.5 | 7/10 | 9/10 |
 | GPT Sol 6.2 | 8/10 | 10/10 |
 | DeepSeek V4.1 Flash | 7/10 | 9/10 |
 | Gemini 4 Neon | 8/10 | 9/10 |

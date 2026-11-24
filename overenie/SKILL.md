@@ -81,7 +81,7 @@ every tool, and on 10. 11. a Codex builder's `delegate_task` to Claude Opus spen
 Two verifiers check every change side by side (Karchi, 2026-11-24), and `verify.sh` joins their verdicts into one
 file, a section per verifier:
 
-- Claude Fable 5.2 at high effort, every time.
+- Claude Opus 5.5 at high effort, every time.
 - The first of this chain that writes a verdict, so a used-up limit moves to the next:
   1. OpenCode free, DeepSeek V4.1 Flash at high, without an account (one free limit for the home public IP).
   2. GPT Sol 6.2 at high on his own ChatGPT (`~/.codex-t3code/moj`).

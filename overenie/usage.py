@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turns one verifier run's machine output into output.txt next to it and one usage line.
 
-Usage: python3 -I usage.py <overenie/fable/output.json | overenie/sol-moj/output.jsonl> [start epoch seconds]
+Usage: python3 -I usage.py <overenie/opus/output.json | overenie/sol-moj/output.jsonl> [start epoch seconds]
 Reads `claude -p --output-format json` or `codex exec --json`. Writes the verifier's reply next to it as
 output.txt (what the skill reads) and appends one line to ~/.claude/overenie-usage.jsonl: verifier, project,
 time, duration, turns, tokens by kind and, for Claude, the API-priced cost the CLI reports. That cost is the API

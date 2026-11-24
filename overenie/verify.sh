@@ -2,7 +2,7 @@
 # Usage: verify.sh <brief.md> [verdict, default overenie/verdikt.md]    (run it in the project root)
 # The independent verifiers of skill overenie (Karchi, 2026-11-24): two run side by side and each writes its own verdict,
 # which this script joins into the one verdict file:
-#   fable      Claude Fable 5.2 at high effort
+#   opus       Claude Opus 5.5 at high effort
 #   the chain  the first of these that writes a verdict, so a used-up limit moves to the next:
 #     opencode      DeepSeek V4.1 Flash, OpenCode's free tier without an account (one limit for the home public IP)
 #     sol-moj       GPT Sol 6.2 on Karchi's own ChatGPT (T3's Codex login ~/.codex-t3code/moj)
@@ -30,13 +30,13 @@ log() {  # <verifier> <dir> <start epoch>: one usage line for the CLIs that repo
       duration_s: ((now - $s) | round)}' >> ~/.claude/overenie-usage.jsonl
 }
 
-run_fable() {  # Claude gets six tools: the default set of about a hundred costs ~27 000 tokens a step (9. 11.)
-  local d=overenie/fable t=$(date +%s)
+run_opus() {  # Claude gets six tools: the default set of about a hundred costs ~27 000 tokens a step (9. 11.)
+  local d=overenie/opus t=$(date +%s)
   command -v claude >/dev/null || return 1
-  timeout 3600 claude -p "$(prompt "$d")" --model claude-fable-5-2 --effort high --no-session-persistence \
+  timeout 3600 claude -p "$(prompt "$d")" --model claude-opus-5-5 --effort high --no-session-persistence \
     --tools Bash,Read,Write,Edit,Glob,Grep --permission-mode bypassPermissions --output-format json \
     < /dev/null > "$d/output.json" 2> "$d/stderr.txt"
-  OVERENIE_ACCOUNT=fable python3 -I "$D/usage.py" "$d/output.json" "$t"
+  OVERENIE_ACCOUNT=opus python3 -I "$D/usage.py" "$d/output.json" "$t"
 }
 
 run_opencode() {
@@ -80,19 +80,19 @@ run_chain() {  # Every CLI exits 0 even when it hits a limit, so the verdict fil
   done
 }
 
-for d in fable opencode sol-moj sol-infowork neon; do rm -rf "overenie/$d"; mkdir -p "overenie/$d"; done
+for d in opus opencode sol-moj sol-infowork neon; do rm -rf "overenie/$d"; mkdir -p "overenie/$d"; done
 rm -f overenie/chain-kto
-run_fable & run_chain & wait
+run_opus & run_chain & wait
 
 kto=$(cat overenie/chain-kto 2>/dev/null)
 {
-  for v in fable "${kto:-chain}"; do
+  for v in opus "${kto:-chain}"; do
     if [ -s "overenie/$v/verdikt.md" ]; then echo "## Overovateľ: $v"; echo; cat "overenie/$v/verdikt.md"
     else echo "## Overovateľ: $v – verdikt nevznikol (limit alebo chyba), pozri overenie/*/output.txt a stderr.txt"; fi
     echo
   done
 } > "$verdict.tmp"
-if [ -s overenie/fable/verdikt.md ] || [ -n "$kto" ]; then
+if [ -s overenie/opus/verdikt.md ] || [ -n "$kto" ]; then
   mv "$verdict.tmp" "$verdict"; echo "verify.sh: verdikt v $verdict" >&2; exit 0
 fi
 rm -f "$verdict.tmp"; echo "verify.sh: verdikt nevznikol, pozri overenie/*/output.txt a stderr.txt" >&2; exit 1
