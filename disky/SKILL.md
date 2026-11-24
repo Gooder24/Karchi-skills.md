@@ -11,12 +11,16 @@ known disk (serial, filesystem UUID, what it is, where it is, date of the last l
 archívy). The full file list is `zoznam-<date>.jsonl.gz` next to it (`path`, `bytes`); search it with
 `zcat … | rg` when he asks for a specific file or folder.
 
-## What goes where (Karchi, 2026-11-21)
+## What goes where (Karchi, 2026-11-21 and 2026-11-24)
 
 - **Ľuptákovci** is the family's disk: family photos and videos, old family computers, and everything from the
-  old WD rescue. None of Karol's (Karchi's) own files go there, not even as a second copy.
-- Karol's own files (his photos, laptop backups and archives, passwords) go on the Hitachi „Karol-HP“, with
-  their second copy on the Seagate 500 GB.
+  old WD rescue. None of Karol's (Karchi's) own files go there, not even as a second copy. Something inside his
+  folders can still be the family's (K&S, Kapucíni a Stanley songs): ask before treating it as his.
+- Karol's own files (his photos, laptop backups and archives, passwords) live only on the Hitachi „Karčiho
+  Záloha“ (until 2026-11-24 „Karol-HP“). He does not want a second copy; the Seagate 500 GB is not for that.
+- No copy of disk data stays on his computers (asus, x270, dell, e540). A temporary copy made for disk work is
+  deleted once every file is byte-identical (sha256) on the disk where it belongs; the list of deleted files goes
+  to `~/zaloha/disky/<place>/zmazane-<date>.jsonl.gz`.
 
 ## Answering
 
