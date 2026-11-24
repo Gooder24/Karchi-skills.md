@@ -38,7 +38,7 @@ Dve dvojice, ktoré sú v učebnici na oboch stranách rovnaké („štandardný
 | leasing | lízing |
 | management | manažment |
 | manager | manažér |
-| meritko | mierka, miera, rozmer, meradlo, veľkosť |
+| merítko | mierka, miera, rozmer, meradlo, veľkosť |
 | množstevný | množstvový |
 | môžme, môžte | môžeme, môžete |
 | na odporučenie (koho) | na odporúčanie (koho) |
