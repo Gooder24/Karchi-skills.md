@@ -78,11 +78,17 @@ he asked for is finished, not after each partial step: several commits for one a
 After building, start a verifier that has not seen your work, always through `verify.sh` (Weft: `tools/verify-on-asus`),
 never as a subagent, a T3 `delegate_task` or a new thread: those inherit your assumptions or load a whole agent with
 every tool, and on 10. 11. a Codex builder's `delegate_task` to Claude Opus spent his Claude limit on a routine check.
-`verify.sh` starts Codex first (it spends the ChatGPT limit, not Karchi's Claude limit, and in the 9. 11. pilot it found
-as much as Opus in half the time) and Claude Opus when Codex leaves no verdict. This holds when Codex built the change
-too: a fresh Codex has not seen your work. Only for `Hĺbka: dôkladná` on a change Codex built, set
-`OVERENIE_CLAUDE_FIRST=1`, so a different model checks it. On 5. 11. two verdicts were written by the builder because
-the verifier hit the limit; that must not happen again.
+There is one verifier (Karchi, 2026-11-24): `verify.sh` tries this chain and stops at the first that writes the
+verdict, so a used-up limit moves to the next. None of them spends his Claude limit.
+
+1. OpenCode free, DeepSeek V4.1 Flash at high, without an account (one free limit for the home public IP).
+2. GPT Sol 6.2 at high on his own ChatGPT (`~/.codex-t3code/moj`).
+3. GPT Sol 6.2 at high on the Infowork ChatGPT (`~/.codex-t3code/infowork`).
+4. Gemini 4 Neon at high through Antigravity (agy-guard).
+
+Only when he asks for more verifiers, run `verify.sh` again with another verdict path and `OVERENIE_KTO` naming the
+others (`OVERENIE_KTO="sol-moj neon"`); the reply then names every verdict. `OVERENIE_KTO` also picks a model other
+than the builder's for `Hĺbka: dôkladná` (a Sol builder: `OVERENIE_KTO="opencode neon"`).
 
 ```sh
 cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
@@ -92,10 +98,8 @@ The turn waits for the verdict, so the thread stays in Working until the work is
 foreground with a timeout of an hour. Claude: run it in the background and call `t3_background_wait` with its task
 ID, then read the verdict in the same thread before you reply. Never end the turn with `Overenie: prebieha` while the
 verifier runs. The verifier needs network and SSH to reach
-the real target, hence the full-access sandbox; `verifier-agents.md` forbids it to edit anything but the verdict
-and fixes the verdict's shape and how deep it goes. Claude gets six tools: the default set of about a hundred costs
-about 27 000 tokens on every one of its steps (measured 9. 11.). Every run logs its usage to
-`~/.claude/overenie-usage.jsonl`.
+the real target, hence full access in every CLI; `verifier-agents.md` forbids it to edit anything but the verdict
+and fixes the verdict's shape and how deep it goes. Every run logs a line to `~/.claude/overenie-usage.jsonl`.
 If no verdict appears, every check that only the verifier could judge is `nedá sa overiť` and the reply
 ends with `Overenie: neoverené – …`. A verdict written by the builder never says `passed` for those checks.
 

@@ -1,42 +1,66 @@
 #!/usr/bin/env bash
 # Usage: verify.sh <brief.md> [verdict, default overenie/verdikt.md]    (run it in the project root)
-# The independent verifier of skill overenie. Codex goes first: it spends the ChatGPT limit, not Karchi's Claude
-# limit, and in the 9. 11. pilot it found as much as Opus in half the time. When Codex leaves no verdict (its limit,
-# a crash, not installed), Claude Opus runs. OVERENIE_CLAUDE_FIRST=1 swaps the order: use it only for
-# `Hĺbka: dôkladná` on a change Codex built, so a different model checks it. How deep it goes is in the brief (verifier-agents.md).
-# Every run logs its usage to ~/.claude/overenie-usage.jsonl. Exits 1 when no verdict was written.
+# The independent verifier of skill overenie: one verifier, the first in the chain that writes the verdict
+# (Karchi, 2026-11-24). None of them spends Karchi's Claude limit:
+#   opencode   DeepSeek V4.1 Flash, OpenCode's free tier without an account (one limit for the home public IP)
+#   sol-moj    GPT Sol 6.2 on Karchi's own ChatGPT (T3's Codex login ~/.codex-t3code/moj)
+#   sol-infowork  GPT Sol 6.2 on the Infowork ChatGPT (~/.codex-t3code/infowork)
+#   neon       Gemini 4 Neon at high effort through Antigravity (agy-guard)
+# OVERENIE_KTO="sol-moj neon" runs only those, in that order: for a second verifier when Karchi asks for one
+# (run verify.sh again with another verdict path), or for a different model than the one that built the change.
+# Every run logs one line to ~/.claude/overenie-usage.jsonl. Exits 1 when no verdict was written.
 set -u
 brief=$1 verdict=${2:-overenie/verdikt.md}
 [ -s "$brief" ] || { echo "verify.sh: brief $brief neexistuje" >&2; exit 2; }
 D=$(dirname "$(readlink -f "$0")"); V=$D/verifier-agents.md
 export OVERENIE_VERIFIER=1   # tells the Stop hook this is the verifier, not a builder
+export PATH=$PATH:$HOME/.local/bin:$HOME/.bun/bin:$HOME/.opencode/bin
 mkdir -p overenie "$(dirname "$verdict")"; rm -f "$verdict"
+prompt="$(cat "$V" "$brief")"
+out=overenie/verifier-output.txt err=overenie/verifier-stderr.txt
 
-# Codex logins: T3 keeps its accounts in ~/.codex-t3code/<account> (the ones Karchi logs in and T3 refreshes);
-# ~/.codex is only a fallback, its login went stale on 10. 11. Each logged-in account is tried until one writes the
-# verdict, so a used-up limit on one account moves to the next.
-codex_run() {
-  local c h t; c=$(command -v codex || echo ~/.local/bin/codex); [ -x "$c" ] || return 0
-  for h in ${CODEX_HOME:+"$CODEX_HOME"} ~/.codex-t3code/*/ ~/.codex; do
-    [ -f "$h/auth.json" ] && CODEX_HOME=$h "$c" login status >/dev/null 2>&1 || continue
-    t=$(date +%s)
-    CODEX_HOME=$h timeout 3600 "$c" exec --skip-git-repo-check -s danger-full-access -C "$PWD" \
-      -c model_reasoning_effort=high --json "$(cat "$V" "$brief")" < /dev/null \
-      > overenie/verifier-codex.jsonl 2> overenie/verifier-stderr.txt
-    OVERENIE_ACCOUNT=$(basename "$h") python3 -I "$D/usage.py" overenie/verifier-codex.jsonl "$t"
-    [ -s "$verdict" ] && return 0
-  done
+log() {  # <verifier> <start epoch>: one usage line; tokens only where the CLI reports them (Codex, via usage.py)
+  jq -cn --arg v "$1" --arg p "$PWD" --argjson s "$2" --argjson ok "$([ -s "$verdict" ] && echo true || echo false)" \
+    '{time: (now | strftime("%Y-%m-%dT%H:%M:%S%z")), project: $p, verifier: $v, verdict: $ok,
+      duration_s: ((now - $s) | round)}' >> ~/.claude/overenie-usage.jsonl
 }
-claude_run() {
+
+run_opencode() {
+  command -v opencode >/dev/null || return 1
   local t=$(date +%s)
-  timeout 3600 claude -p "$(cat "$brief")" --model claude-opus-5-5 --effort high --no-session-persistence \
-    --append-system-prompt "$(cat "$V")" --tools Bash,Read,Write,Edit,Glob,Grep \
-    --permission-mode bypassPermissions --output-format json < /dev/null > overenie/verifier-output.json 2>&1
-  python3 -I "$D/usage.py" overenie/verifier-output.json "$t"
+  timeout 3600 opencode run --archived --auto -m "opencode/deepseek-v4.1-flash-free#high" "$prompt" \
+    < /dev/null > "$out" 2> "$err"
+  log opencode-free "$t"
 }
 
-# Both CLIs exit 0 even when they hit a limit, so the verdict file is the judge.
-if [ -n "${OVERENIE_CLAUDE_FIRST:-}" ]; then claude_run; [ -s "$verdict" ] || codex_run
-else codex_run; [ -s "$verdict" ] || claude_run; fi
-[ -s "$verdict" ] && echo "verify.sh: verdikt v $verdict" >&2 && exit 0
-echo "verify.sh: verdikt nevznikol, pozri overenie/verifier-output.txt" >&2; exit 1
+run_sol() {  # <account>: T3's Codex logins live in ~/.codex-t3code/<account>; ~/.codex is not logged in
+  local c h=$HOME/.codex-t3code/$1 t
+  c=$(command -v codex) && [ -f "$h/auth.json" ] && CODEX_HOME=$h "$c" login status >/dev/null 2>&1 || return 1
+  t=$(date +%s)
+  CODEX_HOME=$h timeout 3600 "$c" exec --skip-git-repo-check -s danger-full-access -C "$PWD" -m gpt-6.2-sol \
+    -c model_reasoning_effort=high --json "$prompt" < /dev/null > overenie/verifier-codex.jsonl 2> "$err"
+  OVERENIE_ACCOUNT=$1 python3 -I "$D/usage.py" overenie/verifier-codex.jsonl "$t"
+}
+
+run_neon() {
+  local a=$HOME/.work/karchi-skills/antigravity/bin/agy t=$(date +%s)
+  [ -x "$a" ] || return 1
+  # In agy, -p takes the next word as the prompt: keep it last.
+  timeout 3600 "$a" --dangerously-skip-permissions --model gemini-4-neon --effort high -p "$prompt" \
+    < /dev/null > "$out" 2> "$err"
+  log neon "$t"
+}
+
+# Every CLI exits 0 even when it hits a limit, so the verdict file is the judge.
+for kto in ${OVERENIE_KTO:-opencode sol-moj sol-infowork neon}; do
+  case $kto in
+    opencode) run_opencode ;;
+    sol-moj) run_sol moj ;;
+    sol-infowork) run_sol infowork ;;
+    neon) run_neon ;;
+    *) echo "verify.sh: neznámy overovateľ $kto (opencode, sol-moj, sol-infowork, neon)" >&2; continue ;;
+  esac
+  [ -s "$verdict" ] && { echo "verify.sh: verdikt od $kto v $verdict" >&2; exit 0; }
+  echo "verify.sh: $kto nenechal verdikt, skúšam ďalšieho" >&2
+done
+echo "verify.sh: verdikt nevznikol, pozri $out a $err" >&2; exit 1
