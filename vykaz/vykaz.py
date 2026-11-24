@@ -54,11 +54,12 @@ MIN_SEDENIE = 0.5  # minutes: shorter sittings (their time without his own threa
 FIREMNE = ("SPOTREX", "eSYST", "Hurbanova", "eSYSTAK", "enex")  # not partsheet: his choir songbook (23. 11.)
 KROK = 30        # seconds: start, end and duration are rounded to the nearest half minute
 PRAVIDLA = 6     # raise when the counting changes: days written by older rules are counted again (auto)
-ZOBUDENY = range(7, 23)
+ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 EKONOMIKA = "ekonomika@esyst.sk"  # Andrea Hanková, ekonomika eSYST
 PREDMET = "Karol Ľupták"  # the whole mail: this subject and the file, no text (Karchi 24. 11.)
-POSLAT_Z = None  # Weft account of administrativa@esyst.sk (`weft mail --from`); None until he sets it up in Weft
-ODOSLANE = DATA / "odoslane.json"  # the timer writes only by day: no model runs while he sleeps
+POSLAT_Z = None  # Weft account of his eSYST mailbox (`weft mail --from`); None until he sets it up in Weft
+ODOSLANE = DATA / "odoslane.json"
+WEFT = next((p for p in [Path.home() / ".local/bin/weft"] if p.exists()), "weft")  # systemd PATH lacks ~/.local/bin
 
 
 def subor(d):
@@ -643,18 +644,25 @@ def poslat(teraz=None):
             f"Posielanie cez Weft ešte nie je zapnuté: {f.name} pošli dnes sám na {EKONOMIKA}"
         notify(f"Výkaz {MESIACE[mesiac.month]}: spolu {spolu}. {kam}. Ak niečo nesedí, oprav súbor pred tým.")
         return
-    cmd = ["weft", "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]
+    cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]
     if not POSLAT_Z:
         notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (Weft ešte nie je nastavený): pošli {f} na {EKONOMIKA}.")
         print("neposlané, chýba POSLAT_Z:", " ".join(cmd))
         return
-    if d == mesiac:
-        zapis_den(d)  # the last day so far, else it would be missing from the file that goes out
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    # the last day (so far), else it would be missing from the file that goes out
+    if zapis_den(mesiac) is None:
+        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal: {mesiac:%-d. %-m.} sa nedal zapísať (otvorený súbor alebo "
+               f"nedostupný stroj). Skúsim znova; alebo pošli {f} sám na {EKONOMIKA}.")
+        sys.exit(1)
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        r = subprocess.CompletedProcess(cmd, 1, "", str(e))
     if r.returncode:
         notify(f"Výkaz {MESIACE[mesiac.month]} sa nepodarilo poslať: {(r.stderr or r.stdout).strip()[:160]}")
         sys.exit(1)
     odoslane[kluc] = teraz.isoformat(timespec="minutes")
+    ODOSLANE.parent.mkdir(parents=True, exist_ok=True)
     ODOSLANE.write_text(json.dumps(odoslane, indent=1) + "\n")
     notify(f"Výkaz {MESIACE[mesiac.month]} odišiel na {EKONOMIKA}.")
 
