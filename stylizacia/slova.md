@@ -15,7 +15,7 @@ Dve dvojice, ktoré sú v učebnici na oboch stranách rovnaké („štandardný
 | cez to všetko | napriek tomu, jednako |
 | čiastka | *vhodnejšie:* suma |
 | čo nevidieť | čoskoro, čochvíľa |
-| dielči | čiastkový |
+| dielčí | čiastkový |
 | dĺžnik | dlžník |
 | dĺžna suma | dlžná suma |
 | dojednať stretnutie | dohodnúť stretnutie |
@@ -86,7 +86,7 @@ Dve dvojice, ktoré sú v učebnici na oboch stranách rovnaké („štandardný
 | štandart | štandard |
 | tématika | tematika (ale slovo téma) |
 | tématický | tematický |
-| tržný (vo význame trhový) | trhový |
+| tržný (vo význame: trhový) | trhový |
 | udiať sa | *vhodnejšie:* uskutočniť sa, stať sa, odohrať sa |
 | upresniť | *vhodnejšie:* spresniť |
 | vada (súvisiaca s chybou) | chyba, kaz, porucha |
