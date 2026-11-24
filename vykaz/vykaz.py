@@ -142,8 +142,7 @@ def okna(d):
 
 
 def prax(d):
-    """The Tuesday practice interval from dochadzka, which is not paid work: from his arrival until 14:00, also when
-    he came earlier (6:40-13:40) or left earlier; paid time on a practice day starts at 14:00 (Karchi, 24. 11.)."""
+    """The Tuesday practice interval from dochadzka, which is not paid work."""
     f = DOCH / f"{d}.json"
     if not f.exists():
         return None
@@ -151,7 +150,7 @@ def prax(d):
     if "od" not in z:
         return None
     c = lambda s: datetime.combine(d, datetime.strptime(s, "%H:%M").time(), TZ)
-    return c(z["od"]), max(c(z["do"]), c("14:00"))
+    return c(z["od"]), c(z["do"])
 
 
 CAS = re.compile(r"\s*(\d+)\.(\d+)\.(\d{4})\s+(\d+):(\d+)(?::(\d+))?\s*-\s*(\d+):(\d+)(?::(\d+))?")

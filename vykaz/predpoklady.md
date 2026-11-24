@@ -18,8 +18,7 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
 
 ## Čas
 
-- Utorková prax (dochadzka, 7 h) do výkazu nepatrí: je to výkaz nadčasov, preto sa jej čas vynecháva, od príchodu
-  až do 14:00, aj keď prišiel skôr alebo odišiel skôr (Karchi 24. 11.: v deň praxe sa ráta až po 14:00).
+- Utorková prax (dochadzka, 7 h) do výkazu nepatrí: je to výkaz nadčasov, preto sa jej čas vynecháva.
 - Čas počas vyučovania sa ráta len vtedy, keď v ňom robil prácu pre eSYST; škola sama nie (pozri vyššie).
 - Ráta sa čas, keď je vo vlákne: číta odpoveď agenta, rozmýšľa a píše (Karchi 20. 11.: to je základ výkazu; „skús
   znova“ sa predtým rátalo ako 15 až 20 min, hoci na x270 trvalo 21 s). Pred jeho správou: od chvíle, keď bola
