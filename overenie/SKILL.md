@@ -78,17 +78,19 @@ he asked for is finished, not after each partial step: several commits for one a
 After building, start a verifier that has not seen your work, always through `verify.sh` (Weft: `tools/verify-on-asus`),
 never as a subagent, a T3 `delegate_task` or a new thread: those inherit your assumptions or load a whole agent with
 every tool, and on 10. 11. a Codex builder's `delegate_task` to Claude Opus spent his Claude limit on a routine check.
-There is one verifier (Karchi, 2026-11-24): `verify.sh` tries this chain and stops at the first that writes the
-verdict, so a used-up limit moves to the next. None of them spends his Claude limit.
+Two verifiers check every change side by side (Karchi, 2026-11-24), and `verify.sh` joins their verdicts into one
+file, a section per verifier:
 
-1. OpenCode free, DeepSeek V4.1 Flash at high, without an account (one free limit for the home public IP).
-2. GPT Sol 6.2 at high on his own ChatGPT (`~/.codex-t3code/moj`).
-3. GPT Sol 6.2 at high on the Infowork ChatGPT (`~/.codex-t3code/infowork`).
-4. Gemini 4 Neon at high through Antigravity (agy-guard).
+- Claude Fable 5.2 at high effort, every time.
+- The first of this chain that writes a verdict, so a used-up limit moves to the next:
+  1. OpenCode free, DeepSeek V4.1 Flash at high, without an account (one free limit for the home public IP).
+  2. GPT Sol 6.2 at high on his own ChatGPT (`~/.codex-t3code/moj`).
+  3. GPT Sol 6.2 at high on the Infowork ChatGPT (`~/.codex-t3code/infowork`).
+  4. Gemini 4 Neon at high through Antigravity (agy-guard).
 
-Only when he asks for more verifiers, run `verify.sh` again with another verdict path and `OVERENIE_KTO` naming the
-others (`OVERENIE_KTO="sol-moj neon"`); the reply then names every verdict. `OVERENIE_KTO` also picks a model other
-than the builder's for `Hĺbka: dôkladná` (a Sol builder: `OVERENIE_KTO="opencode neon"`).
+Only when he asks for other verifiers, set `OVERENIE_KTO` to the chain he wants (`OVERENIE_KTO="sol-moj neon"`).
+Each verifier keeps its files in `overenie/<name>/`. When one leaves no verdict (a limit), its section says so: name it
+in the reply. Judge every finding from both; when they disagree, check it yourself in the real target.
 
 ```sh
 cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
@@ -106,7 +108,7 @@ ends with `Overenie: neoverené – …`. A verdict written by the builder never
 On dell and e540 (3.7 GB) do not run the verifier locally: an Opus verifier with its browser took an hour
 there and froze dell for every other thread (7. 11.). Run it on asus (15 GB). Weft has a runner,
 `tools/verify-on-asus <brief> [verdict]`: it copies the working tree, uncommitted changes included, runs the
-command above on asus and brings back only the verdict and `verifier-output.txt`. Any project without one: copy
+command above on asus and brings back only the joined verdict and each verifier's `output.txt`. Any project without one: copy
 the tree to asus and run the same command there over `ssh asus`. The verifier stays just as strict; only where it
 runs changes.
 

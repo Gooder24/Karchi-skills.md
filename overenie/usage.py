@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Turns one verifier run's machine output into verifier-output.txt and one usage line.
+"""Turns one verifier run's machine output into output.txt next to it and one usage line.
 
-Usage: python3 -I usage.py <overenie/verifier-output.json | overenie/verifier-codex.jsonl> [start epoch seconds]
+Usage: python3 -I usage.py <overenie/fable/output.json | overenie/sol-moj/output.jsonl> [start epoch seconds]
 Reads `claude -p --output-format json` or `codex exec --json`. Writes the verifier's reply next to it as
-verifier-output.txt (what the skill reads) and appends one line to ~/.claude/overenie-usage.jsonl: verifier, project,
+output.txt (what the skill reads) and appends one line to ~/.claude/overenie-usage.jsonl: verifier, project,
 time, duration, turns, tokens by kind and, for Claude, the API-priced cost the CLI reports. That cost is the API
 price, not how much of Karchi's subscription limit the run used; neither CLI reports that.
 """
@@ -11,7 +11,7 @@ import json, os, sys, time
 src = sys.argv[1]
 start = float(sys.argv[2]) if len(sys.argv) > 2 else None
 raw = open(src, errors="replace").read()
-out = os.path.join(os.path.dirname(src), "verifier-output.txt")
+out = os.path.splitext(src)[0] + ".txt"
 line = {"time": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "project": os.getcwd()}
 
 events = []
