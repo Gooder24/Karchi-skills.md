@@ -73,8 +73,8 @@ rozoznal: `$\textcolor{#3b82f6}{\text{Čo}}$` a ďalšie stĺpce v poradí `#8b5
 Bunka „Kto“ má farbu podľa toho, kto je na ťahu: Karchi `#ef4444`, agent čakajúci na jeho áno `#d97706`, agent
 sám hneď `#16a34a`. Farbu v T3 prenesie len vzorec (`<span style>`, `<font>` a `<mark>` zahodí) a kreslí ho len so
 zapnutým Settings → Appearance → Render math. Vždy `\text`, nikdy `\textbf`: tučné písmená s diakritikou T3 obtiahne
-farbou bežného textu. Dlhý text v bunke ostáva bez vzorca, lebo vzorec nezalamuje riadky. Mimo tabuliek farebne zvýrazňujú
-GitHub alerty `> [!TIP]`, `> [!WARNING]`, `> [!CAUTION]`.
+farbou bežného textu. Dlhý text v bunke ostáva bez vzorca, lebo vzorec nezalamuje riadky. Mimo tabuliek
+žiadne farby ani rámčeky (`> [!TIP]`, `> [!WARNING]` a podobné).
 
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 
