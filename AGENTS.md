@@ -69,7 +69,7 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 5. Riadok `Overenie:` ako posledný.
 
 Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho začína hlavička každého stĺpca iným farebným
-krúžkom, aby stĺpce rozoznal: `| 🔵 Čo | 🟣 Prečo nie | 🟢 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce 🟤, ⚪. Bunka
+krúžkom, aby stĺpce rozoznal: `| 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce ⚪, ⚫. Bunka
 „Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď. Nič iné
 nefarbi: žiadne vzorce (`$\textcolor…$` sa bez zapnutého Render math ukáže ako surový text), HTML ani rámčeky
 (`> [!TIP]`, `> [!WARNING]` a podobné).
