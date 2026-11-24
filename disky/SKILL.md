@@ -1,6 +1,6 @@
 ---
 name: disky
-description: What is on each of Karchi's disks (Ľuptákovci, Hitachi „Karol-HP“, Seagate 500 GB, the old WD, asus ~/zaloha) and how to keep that current. Use when he asks which disk has what, where some photos or a backup are, what is on a disk, or when one of his external disks is connected to a machine (refresh its overview before or after any copy), and before planning any copy, wipe or rescue across his disks.
+description: What is on each of Karchi's disks (Ľuptákovci, Hitachi „Karčiho Záloha“, Seagate 500 GB, the old WD, asus ~/zaloha) and how to keep that current. Use when he asks which disk has what, where some photos or a backup are, what is on a disk, or when one of his external disks is connected to a machine (refresh its overview before or after any copy), and before planning any copy, wipe or rescue across his disks.
 ---
 
 # Disky
@@ -20,7 +20,8 @@ archívy). The full file list is `zoznam-<date>.jsonl.gz` next to it (`path`, `b
   Záloha“ (until 2026-11-24 „Karol-HP“). He does not want a second copy; the Seagate 500 GB is not for that.
 - No copy of disk data stays on his computers (asus, x270, dell, e540). A temporary copy made for disk work is
   deleted once every file is byte-identical (sha256) on the disk where it belongs; the list of deleted files goes
-  to `~/zaloha/disky/<place>/zmazane-<date>.jsonl.gz`.
+  to `~/zaloha/disky/<place>/zmazane-<date>.jsonl.gz`. A disk path that is missing from the disk's newest list is
+  no match, even if an older hash record has it (on 2026-11-24 two incomplete WD images were deleted that way).
 
 ## Answering
 
