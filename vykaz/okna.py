@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
-"""Logs when Outlook, Teams, a T3 Code thread or a work file is the focused window on x270 (Hyprland).
+"""Logs when Outlook, Teams, a Weft chat with a work contact, a T3 Code thread or a work file is the focused window
+on x270 (Hyprland).
 
 Stdlib only, event-driven: it sleeps on Hyprland's event socket and writes one line per focus change, so it
 costs nothing while he works. vykaz-okna.service runs it; vykaz turns the lines into work time.
-Lines: ~/.local/share/vykaz/okna/YYYY-MM-DD.tsv  "epoch<TAB>druh<TAB>titul", druh = outlook|teams|t3|subor|-
+Lines: ~/.local/share/vykaz/okna/YYYY-MM-DD.tsv  "epoch<TAB>druh<TAB>titul", druh = outlook|teams|weft|t3|subor|-
+weft is the Weft window while a chat with someone in LUDIA is open (Weft puts the chat's name in its title).
 t3 is every thread ("project / thread"): vykaz decides which are eSYST work and subtracts the others (his own
 projects) from a sitting. subor is a window whose title names a document under ~/Work/projekty.
 "-" = something else got focus, which ends the interval before it; its title is not stored.
 """
-import json, os, re, socket, subprocess, sys, time
+import json, os, re, socket, subprocess, sys, time, unicodedata
 from pathlib import Path
 
 OUT = Path.home() / ".local/share/vykaz/okna"
 PROJEKTY = Path.home() / "Work/projekty"
 DOKUMENTY = (".xlsx", ".xls", ".docx", ".doc", ".pptx", ".odt", ".ods", ".odp", ".pdf", ".csv", ".excalidraw")
 _subory = (0.0, frozenset())
+LUDIA = ("Martin Štepánek",)  # Weft chats that are eSYST work (Karchi 24. 11.)
+
+
+def bez_diakritiky(s):
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)).casefold()
 
 
 def subory():
@@ -37,6 +44,8 @@ def druh(cls, title):
         return "outlook"
     if re.search(r"Microsoft Teams|\| Teams\b", t) or "teams" in cls.lower():
         return "teams"
+    if cls == "Správy" or t.endswith("Weft"):
+        return "weft" if any(bez_diakritiky(m) in bez_diakritiky(t) for m in LUDIA) else "-"
     if any(re.search(r"(?<![\w.-])" + re.escape(m) + r"(?![\w.])", t) for m in subory()):
         return "subor"
     return "-"

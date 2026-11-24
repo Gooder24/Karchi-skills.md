@@ -13,7 +13,7 @@ október vyplnil ručne). Riadok je jedno sedenie: A popis, B `D.M.RRRR H:MM-H:M
 ## Ako sa plní
 
 - `okna.py` (`vykaz-okna.service` na x270): udalosti Hyprlandu, žiadne pollovanie. Do
-  `~/.local/share/vykaz/okna/<deň>.tsv` zapíše čas a titul, keď je aktívne okno Outlook, Teams, vlákno T3 (každé,
+  `~/.local/share/vykaz/okna/<deň>.tsv` zapíše čas a titul, keď je aktívne okno Outlook, Teams, Weft s konverzáciou s Martinom Štepánkom (`LUDIA`), vlákno T3 (každé,
   aj jeho vlastné, aby sa dalo odrátať) alebo dokument z `~/Work/projekty`, a „-“, keď prejde inam. Iné tituly
   neukladá.
 - `t3-esyst.py`: jeho vlastné správy (nie agentov) v eSYST vláknach T3 na stroji, iba čítanie projekčných
@@ -23,7 +23,7 @@ október vyplnil ručne). Riadok je jedno sedenie: A popis, B `D.M.RRRR H:MM-H:M
   za každý dokončený deň od 1. 11. 2026, ktorý ešte nie je v `~/.local/share/vykaz/zapisane.json`, zoberie
   správy zo všetkých strojov (x270 lokálne, asus, dell, e540 cez ssh) a okná. Ráta čas, keď bol vo vlákne
   (čítanie odpovede, rozmýšľanie, písanie pred správou, najviac 10 min; kým pracuje agent, nie), zaostrené okno
-  najviac 20 min, vlastné vlákno uprostred sedenia odráta (B od-do, C čistý čas), všetko na pol minúty, sedenie kratšie než 5 min vypadne (presne v `predpoklady.md`). Deň zapísaný starším pravidlom
+  najviac 20 min, vlastné vlákno uprostred sedenia odráta (B od-do, C čistý čas), všetko na pol minúty, sedenie kratšie než pol minúty vypadne (presne v `predpoklady.md`). Deň zapísaný starším pravidlom
   (`PRAVIDLA` vo `vykaz.py`) prepočíta sám a nahradí len svoje nezmenené riadky. Vynechá čas utorkovej praxe (`~/Work/dual/dochadzka/zaznamy/<deň>.json`) a čas, ktorý už v súbore
   je. Popis sedenia napíše Haiku (`claude -p`); sedenie, ktoré nie je práca pre eSYST, vynechá. Čo sa ráta,
   komu súbor ide a ďalšie predpoklady sú v `predpoklady.md` (oprav tam). Bez siete alebo asusu nezapíše nič a
@@ -40,6 +40,8 @@ vykaz zapis DÁTUM     deň znova: pridá len sedenia, ktoré v súbore ešte ni
 vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky nahradí novým výpočtom, jeho riadky ostanú
 vykaz vrat [MESIAC]   vráti súbor do stavu pred posledným zápisom
 vykaz stav            zapísané dni, zálohy, dnešné okná a stav jednotiek
+vykaz poslat          posledný deň mesiaca (timer): 20:00 upozornenie, 21:00 mail na ekonomika@esyst.sk
+                      (predmet „Karol Ľupták“, bez textu) cez Weft; kým POSLAT_Z nie je nastavené, nepošle nič
 ```
 
 Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore. Zmazaný riadok si výkaz pamätá

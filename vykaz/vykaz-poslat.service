@@ -1,0 +1,6 @@
+[Unit]
+Description=Výkaz eSYST: súbor mesiaca na ekonomika@esyst.sk (vykaz poslat)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/vykaz poslat

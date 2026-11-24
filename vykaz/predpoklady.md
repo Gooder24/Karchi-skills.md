@@ -9,7 +9,7 @@ doplní znova. Sekciu „Čo sa ráta“ dostáva model, ktorý píše popisy, d
 Firemná práca: SPOTREX (systém na odpočty meračov tepla a vody pre eSYST, stanice CRS 40, MQTT, VPS,
 účtovanie), firemný AI asistent a AI nástroje pre zamestnancov (eSYSŤák, Hermes pre firmu, firemný T3 Code,
 tímové účty Claude, lokálne AI a stroj naň, firemné počítače, firemné heslá, GitHub organizácia eSYST), zákazky
-eSYST (napr. Hurbanova), EUCF, firemné e-maily a Teams.
+eSYST (napr. Hurbanova), EUCF, firemné e-maily a Teams, konverzácia s Martinom Štepánkom vo Wefte.
 
 Nie je firemná práca: škola (vyučovanie, domáce úlohy, maturita, učenie), samotné písanie školskej práce (SOČ,
 obhajoba, kapitoly, prezentácia pre komisiu), vlastný notebook a jeho vzhľad, osobné aplikácie (Weft, Učenie,
@@ -33,10 +33,11 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   sedenia odráta, aj keby trval pár sekúnd. Do 15 min vlastného vlákna sedenie nepreruší: riadok ostane jeden, B je
   od-do celého sedenia a C čistý čas bez vlastného vlákna (C je preto niekedy menej ako B).
 - Presnosť (Karchi 23. 11.): začiatok, koniec aj trvanie sa zaokrúhľujú na pol minúty, nie na 5 min. Čas, ktorý nie
-  je na celú minútu, má sekundy: „13:40:30-14:02“, „0.21.30 h“. Sedenie kratšie než 5 min čistého času vypadne
+  je na celú minútu, má sekundy: „13:40:30-14:02“, „0.21.30 h“. Sedenie kratšie než pol minúty čistého času vypadne (Karchi 24. 11.: ráta sa aj krátka činnosť)
   (konštanty na začiatku `vykaz.py`). Keď sa pravidlá zmenia (`PRAVIDLA`), výkaz svoje nezmenené riadky starších dní
   pri ďalšom behu prepočíta sám; riadky, ktoré Karchi napísal alebo upravil, ostanú.
-- Okná Outlook a Teams sa rátajú vždy (firemné účty), T3 okno len s eSYST vláknom (vlákno v projekte Obhajoba práce
+- Okná Outlook a Teams sa rátajú vždy (firemné účty), okno Weft s otvorenou konverzáciou s Martinom Štepánkom
+  (`LUDIA` v `okna.py`; Weft má meno konverzácie v titule okna), T3 okno len s eSYST vláknom (vlákno v projekte Obhajoba práce
   posúdi Haiku ako správu), pracovný súbor, keď titul okna nesie meno dokumentu z `~/Work/projekty` (xlsx, docx,
   pptx, pdf, csv, excalidraw a pod.). Ostatné okná sa neukladajú a nerátajú.
 - Či sedí pri počítači, výkaz zatiaľ nevie (na x270 nie je hypridle): zaostrené okno sa preto ráta najviac 20 min.
@@ -48,4 +49,8 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   svojom riadku.
 - Súbor mesiaca dostáva Andrea Hanková (ekonomika@esyst.sk, ekonomika eSYST): september a október jej poslal z
   administrativa@esyst.sk ako prílohu mailu „Nadčasy Karol Ľupták“ (1. 10.) a „Karol Ľupták pracovné hodiny“
-  (31. 10.), posledný alebo prvý deň mesiaca. Výkaz nič neposiela, posiela ho Karchi sám.
+  (31. 10.), posledný alebo prvý deň mesiaca. Od 24. 11. ho má posielať výkaz sám (`vykaz poslat`,
+  `vykaz-poslat.timer`): posledný deň mesiaca o 20:00 upozornenie so súčtom, o 21:00 mail cez Weft z
+  administrativa@esyst.sk, predmet „Karol Ľupták“, žiadny text, príloha súbor mesiaca (Karchi 24. 11.). Súbor
+  ostáva, kde je. Kým Weft s tým účtom nie je nastavený (`POSLAT_Z` vo `vykaz.py`), nepošle nič a pripomenie mu
+  poslať ho ručne. Práca po 21:00 posledného dňa už v odoslanom súbore nie je.

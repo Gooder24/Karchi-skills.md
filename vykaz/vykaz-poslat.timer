@@ -1,0 +1,10 @@
+[Unit]
+Description=Výkaz eSYST: posledný deň mesiaca o 20:00 upozornenie, o 21:00 poslanie na ekonomiku
+
+[Timer]
+OnCalendar=*-*~01 20:00
+OnCalendar=*-*~01 21:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

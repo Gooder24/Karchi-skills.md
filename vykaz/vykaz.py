@@ -7,6 +7,9 @@
   vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky toho dňa nahradí novým výpočtom (jeho riadky ostanú)
   vykaz vrat [MESIAC]   vráti súbor mesiaca do stavu pred posledným zápisom (záloha)
   vykaz stav            zapísané dni, posledné zálohy, stav zberu okien
+  vykaz poslat          posledný deň mesiaca (vykaz-poslat.timer): o 20:00 upozorní, o 21:00 pošle súbor mesiaca
+                        na ekonomika@esyst.sk cez Weft (predmet „Karol Ľupták“, bez textu); kým POSLAT_Z nie je
+                        nastavené, nepošle nič a povie, že ho treba poslať ručne
 
 Riadok súboru je jedno sedenie: popis | "D.M.RRRR H:MM-H:MM" | "H.MM h" (hodiny.minúty); čas, ktorý nie je na
 celú minútu, má aj sekundy ("13:40:30", "1.05.30 h", vždy po pol minúte). Posledný riadok "H.MM h | spolu".
@@ -45,13 +48,17 @@ PO_SPRAVE = 1    # minutes after sending it
 OKNO_MAX = 20    # one focused Outlook/Teams/T3 interval counts at most this long (he may have walked away)
 MEDZERA = 2      # events closer than this are one sitting
 OSOBNE_MOST = 15  # minutes in his own (non-eSYST) threads that still keep one sitting together; they are subtracted
-MIN_SEDENIE = 5  # shorter sittings (their time without his own threads) are dropped
+MIN_SEDENIE = 0.5  # minutes: shorter sittings (their time without his own threads) are dropped (Karchi 24. 11.)
 # Projects that are eSYST work as a whole: their messages and threads count without asking the model, so the same
 # day always comes out the same. Other projects (Obhajoba práce, No project) are judged message by message.
 FIREMNE = ("SPOTREX", "eSYST", "Hurbanova", "eSYSTAK", "enex")  # not partsheet: his choir songbook (23. 11.)
 KROK = 30        # seconds: start, end and duration are rounded to the nearest half minute
-PRAVIDLA = 5     # raise when the counting changes: days written by older rules are counted again (auto)
-ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
+PRAVIDLA = 6     # raise when the counting changes: days written by older rules are counted again (auto)
+ZOBUDENY = range(7, 23)
+EKONOMIKA = "ekonomika@esyst.sk"  # Andrea Hanková, ekonomika eSYST
+PREDMET = "Karol Ľupták"  # the whole mail: this subject and the file, no text (Karchi 24. 11.)
+POSLAT_Z = None  # Weft account of administrativa@esyst.sk (`weft mail --from`); None until he sets it up in Weft
+ODOSLANE = DATA / "odoslane.json"  # the timer writes only by day: no model runs while he sleeps
 
 
 def subor(d):
@@ -117,7 +124,8 @@ def t3_spravy(d):
 
 
 def okna(d):
-    """Focus intervals of Outlook, Teams, T3 threads and work files that day: [(start, end, druh, titul)]."""
+    """Focus intervals of Outlook, Teams, Weft chats with work people, T3 threads and work files that day:
+    [(start, end, druh, titul)]."""
     def citaj(x):
         f = OKNA / f"{x}.tsv"
         rows = []
@@ -610,6 +618,47 @@ def stav_vypis():
                    check=False)
 
 
+def posledny_den(d):
+    return (d.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+
+def poslat(teraz=None):
+    """Last day of the month: before 21:00 a reminder, from 21:00 the month's file goes to ekonomika (once).
+    A laptop that slept through 21:00 sends it when it wakes, until noon of the 1st."""
+    teraz = teraz or datetime.now(TZ)
+    d = teraz.date()
+    mesiac = d if d == posledny_den(d) else (d - timedelta(days=1) if d.day == 1 and teraz.hour < 12 else None)
+    if mesiac is None:
+        return
+    f = subor(mesiac)
+    odoslane = json.loads(ODOSLANE.read_text()) if ODOSLANE.exists() else {}
+    kluc = f"{mesiac:%Y-%m}"
+    if kluc in odoslane:
+        return
+    if d == mesiac and teraz.hour < 21:
+        ws = openpyxl.load_workbook(f).active if f.exists() else None
+        spolu = next((ws.cell(r[0].row, 3).value for r in ws.iter_rows(min_col=4, max_col=4)
+                      if str(r[0].value or "").strip() == "spolu"), "?") if ws else "?"
+        kam = f"O 21:00 pošlem {f.name} na {EKONOMIKA}" if POSLAT_Z else \
+            f"Posielanie cez Weft ešte nie je zapnuté: {f.name} pošli dnes sám na {EKONOMIKA}"
+        notify(f"Výkaz {MESIACE[mesiac.month]}: spolu {spolu}. {kam}. Ak niečo nesedí, oprav súbor pred tým.")
+        return
+    cmd = ["weft", "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]
+    if not POSLAT_Z:
+        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (Weft ešte nie je nastavený): pošli {f} na {EKONOMIKA}.")
+        print("neposlané, chýba POSLAT_Z:", " ".join(cmd))
+        return
+    if d == mesiac:
+        zapis_den(d)  # the last day so far, else it would be missing from the file that goes out
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    if r.returncode:
+        notify(f"Výkaz {MESIACE[mesiac.month]} sa nepodarilo poslať: {(r.stderr or r.stdout).strip()[:160]}")
+        sys.exit(1)
+    odoslane[kluc] = teraz.isoformat(timespec="minutes")
+    ODOSLANE.write_text(json.dumps(odoslane, indent=1) + "\n")
+    notify(f"Výkaz {MESIACE[mesiac.month]} odišiel na {EKONOMIKA}.")
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
@@ -624,5 +673,7 @@ if __name__ == "__main__":
         vrat(*a[1:2])
     elif a[0] == "stav":
         stav_vypis()
+    elif a[0] == "poslat":
+        poslat()
     else:
         sys.exit(__doc__)

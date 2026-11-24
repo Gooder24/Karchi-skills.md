@@ -168,10 +168,12 @@ if [ "$(uname -n)" = karchi ] && command -v systemctl >/dev/null; then
   if ! cmp -s "$R/vykaz/vykaz.timer" "$HOME/.config/systemd/user/vykaz.timer" ||
      ! cmp -s "$R/vykaz/vykaz.service" "$HOME/.config/systemd/user/vykaz.service" ||
      ! cmp -s "$R/vykaz/vykaz-okna.service" "$HOME/.config/systemd/user/vykaz-okna.service" ||
+     ! cmp -s "$R/vykaz/vykaz-poslat.timer" "$HOME/.config/systemd/user/vykaz-poslat.timer" ||
+     ! cmp -s "$R/vykaz/vykaz-poslat.service" "$HOME/.config/systemd/user/vykaz-poslat.service" ||
      ! cmp -s "$R/vykaz/okna.py" "$HOME/.local/share/vykaz/okna.py.bezi"; then
-    cp "$R"/vykaz/vykaz{.service,.timer,-okna.service} "$HOME/.config/systemd/user/"
+    cp "$R"/vykaz/vykaz{.service,.timer,-okna.service,-poslat.service,-poslat.timer} "$HOME/.config/systemd/user/"
     systemctl --user daemon-reload
-    systemctl --user enable --now vykaz.timer && echo "ok vykaz.timer"
+    systemctl --user enable --now vykaz.timer vykaz-poslat.timer && echo "ok vykaz.timer vykaz-poslat.timer"
     systemctl --user enable vykaz-okna.service && systemctl --user restart vykaz-okna.service &&
       cp "$R/vykaz/okna.py" "$HOME/.local/share/vykaz/okna.py.bezi" && echo "ok vykaz-okna.service"
   fi
