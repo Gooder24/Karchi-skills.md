@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<!-- The reference demo of skill ukazka (Weft „Rozoslať“, 2026-11-25). To view it, copy next to it from Weft app/:
+     fonts/DepartureMono-Regular.woff2, messenger.ico, whatsapp.webp, instagram.png, discord.png. index.html#3 opens step 3. -->
+<meta charset="utf-8">
+<title>Weft – ukážka: Rozoslať</title>
+<style>
+@font-face { font-family: 'Departure Mono'; src: url('DepartureMono-Regular.woff2') format('woff2'); font-display: block; }
+:root {
+  --font: 'Departure Mono', ui-monospace, monospace, "Noto Color Emoji";
+  --fs: 11px; --fs-2: 22px; --lh: 14px;
+  --radius: 10px; --radius-s: 6px; --radius-l: 14px; --bw: 2px;
+  --page: #000a07; --panel: #0a1512; --soft: #1a2320; --hover: #26302c; --line: #26302c; --line-strong: #585f5d;
+  --text: #f0f0eb; --muted: #b4b4b0; --accent: #628790; --accent-text: #000a07; --link: #a2cdc4; --tint: #0a1512;
+  --message: #e5786d; --notice: #a1d289; --error: #e5786d; --warning: #e2c08d; --info: #abe7e6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font: var(--fs)/var(--lh) var(--font); color: var(--text); background: var(--page); overflow: hidden; }
+button, textarea, input { font: inherit; color: inherit; }
+kbd { font: inherit; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: var(--radius-s); color: var(--muted); }
+
+/* The app behind: inbox and an empty chat, dimmed. */
+.shell { display: grid; grid-template-columns: 300px 1fr; height: 100%; opacity: .35; }
+.inbox { border-right: var(--bw) solid var(--line); padding: 10px 8px; }
+.inbox .row { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: var(--radius); }
+.inbox .row b { display: block; font-weight: 600; }
+.inbox .row small { color: var(--muted); }
+.av { flex: none; width: 32px; height: 32px; border-radius: var(--radius); display: grid; place-items: center; background: var(--soft); color: var(--text); font-weight: 600; }
+.av.c1 { background: #e5786d33; color: var(--message); } .av.c2 { background: #a1d28933; color: var(--notice); }
+.av.c3 { background: #e2c08d33; color: var(--warning); } .av.c4 { background: #abe7e633; color: var(--info); }
+
+.demo { position: fixed; top: 10px; right: 14px; z-index: 30; color: var(--warning); }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; justify-content: center; align-items: flex-start; padding: 7vh 16px 16px; }
+.cmd { width: 100%; max-width: 780px; height: 80vh; display: flex; flex-direction: column; background: var(--panel); border: var(--bw) solid var(--line-strong); border-radius: var(--radius-l); overflow: hidden; }
+
+.steps { flex: none; display: flex; gap: 4px; align-items: center; padding: 12px 14px; border-bottom: var(--bw) solid var(--line); }
+.steps h1 { margin: 0 12px 0 4px; font-size: var(--fs-2); line-height: 28px; font-weight: 400; }
+.step { border: 0; border-radius: var(--radius); padding: 5px 10px; background: none; color: var(--muted); cursor: pointer; }
+.step:hover { background: var(--hover); }
+.step.on { background: var(--soft); color: var(--text); }
+.step.done { color: var(--link); }
+.steps .x { margin-left: auto; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: var(--radius); background: none; cursor: pointer; }
+.steps .x:hover { background: var(--hover); }
+
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pane { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 6px 8px; outline: none; }
+.cmdinput { flex: none; width: 100%; background: none; font-size: var(--fs-2); line-height: 28px; padding: 12px 18px; border: 0; border-bottom: var(--bw) solid var(--line); outline: none; }
+.cmdinput::placeholder { color: var(--muted); }
+.chips { flex: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px 4px; }
+.chip { border: var(--bw) solid var(--line); border-radius: var(--radius); padding: 4px 11px; background: var(--soft); font-weight: 600; cursor: pointer; }
+.chip:hover { border-color: var(--line-strong); }
+.chip.on { border-color: var(--link); color: var(--link); }
+.chip small { font-weight: 400; color: var(--muted); }
+.rsec { padding: 10px 12px 4px; font-weight: 700; color: var(--muted); }
+.res { display: flex; align-items: center; gap: 12px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius); background: none; text-align: left; cursor: pointer; }
+.res:hover { background: var(--hover); }
+.res.on { background: var(--accent); color: var(--accent-text); }
+.res.on small, .res.on .tag { color: var(--accent-text); border-color: var(--accent-text); }
+.res.dim { opacity: .5; cursor: default; }
+.rmeta { flex: 1; min-width: 0; }
+.rmeta b, .rmeta small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rmeta b { font-weight: 600; }
+.rmeta small { color: var(--muted); }
+.check { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border: var(--bw) solid var(--line-strong); border-radius: var(--radius-s); }
+.res.picked .check { background: var(--link); border-color: var(--link); color: var(--accent-text); }
+.res.on .check { border-color: var(--accent-text); }
+.res.on.picked .check { background: var(--accent-text); color: var(--accent); }
+.net { flex: none; width: 16px; height: 16px; border-radius: var(--radius-s); }
+.nets { display: flex; gap: 4px; }
+.tag { flex: none; padding: 1px 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-s); color: var(--muted); }
+.tag.warn { color: var(--warning); border-color: var(--warning); }
+.tag.ok { color: var(--notice); border-color: var(--notice); }
+.tag.no { color: var(--error); border-color: var(--error); }
+.tag.wait { color: var(--muted); }
+
+.foot { flex: none; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border-top: var(--bw) solid var(--line); color: var(--muted); }
+.foot b { color: var(--text); font-weight: 600; }
+.foot .keys { display: flex; gap: 10px; flex-wrap: wrap; }
+.go { margin-left: auto; flex: none; display: flex; align-items: center; gap: 8px; border: 0; border-radius: var(--radius); padding: 8px 14px; background: var(--accent); color: var(--accent-text); font-weight: 600; cursor: pointer; }
+.go kbd { color: var(--accent-text); border-color: var(--accent-text); }
+.go:disabled { opacity: .5; cursor: default; }
+.ghost { flex: none; border: var(--bw) solid var(--line-strong); border-radius: var(--radius); padding: 6px 12px; background: none; cursor: pointer; }
+.ghost:hover { background: var(--hover); }
+.ghost.danger { color: var(--error); border-color: var(--error); }
+
+/* Step 2: the template. */
+.write { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; overflow-y: auto; }
+.write label { color: var(--muted); }
+.field { border: var(--bw) solid var(--line-strong); border-radius: var(--radius-l); background: var(--page); }
+.field:focus-within { border-color: var(--text); }
+.field textarea { display: block; width: 100%; min-height: 190px; resize: vertical; border: 0; background: none; padding: 10px 12px; outline: none; line-height: var(--lh); }
+.slot { display: inline-block; padding: 0 5px; border-radius: var(--radius-s); background: var(--soft); color: var(--link); }
+.hint { color: var(--muted); }
+.atts { display: flex; gap: 8px; }
+.att { display: flex; flex-direction: column; justify-content: center; height: 56px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--soft); }
+.att b { font-weight: 600; }
+.att small { color: var(--muted); }
+.pace { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+/* Step 3: every message, one at a time. */
+.split { flex: 1; min-height: 0; display: grid; grid-template-columns: 290px 1fr; }
+.split .pane { border-right: var(--bw) solid var(--line); }
+.preview { min-height: 0; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.phead { display: flex; align-items: center; gap: 10px; }
+.phead .rmeta b { font-size: var(--fs); }
+.greet { display: flex; align-items: center; gap: 8px; }
+.greet input { flex: 1; min-width: 0; border: var(--bw) solid var(--line); border-radius: var(--radius-s); padding: 6px 10px; background: var(--page); outline: none; }
+.greet input:focus { border-color: var(--link); }
+.netpick { display: flex; gap: 6px; }
+.netpick .chip { display: flex; gap: 6px; align-items: center; }
+.bubble { align-self: flex-end; max-width: 92%; padding: 9px 12px; border-radius: var(--radius-l); background: var(--accent); color: var(--accent-text); white-space: pre-wrap; }
+.bubble mark { background: none; color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
+.bubble.file { padding: 8px 12px; opacity: .9; }
+.extra textarea { width: 100%; min-height: 40px; resize: vertical; border: var(--bw) solid var(--line); border-radius: var(--radius-s); padding: 6px 10px; background: var(--page); outline: none; }
+.extra textarea:focus { border-color: var(--link); }
+
+/* Step 4: what went out and who answered. */
+.sum { flex: none; display: flex; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-bottom: var(--bw) solid var(--line); }
+.sum .gap { width: 1px; margin: 4px 6px; background: var(--line-strong); }
+.sum span b { font-size: var(--fs-2); line-height: 28px; font-weight: 400; margin-right: 4px; }
+#status .rmeta { flex: none; width: 190px; }
+.stcol { flex: none; width: 64px; }
+.rscol { flex: none; width: 56px; text-align: right; }
+.res .ans { flex: 1; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res.on .ans { color: var(--accent-text); }
+.res time { flex: none; width: 40px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.res.on time { color: var(--accent-text); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="demo">ukážka · nič sa neposiela · mená sú vymyslené</div>
+
+<div class="shell" aria-hidden="true">
+  <div class="inbox">
+    <div class="row"><span class="av c1">JK</span><span><b>Janka Kováčová</b><small>ok, tak v sobotu</small></span></div>
+    <div class="row"><span class="av c2">TH</span><span><b>Tomáš Hudec</b><small>Ty: posielam</small></span></div>
+    <div class="row"><span class="av c3">MB</span><span><b>Majo Blaho</b><small>😂</small></span></div>
+    <div class="row"><span class="av c4">LŠ</span><span><b>Lucka Šimková</b><small>dík!</small></span></div>
+    <div class="row"><span class="av">ZA</span><span><b>Zbor – alty</b><small>Zuzka: kedy skúška?</small></span></div>
+  </div>
+  <div></div>
+</div>
+
+<div class="veil">
+  <div class="cmd" id="cmd">
+    <div class="steps">
+      <h1>Rozoslať</h1>
+      <button class="step" data-step="1">1 Komu</button>
+      <button class="step" data-step="2">2 Správa</button>
+      <button class="step" data-step="3">3 Náhľad</button>
+      <button class="step" data-step="4">4 Rozoslané</button>
+      <button class="x" title="Zavrieť (Esc)" id="close"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg></button>
+    </div>
+
+    <!-- 1 Komu -->
+    <div class="body" data-pane="1">
+      <input class="cmdinput" id="q" placeholder="Komu? Meno alebo zoznam…" autocomplete="off">
+      <div class="chips" id="lists"></div>
+      <div class="pane" id="people" tabindex="0"></div>
+      <div class="foot">
+        <span><b id="pickedN">0</b> vybraných</span>
+        <span class="keys"><span><kbd>Medzerník</kbd> označiť</span><span><kbd>↑↓</kbd></span></span>
+        <button class="ghost" id="saveList">Uložiť ako zoznam…</button>
+        <button class="go" id="to2">Ďalej <kbd>Enter</kbd></button>
+      </div>
+    </div>
+
+    <!-- 2 Správa -->
+    <div class="body" data-pane="2" hidden>
+      <div class="write">
+        <label>Správa. <span class="slot">{oslovenie}</span> sa každému nahradí jeho oslovením, zvyšok dostanú všetci rovnako.</label>
+        <div class="field"><textarea id="tpl"></textarea></div>
+        <div class="hint">Vložiť: <button class="chip" data-ins="{oslovenie}">{oslovenie}</button> <button class="chip" data-ins="{meno}">{meno}</button> · osobnú vetu navyše pridáš komukoľvek v náhľade</div>
+        <div class="atts">
+          <div class="att"><b>plagat-mikulas.png</b><small>1,2 MB · nahrá sa raz, pôjde každému</small></div>
+          <button class="ghost">+ Súbor</button>
+        </div>
+        <div class="pace"><span class="hint">Tempo:</span> <span class="tag">jedna správa každých 25–70 s</span> <span class="tag">najviac 30 ľudí na sieť a deň</span></div>
+      </div>
+      <div class="foot">
+        <span class="keys"><span><kbd>Esc</kbd> späť</span></span>
+        <button class="go" id="to3">Náhľad <kbd>Ctrl+Enter</kbd></button>
+      </div>
+    </div>
+
+    <!-- 3 Náhľad -->
+    <div class="body" data-pane="3" hidden>
+      <div class="split">
+        <div class="pane" id="plist" tabindex="0"></div>
+        <div class="preview" id="pview"></div>
+      </div>
+      <div class="foot">
+        <!-- avoid-ai-design-ignore: CP3 — the arrows name keys to press, not a decoration -->
+        <span class="keys"><span><kbd>↑↓</kbd> ďalší</span><span><kbd>E</kbd> oslovenie</span><span><kbd>←→</kbd> sieť</span><span><kbd>Delete</kbd> vyhodiť</span></span>
+        <span id="eta"></span>
+        <button class="go" id="send">Rozoslať <span id="sendN"></span> <kbd>Ctrl+Enter</kbd></button>
+      </div>
+    </div>
+
+    <!-- 4 Rozoslané -->
+    <div class="body" data-pane="4" hidden>
+      <div class="sum" id="sum"></div>
+      <div class="pane" id="status" tabindex="0"></div>
+      <div class="foot">
+        <span class="keys"><span><kbd>Enter</kbd> otvoriť chat</span><span><kbd>A N M</kbd> áno / nie / možno</span></span>
+        <button class="ghost" id="remind">Pripomenúť tým, čo neodpísali</button>
+        <button class="ghost danger" id="stop">Zastaviť</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICO = { messenger: 'messenger.ico', whatsapp: 'whatsapp.webp', instagram: 'instagram.png', discord: 'discord.png' };
+const NET = { messenger: 'Messenger', whatsapp: 'WhatsApp', instagram: 'Instagram', discord: 'Discord' };
+const CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18H8v-2h2v2Zm-2-2H6v-2h2v2Zm4-2v2h-2v-2h2Zm-6 0H4v-2h2v2Zm8 0h-2v-2h2v2Zm2-2h-2v-2h2v2Zm2-2h-2V8h2v2Zm2-2h-2V6h2v2Z"/></svg>';
+
+// Made-up people. `greet` set = Karchi wrote it before; otherwise guessed.
+const people = [
+  { id: 'jk', name: 'Janka Kováčová', ini: 'JK', c: 1, nets: ['messenger'], greet: null },
+  { id: 'th', name: 'Tomáš Hudec', ini: 'TH', c: 2, nets: ['whatsapp'], greet: 'Čau Tomi,' },
+  { id: 'mb', name: 'Majo Blaho', ini: 'MB', c: 3, nets: ['instagram'], greet: null },
+  { id: 'ls', name: 'Lucka Šimková', ini: 'LŠ', c: 4, nets: ['messenger', 'whatsapp'], greet: 'Ahoj Lucka,' },
+  { id: 'po', name: 'Peťo Ondrej', ini: 'PO', c: 1, nets: ['discord'], greet: null },
+  { id: 'zm', name: 'Zuzka Mráziková', ini: 'ZM', c: 2, nets: ['whatsapp'], greet: 'Ahoj Zuzi,' },
+  { id: 'av', name: 'Andrej Vlček', ini: 'AV', c: 3, nets: ['messenger', 'instagram'], greet: null },
+  { id: 'ks', name: 'p. Kráľová', ini: 'K', c: 4, nets: ['whatsapp'], greet: 'Dobrý deň, pani Kráľová,' },
+  { id: 'eh', name: 'Ema Horváthová', ini: 'EH', c: 1, nets: [], greet: null, nochat: 'zo skupiny Zbor – alty' },
+];
+const lists = [
+  { name: 'Animátori', ids: ['jk', 'th', 'mb', 'ls', 'po', 'av'] },
+  { name: 'Zbor – alty', ids: ['ls', 'zm', 'eh'] },
+  { name: 'Rodičia', ids: ['ks'] },
+];
+const S = { step: 1, picked: new Set(), sel: 0, q: '', psel: 0, list: null,
+  tpl: '{oslovenie}\n\nv sobotu 6. 12. robíme Mikuláša pre deti z farnosti. Zraz o 14:00 pri fare, končíme okolo 17:00.\nPotrebujeme 6 animátorov a niekoho na foto.\n\nDáš vedieť do štvrtka, či môžeš? Plagát posielam.\n\nKarchi',
+  msgs: [], sendStart: 0, timer: 0 };
+const $ = s => document.querySelector(s);
+const first = n => n.replace(/^p\. /, '').split(' ')[0];
+const guess = p => 'Ahoj ' + first(p.name) + ',';
+const fill = (m) => S.tpl.replace('{oslovenie}', m.greet).replace(/\{meno\}/g, first(m.p.name));
+
+function go(n) {
+  if (n >= 2 && !S.picked.size) return;
+  if (n === 3 && S.step < 3) buildMsgs();
+  if (n === 4 && S.step !== 4 && !S.sendStart) startSend();
+  S.step = n; draw();
+}
+
+function buildMsgs() {
+  const keep = new Map(S.msgs.map(m => [m.p.id, m]));
+  S.msgs = people.filter(p => S.picked.has(p.id) && !p.nochat).map(p => keep.get(p.id) ||
+    { p, net: p.nets[0], greet: p.greet || guess(p), guessed: !p.greet, extra: '', state: 'wait', at: null, ans: null, rsvp: null });
+  S.psel = Math.min(S.psel, S.msgs.length - 1);
+}
+
+function visible() {
+  const q = S.q.trim().toLowerCase();
+  return people.filter(p => !q || p.name.toLowerCase().includes(q));
+}
+
+function drawPeople() {
+  $('#lists').innerHTML = lists.map((l, i) => `<button class="chip${S.list === i ? ' on' : ''}" data-list="${i}">${l.name} <small>${l.ids.length}</small></button>`).join('');
+  const v = visible();
+  S.sel = Math.max(0, Math.min(S.sel, v.length - 1));
+  $('#people').innerHTML = '<div class="rsec">Ľudia</div>' + v.map((p, i) => {
+    const nets = p.nets.map(n => `<img class="net" src="${ICO[n]}" alt="${NET[n]}">`).join('');
+    const sub = p.nochat ? `${p.nochat} · nemáte spolu chat, vynechá sa` : p.nets.length > 1 ? 'spojený chat · ' + p.nets.map(n => NET[n]).join(', ') : NET[p.nets[0]];
+    return `<button class="res${i === S.sel ? ' on' : ''}${S.picked.has(p.id) ? ' picked' : ''}${p.nochat ? ' dim' : ''}" data-i="${i}">
+      <span class="check">${S.picked.has(p.id) ? CHECK : ''}</span><span class="av c${p.c}">${p.ini}</span>
+      <span class="rmeta"><b>${p.name}</b><small>${sub}</small></span><span class="nets">${nets}</span></button>`;
+  }).join('');
+  const n = people.filter(p => S.picked.has(p.id) && !p.nochat).length;
+  $('#pickedN').textContent = n;
+  $('#to2').disabled = !n;
+}
+
+function drawTpl() {
+  const t = $('#tpl'); if (t.value !== S.tpl) t.value = S.tpl;
+}
+
+function eta() {
+  const n = S.msgs.length, min = Math.round(n * 47 / 60);
+  return n ? `Odíde <b>${n}</b> ${n === 1 ? 'správa' : n < 5 ? 'správy' : 'správ'}, posledná o ~<b>${Math.max(1, min)} min</b>` : 'Nikto nezostal';
+}
+
+function drawPreview() {
+  $('#plist').innerHTML = '<div class="rsec">Správy</div>' + S.msgs.map((m, i) => `<button class="res${i === S.psel ? ' on' : ''}" data-m="${i}">
+    <span class="av c${m.p.c}">${m.p.ini}</span><span class="rmeta"><b>${m.p.name}</b><small>${m.greet}</small></span>
+    ${m.guessed ? '<span class="tag warn">uhádnuté</span>' : ''}<img class="net" src="${ICO[m.net]}" alt="${NET[m.net]}"></button>`).join('')
+    + (S.picked.has('eh') ? '<div class="rsec">Vynechaní</div><div class="res dim"><span class="av c1">EH</span><span class="rmeta"><b>Ema Horváthová</b><small>nemáte spolu chat</small></span></div>' : '');
+  const m = S.msgs[S.psel];
+  if (!m) { $('#pview').innerHTML = '<span class="hint">Nikto nezostal. Vráť sa na krok 1.</span>'; }
+  else {
+    const text = fill(m).replace(m.greet, `<mark>${m.greet}</mark>`) + (m.extra ? '' : '');
+    const body = m.extra ? text.replace('\n\n', `\n\n${m.extra}\n\n`) : text;
+    $('#pview').innerHTML = `
+      <div class="phead"><span class="av c${m.p.c}">${m.p.ini}</span><span class="rmeta"><b>${m.p.name}</b><small>${S.psel + 1} z ${S.msgs.length}</small></span></div>
+      <div class="greet"><span class="hint">Oslovenie</span><input id="greet" value="${m.greet}">${m.guessed ? '<span class="tag warn">uhádnuté – skontroluj</span>' : '<span class="tag">zapamätané</span>'}</div>
+      ${m.p.nets.length > 1 ? `<div class="netpick"><span class="hint">Cez</span>${m.p.nets.map(n => `<button class="chip${n === m.net ? ' on' : ''}" data-net="${n}"><img class="net" src="${ICO[n]}" alt="">${NET[n]}</button>`).join('')}</div>` : `<div class="hint">Cez ${NET[m.net]}</div>`}
+      <div class="bubble">${body}</div>
+      <div class="bubble file">plagat-mikulas.png</div>
+      <div class="extra"><span class="hint">Osobná veta navyše, len v tejto správe</span><textarea id="extra" placeholder="napr. Ty by si mohol robiť foto?">${m.extra}</textarea></div>`;
+  }
+  $('#eta').innerHTML = eta();
+  $('#sendN').textContent = S.msgs.length;
+  $('#send').disabled = !S.msgs.length;
+}
+
+const REPLIES = { jk: ['Jasné, prídem 👍', 'ano'], th: ['v sobotu nemôžem, sorry', 'nie'], ls: ['asi hej, potvrdím v stredu', 'mozno'], av: ['idem, beriem aj foťák', 'ano'] };
+function startSend() {
+  S.sendStart = Date.now();
+  S.msgs.forEach((m, i) => { m.state = 'wait'; m.at = new Date(Date.now() + i * 47000); });
+  let k = 0;
+  // Demo only: time runs fast, ~1 s stands for one 25–70 s gap. Stops when everything went.
+  S.timer = setInterval(() => {
+    const m = S.msgs[k];
+    if (m) { m.state = 'sent'; }
+    const r = S.msgs[k - 2] && REPLIES[S.msgs[k - 2].p.id];
+    if (r) { S.msgs[k - 2].ans = r[0]; S.msgs[k - 2].rsvp = r[1]; }
+    k++;
+    if (k > S.msgs.length + 2) { clearInterval(S.timer); S.timer = 0; }
+    if (S.step === 4) drawStatus();
+  }, 1100);
+}
+
+function drawStatus() {
+  const c = s => S.msgs.filter(m => m.state === s).length;
+  const r = s => S.msgs.filter(m => m.rsvp === s).length;
+  $('#sum').innerHTML = `<span><b>${c('sent')}</b>odišlo</span><span><b>${c('wait')}</b>čaká</span>${c('stopped') ? `<span><b>${c('stopped')}</b>zastavené</span>` : ''}<i class="gap"></i><span><b>${r('ano')}</b>áno</span><span><b>${r('nie')}</b>nie</span><span><b>${r('mozno')}</b>možno</span><span><b>${S.msgs.filter(m => !m.ans).length}</b>bez odpovede</span>`;
+  const st = m => m.state === 'sent' ? '<span class="tag ok">odišlo</span>' : m.state === 'stopped' ? '<span class="tag no">zastavené</span>' : '<span class="tag wait">čaká</span>';
+  const rs = m => m.rsvp === 'ano' ? '<span class="tag ok">áno</span>' : m.rsvp === 'nie' ? '<span class="tag no">nie</span>' : m.rsvp === 'mozno' ? '<span class="tag warn">možno</span>' : '';
+  $('#status').innerHTML = S.msgs.map((m, i) => `<div class="res${i === S.psel ? ' on' : ''}" data-s="${i}">
+    <time>${m.at ? m.at.toTimeString().slice(0, 5) : ''}</time><span class="av c${m.p.c}">${m.p.ini}</span>
+    <span class="rmeta"><b>${m.p.name}</b><small>${NET[m.net]}</small></span><span class="stcol">${st(m)}</span>
+    <span class="ans">${m.ans ? '„' + m.ans + '“' : m.state === 'sent' ? 'zatiaľ neodpísal(a)' : ''}</span><span class="rscol">${rs(m)}</span></div>`).join('');
+  $('#stop').hidden = !S.msgs.some(m => m.state === 'wait');
+}
+
+function draw() {
+  document.querySelectorAll('.step').forEach(b => { const n = +b.dataset.step; b.classList.toggle('on', n === S.step); b.classList.toggle('done', n < S.step); });
+  document.querySelectorAll('[data-pane]').forEach(p => p.hidden = +p.dataset.pane !== S.step);
+  if (S.step === 1) drawPeople();
+  if (S.step === 2) drawTpl();
+  if (S.step === 3) drawPreview();
+  if (S.step === 4) drawStatus();
+  const on = document.querySelector('[data-pane]:not([hidden]) .res.on');
+  if (on) on.scrollIntoView({ block: 'nearest' });
+}
+
+function toggle(p) { if (!p) return; S.picked.has(p.id) ? S.picked.delete(p.id) : S.picked.add(p.id); }
+
+// Clicks
+$('#q').addEventListener('input', e => { S.q = e.target.value; S.sel = 0; drawPeople(); });
+$('#lists').addEventListener('click', e => { const b = e.target.closest('[data-list]'); if (!b) return; const i = +b.dataset.list;
+  S.list = S.list === i ? null : i; if (S.list !== null) lists[i].ids.forEach(id => S.picked.add(id)); drawPeople(); });
+$('#people').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; S.sel = +b.dataset.i; toggle(visible()[S.sel]); drawPeople(); });
+$('#to2').onclick = () => go(2);
+$('#to3').onclick = () => go(3);
+$('#send').onclick = () => go(4);
+$('#saveList').onclick = () => { const n = prompt('Názov zoznamu', 'Mikuláš 2026'); if (n) { lists.push({ name: n, ids: [...S.picked] }); S.list = lists.length - 1; drawPeople(); } };
+document.querySelectorAll('.step').forEach(b => b.onclick = () => { const n = +b.dataset.step; if (n === 4 && !S.sendStart) return; go(n); });
+$('#close').onclick = () => { if (S.timer) clearInterval(S.timer); document.querySelector('.veil').hidden = true; document.querySelector('.shell').style.opacity = 1; };
+$('#tpl').addEventListener('input', e => S.tpl = e.target.value);
+document.querySelectorAll('[data-ins]').forEach(b => b.onclick = () => { const t = $('#tpl'); const a = t.selectionStart; S.tpl = t.value.slice(0, a) + b.dataset.ins + t.value.slice(t.selectionEnd); t.value = S.tpl; t.focus(); t.selectionStart = t.selectionEnd = a + b.dataset.ins.length; });
+$('#plist').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; S.psel = +b.dataset.m; drawPreview(); });
+$('#pview').addEventListener('click', e => { const b = e.target.closest('[data-net]'); if (!b) return; S.msgs[S.psel].net = b.dataset.net; drawPreview(); });
+$('#pview').addEventListener('change', e => { const m = S.msgs[S.psel]; if (e.target.id === 'greet') { m.greet = e.target.value; m.guessed = false; m.p.greet = m.greet; drawPreview(); }
+  if (e.target.id === 'extra') { m.extra = e.target.value.trim(); drawPreview(); } });
+$('#status').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; S.psel = +b.dataset.s; drawStatus(); });
+$('#stop').onclick = () => { if (S.timer) clearInterval(S.timer); S.timer = 0; S.msgs.forEach(m => { if (m.state === 'wait') m.state = 'stopped'; }); drawStatus(); };
+$('#remind').onclick = () => { const left = S.msgs.filter(m => !m.ans).map(m => m.p.id); S.picked = new Set(left); S.msgs = []; S.sendStart = 0;
+  S.tpl = '{oslovenie}\n\nešte sa pripomínam s Mikulášom v sobotu 6. 12. o 14:00 – dáš vedieť, či môžeš?\n\nKarchi'; go(2); };
+
+// Keys
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches('textarea, input:not(#q)');
+  if (e.key === 'Escape') { if (typing) { e.target.blur(); return; } if (S.step > 1 && S.step < 4) go(S.step - 1); return; }
+  if (S.step === 1) {
+    const v = visible();
+    if (e.key === 'ArrowDown') { S.sel = Math.min(S.sel + 1, v.length - 1); e.preventDefault(); draw(); }
+    else if (e.key === 'ArrowUp') { S.sel = Math.max(S.sel - 1, 0); e.preventDefault(); draw(); }
+    else if (e.key === ' ' && (e.target.id !== 'q' || !S.q)) { toggle(v[S.sel]); e.preventDefault(); draw(); }
+    else if (e.key === 'Enter') { go(2); e.preventDefault(); }
+  } else if (S.step === 2) {
+    if (e.key === 'Enter' && e.ctrlKey) { go(3); e.preventDefault(); }
+  } else if (S.step === 3) {
+    if (e.key === 'Enter' && e.ctrlKey) { go(4); e.preventDefault(); return; }
+    if (typing) return;
+    const m = S.msgs[S.psel];
+    if (e.key === 'ArrowDown') { S.psel = Math.min(S.psel + 1, S.msgs.length - 1); e.preventDefault(); draw(); }
+    else if (e.key === 'ArrowUp') { S.psel = Math.max(S.psel - 1, 0); e.preventDefault(); draw(); }
+    else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && m && m.p.nets.length > 1) { const n = m.p.nets; m.net = n[(n.indexOf(m.net) + (e.key === 'ArrowRight' ? 1 : n.length - 1)) % n.length]; e.preventDefault(); draw(); }
+    else if (e.key === 'Delete' && m) { S.picked.delete(m.p.id); S.msgs.splice(S.psel, 1); S.psel = Math.max(0, Math.min(S.psel, S.msgs.length - 1)); draw(); }
+    else if ((e.key === 'e' || e.key === 'E') && m) { e.preventDefault(); const g = $('#greet'); g.focus(); g.select(); }
+  } else if (S.step === 4) {
+    const m = S.msgs[S.psel];
+    if (e.key === 'ArrowDown') { S.psel = Math.min(S.psel + 1, S.msgs.length - 1); e.preventDefault(); draw(); }
+    else if (e.key === 'ArrowUp') { S.psel = Math.max(S.psel - 1, 0); e.preventDefault(); draw(); }
+    else if (m && 'anm'.includes(e.key.toLowerCase()) && e.key.length === 1) { m.rsvp = { a: 'ano', n: 'nie', m: 'mozno' }[e.key.toLowerCase()]; draw(); }
+  }
+});
+
+// Start with the list „Animátori“ picked, as if Karchi had chosen it.
+S.list = 0; lists[0].ids.forEach(id => S.picked.add(id)); S.picked.add('eh');
+draw(); $('#q').focus();
+// index.html#3 opens a later step straight away.
+const start = +location.hash.slice(1); for (let n = 2; n <= start; n++) go(n);
+</script>
+</body>
+</html>

@@ -114,7 +114,9 @@ says now applies.
   - If you can do it yourself (API, CLI, a token he gives you), do that instead of sending him to click.
 - **Verify first, then build.** With ideas he first wants research into whether it already exists; with
   optimization, measurement first. When choosing, he wants a comparison and decides himself ("compare and I'll decide").
-- **A demo as soon as possible.** Rather a fast working prototype than long planning.
+- **A demo as soon as possible.** Rather a fast working prototype than long planning. A demo is a clickable HTML page in
+  the product's real look, shown in the thread (2026-11-25, about the Weft „Rozoslať“ demo: „EPICKÁ UKÁŽKA … ak má byť
+  niečo ukážka tak toto“); how: skill `ukazka`.
 - **He gives feedback in rounds**, often as a screenshot with one sentence. Fix exactly what it
   shows, and do not add anything extra.
 - **Changes in his personal projects** (karchi-os, karchi-skills) are committed straight to `main` and pushed:

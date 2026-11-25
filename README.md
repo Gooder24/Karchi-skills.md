@@ -28,6 +28,7 @@ The [Claude Code](#claude-code) section says what it does.
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
+| [`ukazka`](ukazka/SKILL.md) | Every demo of a feature or UI: one clickable HTML page in the product's real look with made-up data, shown in the thread, later the spec and starting code for production; why it beats a screenshot, GIF or video in tokens |
 | [`prezentacie`](prezentacie/SKILL.md) | Every presentation: outline, three style previews he picks from, checks before showing; the look from `frontend-slides`, the content from `academic-pptx`, both vendored inside it |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`oss-prispevky`](oss-prispevky/SKILL.md) | Contributing to other people's open-source projects: project choice by measured merge rates, AI policies, bugs reproduced in desktop VMs (`desktop-vm/dvm.sh`), PRs with proof and a merge chance, a Slovak explanation he defends himself |
