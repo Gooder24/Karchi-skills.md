@@ -46,7 +46,7 @@ The [Claude Code](#claude-code) section says what it does.
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
 | [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high), DeepSeek V4.1 Flash (OpenCode, free first) and Gemini 4 Neon (medium), on another machine when this one cannot run a member |
-| [`full-send`](full-send/SKILL.md), [`full-stop`](full-stop/SKILL.md), [`file-pr`](file-pr/SKILL.md), [`babysit-pr`](babysit-pr/SKILL.md), [`leaving-pr-comments`](leaving-pr-comments/SKILL.md) | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
+| [`full-send`](full-send/SKILL.md), [`full-stop`](full-stop/SKILL.md), [`file-pr`](file-pr/SKILL.md), [`babysit-pr`](babysit-pr/SKILL.md), [`leaving-pr-comments`](leaving-pr-comments/SKILL.md) | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), adapted to his rules (full-send verifies with `overenie`, full-stop adds screenshots, babysit-pr defers to Hermes) |
 
 ## Hooks
 
