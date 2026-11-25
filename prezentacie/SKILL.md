@@ -9,17 +9,17 @@ Karchi asked several times for presentation skills from GitHub that are used for
 2026-11-05 an agent misread "cez github" as GitHub's Primer design system and built a Primer theme; on
 2026-11-17 he rejected the eSYST workflow deck made with it as "extrémne AI, nezaujímavý a strašne
 stručný" and repeated the request. The answer is the two third-party skills below, vendored in this
-repo. Use them for every presentation, whatever the output format, also when an artifact type
+folder. Use them for every presentation, whatever the output format, also when an artifact type
 (Claude Slides) or another skill (`pptx`, `soc`) builds the file.
 
 | Half | Skill | What it decides |
 | --- | --- | --- |
-| Look | [`frontend-slides`](../frontend-slides/SKILL.md) (zarazhangrui, MIT) | Style, type, colour, layout system, motion; three previews he chooses from |
-| Content | [`academic-pptx`](../academic-pptx/SKILL.md) (Gabberflast, MIT) | The argument: narrative spine, action titles, one job per slide, sources |
+| Look | [`frontend-slides`](frontend-slides/GUIDE.md) (zarazhangrui, MIT) | Style, type, colour, layout system, motion; three previews he chooses from |
+| Content | [`academic-pptx`](academic-pptx/GUIDE.md) (Gabberflast, MIT) | The argument: narrative spine, action titles, one job per slide, sources |
 
 ## Order of work
 
-1. **Read both skills** (their `SKILL.md`; from `academic-pptx` also `content_guidelines.md`).
+1. **Read both skills** (their `GUIDE.md`; from `academic-pptx` also `content_guidelines.md`).
 2. **Outline first.** One line per slide: an action title (a full sentence with the takeaway) and what
    the slide shows. The titles read in order must tell the whole argument (ghost deck test). Put the
    outline in the thread with the previews; do not ask about it separately.

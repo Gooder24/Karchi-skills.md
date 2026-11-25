@@ -27,16 +27,13 @@ The [Claude Code](#claude-code) section says what it does.
 | Skill | What it does |
 |-------|---------|
 | [`taste`](taste/taste.md) | Karchi's taste: look, controls, performance, information, way of working |
-| [`prezentacie`](prezentacie/SKILL.md) | Entry point for every presentation: outline, three style previews he picks from, checks before showing |
-| [`frontend-slides`](frontend-slides/SKILL.md) | The look of his presentations: style presets, 34 bold templates, single-file HTML decks, PDF export |
-| [`academic-pptx`](academic-pptx/SKILL.md) | The content of his presentations: narrative spine, action titles, one job per slide, sources |
+| [`prezentacie`](prezentacie/SKILL.md) | Every presentation: outline, three style previews he picks from, checks before showing; the look from `frontend-slides`, the content from `academic-pptx`, both vendored inside it |
 | [`github`](github/SKILL.md) | How to write commits, pull requests and comments on GitHub |
 | [`oss-prispevky`](oss-prispevky/SKILL.md) | Contributing to other people's open-source projects: project choice by measured merge rates, AI policies, bugs reproduced in desktop VMs (`desktop-vm/dvm.sh`), PRs with proof and a merge chance, a Slovak explanation he defends himself |
 | [`adopcia`](adopcia/SKILL.md) | An idea or side project he drops goes public in `Gooder24/napady` with its research, cleaned of personal data; it waits there until he names a place to send the ideas |
 | [`priority`](priority/SKILL.md) | Karchi's inbox on asus: only Hermes reads it, every chat only writes to it |
 | [`zadanie`](zadanie/SKILL.md) | Turns a short ask into a goal file with checks the agent runs itself, so a task runs for an hour or a night without his feedback |
 | [`overenie`](overenie/SKILL.md) | Verification he can trust: checks fixed before the work, run by a fresh verifier, with evidence and a log of misses |
-| [`retro`](retro/SKILL.md) | Morning retro on asus: the settled thread with the most rounds, and the one prompt that would have done it, saved to `~/inbox/retro/` |
 | [`ucenie`](ucenie/SKILL.md) | Karchi's learning app Učenie and the `ucenie` command: cards and packs, homework drafts, the learn harness, Anki import and export; points to the e540 thread that built it |
 | [`weft`](weft/SKILL.md) | The `weft` command on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
 | [`stylizacia`](stylizacia/SKILL.md) | Slovak business texts the way his OBK teacher corrects them, for eSYST customers and school, and `pevne-medzery.ts`, which puts in the non-breaking spaces (Ctrl+Shift+Space) |
@@ -44,7 +41,7 @@ The [Claude Code](#claude-code) section says what it does.
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
 | [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high), DeepSeek V4.1 Flash (OpenCode, free first) and Gemini 4 Neon (medium), on another machine when this one cannot run a member |
-| `full-send`, `full-stop`, `sol-loop`, `file-pr`, `takeover`, `babysit-pr`, `modernize`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
+| `full-send`, `full-stop`, `file-pr`, `takeover`, `babysit-pr`, `modernize`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
 
 ## Hooks
 
@@ -79,14 +76,14 @@ Wiring:
 `frontend-design` is `skills/frontend-design` from [anthropics/skills](https://github.com/anthropics/skills)
 (commit ca45fc4, 2026-10-28, Apache-2.0, `LICENSE.txt` kept). `avoid-ai-design` is
 [funboy322/avoid-ai-design](https://github.com/funboy322/avoid-ai-design) without its README, docs and
-examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). `frontend-slides` is
+examples (commit 2b7c718, v0.4.0, MIT, `LICENSE` kept). `prezentacie/frontend-slides` is
 [zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) without its README, `.gitignore`,
 `.claude-plugin`, `plugins` copy, `bold-template-pack/README.md` and `scripts/deploy.sh` (commit 9906a34,
 2026-06-23, MIT, `LICENSE` kept); `scripts/export-pdf.sh` is changed: its server listens only on
 127.0.0.1 and serves only the deck's folder, it uses `/usr/bin/chromium` when there is one instead of
-downloading a browser, and it no longer opens the PDF. `academic-pptx` is [Gabberflast/academic-pptx-skill](https://github.com/Gabberflast/academic-pptx-skill)
+downloading a browser, and it no longer opens the PDF. `prezentacie/academic-pptx` is [Gabberflast/academic-pptx-skill](https://github.com/Gabberflast/academic-pptx-skill)
 without its README and PDF (commit 9f2b703, 2026-07-14, MIT, `LICENSE` kept; the `license` line of its
-frontmatter said Proprietary and is corrected). In both, the `description` starts with a pointer to
+frontmatter said Proprietary and is corrected). In both, `SKILL.md` is renamed to `GUIDE.md`, so no agent lists them as skills of their own, the `description` starts with a pointer to
 `prezentacie` and a note under the title says what `prezentacie` overrides. To update one, copy the same files from upstream
 again. The section „Ako pracovať“ in `AGENTS.md` is translated and adapted from T3 Code's `AGENTS.md`
 ([pingdotgg/t3code](https://github.com/pingdotgg/t3code), MIT, `LICENSE-t3code`). The detector needs Node 18+ (asus, dell and x270 have it; e540 does not).

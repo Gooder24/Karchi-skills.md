@@ -99,7 +99,7 @@ projekt, ktorý ho už má (SPOTREX). Pri Postgrese patrí k projektu aj záloha
 
 # Prezentácie (Karchi, 2026-11-17)
 
-Každá prezentácia (slajdy, deck, Claude Slides, PowerPoint, HTML, PDF), školská aj pracovná, nová aj upravovaná, sa začína skillom `prezentacie`. Vzhľad a obsah určujú skilly z GitHubu `frontend-slides` a `academic-pptx`; štýl si Karchi vyberá z troch ukážok. Bez neho prezentáciu nestavaj ani neprerábaj, ani keď ju vyrába iný skill alebo typ artefaktu.
+Každá prezentácia (slajdy, deck, Claude Slides, PowerPoint, HTML, PDF), školská aj pracovná, nová aj upravovaná, sa začína skillom `prezentacie`. Vzhľad a obsah určujú návody z GitHubu `frontend-slides` a `academic-pptx`, ktoré sú v ňom; štýl si Karchi vyberá z troch ukážok. Bez neho prezentáciu nestavaj ani neprerábaj, ani keď ju vyrába iný skill alebo typ artefaktu.
 
 # Subagenti (Claude Code)
 

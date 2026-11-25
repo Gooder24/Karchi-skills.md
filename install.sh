@@ -12,6 +12,12 @@ else mkdir -p "$HOME/.work" && git clone -q https://github.com/Gooder24/Karchi-s
 [ -z "${KS_FRESH:-}" ] && KS_FRESH=1 exec bash "$R/install.sh"
 # Antigravity reads its skills from ~/.gemini/config/skills, also before agy has made ~/.gemini/config.
 if [ -d "$HOME/.gemini/antigravity-cli" ]; then mkdir -p "$HOME/.gemini/config"; fi
+# A skill deleted or moved in the repo leaves a dead link; it goes too.
+for t in "$HOME/.claude/skills" "$HOME/.codex/skills" "$HOME/.gemini/config/skills"; do
+  for l in "$t"/*; do
+    [ -L "$l" ] && [ ! -e "$l/SKILL.md" ] && case "$(readlink "$l")" in "$R"/*) rm "$l" && echo "rm $l";; esac
+  done
+done
 for d in "$R"/*/; do
   [ -f "$d/SKILL.md" ] || continue
   n=$(basename "$d")
@@ -61,7 +67,7 @@ for k, v in {"anthropic-skills:morning": "off", "anthropic-skills:google-workspa
              "anthropic-skills:chrome-browser": "user-invocable-only",
              "anthropic-skills:built-in-browser": "user-invocable-only",
              # Only when he types /name: the agent never needs them on its own.
-             "retro": "user-invocable-only", "code-review": "user-invocable-only",
+             "code-review": "user-invocable-only",
              "simplify": "user-invocable-only", "run": "user-invocable-only",
              "workflow-authoring": "user-invocable-only", "loop": "user-invocable-only",
              "schedule": "user-invocable-only", "anthropic-skills:skill-creator": "user-invocable-only",

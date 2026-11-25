@@ -5,7 +5,7 @@ description: The look of Karchi's presentations; start at the `prezentacie` skil
 
 # Frontend Slides
 
-> **Karchi's copy.** [`prezentacie`](../prezentacie/SKILL.md) is the entry point and overrides this file:
+> **Karchi's copy.** [`prezentacie`](../SKILL.md) is the entry point and overrides this file:
 > no Phase 1 questions, no `open` of files, no offer to share or export in Phase 5, all of Phase 6 is void
 > (no sharing question, no Vercel; a PDF is made only when he asks), nothing installed globally. The bold
 > templates here have only `design.md` and `preview.md`: ignore every line that points to `template.html`

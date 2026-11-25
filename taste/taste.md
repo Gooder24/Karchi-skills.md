@@ -21,7 +21,7 @@ says now applies.
 ## Presentations
 
 - Every presentation, in any format and for any audience, starts at the `prezentacie` skill. It uses two
-  skills from GitHub: `frontend-slides` for the look (three style previews, he picks) and `academic-pptx`
+  guides from GitHub inside it: `frontend-slides` for the look (three style previews, he picks) and `academic-pptx`
   for the argument (2026-11-05: „daj tam aspoň fotku… ak si ho nenašiel tak nájdi nový napíš si ho teda
   vždy keď vytváraš prezentácie tak nech ho použiješ… cez github“; 2026-11-17, after an agent had built
   a GitHub Primer theme instead: „nájsť po Xtý krát ako som ti vravel na githube skills ktoré budeš

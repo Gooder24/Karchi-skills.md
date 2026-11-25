@@ -150,5 +150,5 @@ path of `verdikt.md`.
 
 When Karchi finds something broken that the verification passed, first add a check that fails on it,
 then fix it. Append one line to `~/inbox/overenie-chyby.md` on asus (`ssh asus`):
-`- YYYY-MM-DD · <project> · <what the check missed> · <the new check>`. The morning retro reads this file,
-so he can see how often a passed check was wrong.
+`- YYYY-MM-DD · <project> · <what the check missed> · <the new check>`.
+That way he can see how often a passed check was wrong.
