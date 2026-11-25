@@ -30,9 +30,14 @@ povolené modely sa menia len v `ALLOWED` v `antigravity/agy-guard.mts`.
 
 SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
 
-# Weft (Karchi, 2026-11-20)
+# Weft (Karchi, 2026-11-20 a 2026-11-25)
 
-Weft (`Gooder24/weft`) sa vyvíja na asuse: T3 projekt „Weft“ v `~/weft`, vedľa jeho služieb v `~/matrix-spike`. Nové Weft vlákno zakladaj tam (`environmentId` asusu). Projekt „Weft“ na delli (`~/.t3/projects/spojka`) a checkout na e540 sa už nepoužívajú: 3,7 GB nestačilo na viac Weft vlákien s prehliadačmi.
+Weft (`Gooder24/weft`) má T3 projekt „Weft“ na troch strojoch, aby sa práca nehromadila na jednom: asus `~/weft`
+(vedľa jeho služieb v `~/matrix-spike`), dell `~/.t3/projects/spojka` a e540 `~/weft`. Nové Weft vlákno zakladaj
+tam, kde je voľno; na delli a e540 najviac jedno Weft vlákno naraz (3,7 GB), jeho prehliadač otvára Weft z asusu
+cez Tailscale. Služby, nasadenie a ťažké kompilácie (Rust, Docker, build pre Windows) ostávajú na asuse. Vlákno
+dokončí prácu na stroji, kde začalo. Projekty na delli a e540 majú zapnuté automatické sťahovanie: T3 ich posunie na
+`main` z GitHubu, keď v nich nie sú lokálne zmeny ani commity.
 
 # Keď musí Karchi niečo spraviť hneď (Karchi, 2026-11-18)
 
