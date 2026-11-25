@@ -87,7 +87,7 @@ Accessibility is owned by **Gooder24**, the repository owner. The owner is respo
 
 ## Dependencies
 
-The repository depends on bash, git, Python 3, and Node.js 18 or later for the `avoid-ai-design` detector. None of them is an interface. The third-party skills listed in the README (`frontend-design`, `avoid-ai-design`, and the [tstack](https://github.com/t3dotgg/tstack) skills such as `full-send` and `file-pr`) have not been reviewed for accessibility. Before a new third-party skill is added, run `check-docs.py` on its Markdown and list it in the README. Known upstream blockers: none recorded.
+The repository depends on bash, git, Python 3, and Node.js 18 or later for the `avoid-ai-design` detector. None of them is an interface. The third-party skills listed in the README (`frontend-design`, `avoid-ai-design`, and the [tstack](https://github.com/t3dotgg/tstack) skills such as `full-send` and `full-stop`) have not been reviewed for accessibility. Before a new third-party skill is added, run `check-docs.py` on its Markdown and list it in the README. Known upstream blockers: none recorded.
 
 ## Community
 

@@ -1,6 +1,6 @@
 ---
 name: github
-description: How to write on GitHub for Karchi - commit messages, branches, pull requests, issues and comments. Use before any git commit or push, any gh pr or gh issue command, before writing a PR description or a reply to a review, and before writing to another project's bug tracker by mail (Debian BTS).
+description: How to write on GitHub for Karchi - commit messages, branches, pull requests, issues and comments. Use before any git commit or push, any gh pr or gh issue command, before writing a PR description or a reply to a review.
 ---
 
 # Writing on GitHub
@@ -106,6 +106,16 @@ The body (use the repo's template; without one, these headings):
 - Upload images to GitHub (PR body or comment); never commit assets that only the PR needs into the PR's branch
   or `main`.
 
+Before filing:
+
+- Check whether a PR for this branch already exists (`gh pr list --head <branch>`).
+- The title in the repo's style, saying why the change matters: not
+  `perf(server): negotiate permessage-deflate on the websocket` but
+  `perf(server): cut websocket frame size by 70%+ with gzipping`.
+- Check the title, body and attachments for secrets and private details.
+- A real PR, not a draft, so review bots run. When `gh pr create` fails on the GraphQL rate limit:
+  `gh api repos/<owner>/<repo>/pulls -f title=... -f head=... -f base=... -F body=@<file>`.
+
 ## UI changes: every screen in the PR (Karchi, 2026-11-23)
 
 A PR that changes anything a person sees (a page, a form, a layout, a dialog, a phone view) shows in its
@@ -124,38 +134,10 @@ place they show up, plus a phone width when the app has one.
 4. Look at the pairs yourself before handing over; a pair that shows a broken page is a finding, not proof.
    No private data (chats, real names other than his, passwords) in a screenshot that goes to GitHub.
 
-T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node <skill>/capture.mjs …`
-from the PR checkout starts an isolated dev server, captures this branch, swaps in `origin/main`'s copies
-of the changed files, captures again, and restores them. The header of each file says how to seed data
-and which options exist (`--setup`, `--hover`, `--text`, `--clip`). Run `vp run check:changed` where you
-work; only when it cannot run there at all (lint or knip crash for lack of memory), run it over `ssh asus`.
-
-T3 Code merges most outside bug fixes through the maintainers' pipeline, not a person's review. Measured
-18. 11. 2026 on 197 outside PRs merged 15. to 18. 11. (about half of that window's): 165 ended with a
-maintainer's commit, a median 0.9 h from opening to merge. A maintainer labels the PR `takeover:in-progress`; an agent merges
-`main`, reworks the fix, captures its own proof in a real dev app and merges. It stops with
-`takeover:blocked` and a `factory:stopped-<reason>` comment. In a sample of 68 stopped PRs (of about 410
-with that label), 27 needed something its workers cannot run (macOS, Windows, a provider login), 20 showed
-no bug on `main`, and 13 got a push from outside the pipeline during the takeover, in 10 of them from the
-author (#37314: three force-pushes in the 13 minutes after the label). So:
-
-- Pick bugs their worker can show in an isolated dev web app (`vp run dev`, the Replay provider, seeded
-  data). A bug that needs other hardware or accounts gets an issue with the diagnosis, or a PR whose body
-  carries a capture of the bug on `main` and the exact steps.
-- Write repro steps that a stranger can run unchanged on `main`, and say what to look at.
-- Once the PR is open, do not push while it is `takeover:in-progress` or before a maintainer has looked:
-  the pipeline merges `main` and reworks the fix itself. Answer a bot finding in a reply; push only when a
-  person asks for a change, or to resolve a `needs-rebase` label when no takeover is running.
-- Features from authors who are not in `.github/VOUCHED.td` are closed (7 of the 197 merged were `feat`,
-  all from vouched authors). The maintainers add people to that list by hand, lately Theo in commits like
-  `chore: vouch <login>`.
-- The cheapest help is what CONTRIBUTING asks for first: link a duplicate, confirm that an issue no longer
-  happens on the latest release, or test an open PR and comment what you saw.
-
 After opening (in work projects, ask before each push, as above):
 
 - Read every bot finding (CodeRabbit, Macroscope), including the security and risk sections. Fix real
-  ones with a push and a short reply (T3 Code: a reply only, see above), dismiss false ones
+  ones with a push and a short reply (T3 Code: a reply only, see `oss-prispevky`), dismiss false ones
   with a reason. Never close your own PR to
   dodge feedback.
 - Keep it mergeable (rebase on conflicts; T3 Code: only on `needs-rebase` and never during a takeover)
@@ -168,27 +150,3 @@ After opening (in work projects, ask before each push, as above):
 - Attach evidence when filing; do not promise a screenshot "to follow".
 - When you have a fix, tell Karchi in the same reply and, once he asks for the PR, open it with
   `Fixes #N`; an issue that only offers a fix gets fixed by someone else.
-
-## Bug trackers by mail (Debian BTS and similar)
-
-- The first line of the body (after a `Control:` line, if any) says that an AI assistant did the reproduction
-  and the analysis. Never at the end.
-- At most about 15 lines: what is wrong and where, the fix, one or two numbers that show it was tested, the
-  ask. The root-cause walk-through, tables per release, scripts and logs go into attachments or wait until
-  someone asks. Side findings are separate reports, not paragraphs.
-- Evidence (2026-11-17): Debian #1144467 got a 150-line reply with the disclosure as its last paragraph. The
-  maintainer's answer: "Next time please disclose this *before* the wall of mega-verbose text."
-- Send it with `weft mail` only when Karchi says so. Hermes watches a Debian bug that has a line in
-  `~/.hermes/debian-bugs.list` on asus (job "Debian bugs").
-
-## Babysitting a PR
-
-When Karchi says babysit or babysitting, Hermes on asus takes the PR until it is merged or closed (job "PR
-babysitting", every 20 minutes). He hears from it only about major events. The full rule is the
-"Babysitting" section of `~/.claude/AGENTS.md`.
-
-- Finish any push the PR needs.
-- Add one line to `~/.hermes/pr-babysit.list` on asus (from another machine through `ssh asus`):
-  `owner/repo#number`, then a checkout path only for his own PR checked out on asus on the PR's branch.
-  A line without a path is only watched.
-- Do not call `watch_pull_request` and do not make a scheduled task of your own. Confirm in one sentence.

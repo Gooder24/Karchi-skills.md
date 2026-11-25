@@ -8,6 +8,10 @@ description: Trigger this if the user says 'full stop', even as a closing "Full 
 Do the same work as `full-send`, but stop with the PR ready for the user to merge.
 Never merge it.
 
+In a repo Karchi does not own (someone else's open-source project), `oss-prispevky` wins over this
+skill: nothing is filed before his „podaj“ and nothing is merged by us. The work ends there with the
+branch pushed to his fork, the PR body and the `obhajoba` ready for him to read.
+
 Read [full-send](../full-send/SKILL.md) and follow its workflow, proof rules,
 review, and babysitting steps. An explicit "full stop" request authorizes that
 work without a separate "full send" request. That includes full-send's

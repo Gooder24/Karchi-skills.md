@@ -10,6 +10,10 @@ they want you to complete the work end-to-end autonomously. Your updates and
 your final message go unread until long after you stop. You own the work from
 its current state to a merged PR.
 
+In a repo Karchi does not own (someone else's open-source project), `oss-prispevky` wins over this
+skill: nothing is filed before his „podaj“ and nothing is merged by us. The work ends there with the
+branch pushed to his fork, the PR body and the `obhajoba` ready for him to read.
+
 If the user did not explicitly request "full send" in some clear way, do not
 assume full autonomy. If they did, everything below applies.
 
@@ -47,7 +51,7 @@ one appears.
    that could. If you are on the default branch, create a branch first.
 2. **Prove it.** Get proof for every change you made. See "Proof".
 3. **Get feedback.** Run the verifiers of the `overenie` skill on the changes.
-4. **File the PR** with the `file-pr` skill. Rebase onto the latest default
+4. **File the PR** as the `github` skill says. Rebase onto the latest default
    branch first. Add one short line to the description that says how you proved
    the change.
 5. **Babysit the PR** with the `babysit-pr` skill. Fix real findings and CI

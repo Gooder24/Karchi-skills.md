@@ -1,6 +1,6 @@
 ---
 name: oss-prispevky
-description: How Karchi contributes to other people's open-source projects so maintainers see a careful developer and not AI slop - picking the project, its contribution and AI rules, reproducing the bug in a desktop VM, the fix, tests and measurements, a PR with evidence and a merge chance, following the replies, and a Slovak explanation he can defend. Use when he wants to contribute to an open-source project he does not own, choose one or an issue, prepare or file a PR or issue there, or when a maintainer replies to one. His own repos follow `github` alone.
+description: How Karchi contributes to other people's open-source projects so maintainers see a careful developer and not AI slop - picking the project, its contribution and AI rules, reproducing the bug in a desktop VM, the fix, tests and measurements, a PR with evidence and a merge chance, following the replies, and a Slovak explanation he can defend. Use when he wants to contribute to an open-source project he does not own, choose one or an issue, prepare or file a PR or issue there, or when a maintainer replies to one, and before writing to another project's bug tracker by mail (Debian BTS). His own repos follow `github` alone.
 ---
 
 # Open-source contributions
@@ -173,6 +173,48 @@ teaches something.
 When a release ships his code, watch the project's new issues for two weeks (`gh issue list -R owner/repo --search
 "created:>=<release date>"`) and give Karchi any that touch his changes first, with the fix ready: a regression fixed
 the same week is what makes a maintainer trust a large contribution he merged without reading every line.
+
+## T3 Code: how its maintainers merge outside PRs
+
+T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node <skill>/capture.mjs …`
+from the PR checkout starts an isolated dev server, captures this branch, swaps in `origin/main`'s copies
+of the changed files, captures again, and restores them. The header of each file says how to seed data
+and which options exist (`--setup`, `--hover`, `--text`, `--clip`). Run `vp run check:changed` where you
+work; only when it cannot run there at all (lint or knip crash for lack of memory), run it over `ssh asus`.
+
+T3 Code merges most outside bug fixes through the maintainers' pipeline, not a person's review. Measured
+18. 11. 2026 on 197 outside PRs merged 15. to 18. 11. (about half of that window's): 165 ended with a
+maintainer's commit, a median 0.9 h from opening to merge. A maintainer labels the PR `takeover:in-progress`; an agent merges
+`main`, reworks the fix, captures its own proof in a real dev app and merges. It stops with
+`takeover:blocked` and a `factory:stopped-<reason>` comment. In a sample of 68 stopped PRs (of about 410
+with that label), 27 needed something its workers cannot run (macOS, Windows, a provider login), 20 showed
+no bug on `main`, and 13 got a push from outside the pipeline during the takeover, in 10 of them from the
+author (#37314: three force-pushes in the 13 minutes after the label). So:
+
+- Pick bugs their worker can show in an isolated dev web app (`vp run dev`, the Replay provider, seeded
+  data). A bug that needs other hardware or accounts gets an issue with the diagnosis, or a PR whose body
+  carries a capture of the bug on `main` and the exact steps.
+- Write repro steps that a stranger can run unchanged on `main`, and say what to look at.
+- Once the PR is open, do not push while it is `takeover:in-progress` or before a maintainer has looked:
+  the pipeline merges `main` and reworks the fix itself. Answer a bot finding in a reply; push only when a
+  person asks for a change, or to resolve a `needs-rebase` label when no takeover is running.
+- Features from authors who are not in `.github/VOUCHED.td` are closed (7 of the 197 merged were `feat`,
+  all from vouched authors). The maintainers add people to that list by hand, lately Theo in commits like
+  `chore: vouch <login>`.
+- The cheapest help is what CONTRIBUTING asks for first: link a duplicate, confirm that an issue no longer
+  happens on the latest release, or test an open PR and comment what you saw.
+
+## Bug trackers by mail (Debian BTS and similar)
+
+- The first line of the body (after a `Control:` line, if any) says that an AI assistant did the reproduction
+  and the analysis. Never at the end.
+- At most about 15 lines: what is wrong and where, the fix, one or two numbers that show it was tested, the
+  ask. The root-cause walk-through, tables per release, scripts and logs go into attachments or wait until
+  someone asks. Side findings are separate reports, not paragraphs.
+- Evidence (2026-11-17): Debian #1144467 got a 150-line reply with the disclosure as its last paragraph. The
+  maintainer's answer: "Next time please disclose this *before* the wall of mega-verbose text."
+- Send it with `weft mail` only when Karchi says so. Hermes watches a Debian bug that has a line in
+  `~/.hermes/debian-bugs.list` on asus (job "Debian bugs").
 
 ## Lessons (append one line each with date and evidence)
 
