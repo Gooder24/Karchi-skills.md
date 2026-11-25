@@ -1,9 +1,10 @@
 # Karchi skills
 
-Personal skills for Claude. Each folder is one skill (`SKILL.md` + its files).
+Personal skills for Claude, Codex and Antigravity. Each folder with a `SKILL.md` is one skill; the other folders are the
+hooks, services and commands listed below.
 
 [`AGENTS.md`](AGENTS.md) holds Karchi's rules for every agent on every machine; `install.sh` links it as
-`~/.claude/CLAUDE.md`, `~/.claude/AGENTS.md` and `~/.codex/AGENTS.md`.
+`~/.claude/CLAUDE.md`, `~/.claude/AGENTS.md`, `~/.codex/AGENTS.md` and `~/.gemini/AGENTS.md`.
 
 ## Requirements
 
@@ -38,10 +39,13 @@ The [Claude Code](#claude-code) section says what it does.
 | [`weft`](weft/SKILL.md) | The `weft` command on every machine: Karchi's chats, search, drafts, sending and calendar in Weft on asus |
 | [`stylizacia`](stylizacia/SKILL.md) | Slovak business texts the way his OBK teacher corrects them, for eSYST customers and school, and `pevne-medzery.ts`, which puts in the non-breaking spaces (Ctrl+Shift+Space) |
 | [`citacka`](citacka/SKILL.md) | The `citacka` command: a transcript of what the Orca screen reader says on a page, a README or a command's output, for screen reader checks |
+| [`android`](android/SKILL.md) | The Android emulator on asus (Pixel 8, Android 15) that agents drive and Karchi watches in T3's Device panel: mobile Chrome, PWAs, APKs, phone screenshots |
+| [`disky`](disky/SKILL.md) | What is on each of his external disks and asus `~/zaloha`, kept current whenever a disk is connected; read before any copy, wipe or rescue |
+| [`vykaz`](vykaz/SKILL.md) | His paid-work log for eSYST: `~/Work/dual/1.plat/<mesiac>.xlsx` on x270 filled from his eSYST threads and focused Outlook/Teams windows, the `vykaz` command, and the month-end send |
 | [`frontend-design`](frontend-design/SKILL.md) | Anthropic's guide to distinctive UI: subject, type and colour decided before code |
 | [`avoid-ai-design`](avoid-ai-design/SKILL.md) | Catalog of AI-design tells and `scripts/detect.mjs`, which finds them in code; `taste` runs it on every user interface (UI) before Karchi sees it |
 | [`council`](council/SKILL.md) | Review by Opus 5.5, Sol 6.2 (high), DeepSeek V4.1 Flash (OpenCode, free first) and Gemini 4 Neon (medium), on another machine when this one cannot run a member |
-| `full-send`, `full-stop`, `file-pr`, `takeover`, `babysit-pr`, `modernize`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
+| `full-send`, `full-stop`, `file-pr`, `babysit-pr`, `leaving-pr-comments` | From [tstack](https://github.com/t3dotgg/tstack) (MIT, `LICENSE-tstack`), as published |
 
 ## Hooks
 
@@ -69,7 +73,17 @@ Wiring:
 | Service | What it does |
 |---------|---------|
 | [`limit-fallback`](limit-fallback/t3-claude-fallback) | Every 10 min: at 3 % of the weekly Claude limit left, switches T3's default model to Codex Infowork (Môj when limit-ping saw Infowork's week used up), and back after the reset |
+| [`limit-ping`](limit-ping/limit-ping) | asus only: one tiny request per 5-hour window keeps the Claude and Codex usage windows back to back at planned times |
+| [`t3-links`](t3-links/t3-links) | asus only, five times a day: links each pair of T3 environments again before their 30-day tokens run out |
 | [`codex-unlock`](codex-unlock/t3-codex-unlock) | Every 3 s: when a Codex turn fails (usually the usage limit), stops that account's idle app-server so the thread can switch to another Codex account without "open in another Codex client". `journalctl --user -u t3-codex-unlock` shows each stop; `t3-codex-unlock --dry-run` shows what it would stop |
+
+## Commands and pages
+
+| Folder | What it does |
+|---------|---------|
+| [`stroj`](stroj/stroj.mts) | `stroj [x270\|asus\|dell\|e540]`: is a machine up, and if not, why; agents run it before calling a machine asleep |
+| [`antigravity`](antigravity/agy-guard.mts) | `agy-guard`: T3 runs Antigravity through it, so only the models in `ALLOWED` are offered and accepted |
+| [`inventory`](inventory/README.md) | Prehľad dvora on asus (`prehlad.service`): what runs on each machine, on which AI subscription, what waits for an update or for Karchi |
 
 ## Third-party skills
 

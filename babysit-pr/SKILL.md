@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: Monitor a pull request through review and CI, when another skill (full-send, takeover) needs it. When Karchi himself says babysit, follow AGENTS.md (Hermes list on asus) instead.
+description: Monitor a pull request through review and CI, when another skill (full-send) needs it. When Karchi himself says babysit, follow AGENTS.md (Hermes list on asus) instead.
 ---
 
 # Babysit PR
