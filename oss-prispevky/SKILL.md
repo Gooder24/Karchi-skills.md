@@ -176,7 +176,7 @@ the same week is what makes a maintainer trust a large contribution he merged wi
 
 ## T3 Code: how its maintainers merge outside PRs
 
-T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node <skill>/capture.mjs …`
+T3 Code UI evidence: `github/t3code-evidence/before-after.sh <home-dir> node github/t3code-evidence/capture.mjs …`
 from the PR checkout starts an isolated dev server, captures this branch, swaps in `origin/main`'s copies
 of the changed files, captures again, and restores them. The header of each file says how to seed data
 and which options exist (`--setup`, `--hover`, `--text`, `--clip`). Run `vp run check:changed` where you
@@ -228,7 +228,7 @@ author (#37314: three force-pushes in the 13 minutes after the label). So:
   desktop runs.
 - 2026-11-17 Atlas: Fedora GNOME showed that the Wayland clipboard fix (#23, data-control) does not work on GNOME;
   without the GNOME VM it would have shipped as "fixes the clipboard". Test every desktop family you claim.
-- 2026-11-17 Debian #1144467 (see `github`): disclose AI at the top and keep it short; a 150-line reply got told off.
+- 2026-11-17 Debian #1144467 (see „Bug trackers by mail“ above): disclose AI at the top and keep it short; a 150-line reply got told off.
 - 2026-11-18 COSMIC Files #2136: the research called COSMIC "no written AI rules" although its PR template, already
   fetched into `data/policy/`, bans LLM content; caught only after the root-cause work. Read the template whole
   in step 2 before scoring a project. Same day: Smithay's `AI.md` and Tauri's policy were missed too, because `rg`

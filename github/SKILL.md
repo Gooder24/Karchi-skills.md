@@ -140,7 +140,7 @@ After opening (in work projects, ask before each push, as above):
   ones with a push and a short reply (T3 Code: a reply only, see `oss-prispevky`), dismiss false ones
   with a reason. Never close your own PR to
   dodge feedback.
-- Keep it mergeable (rebase on conflicts; T3 Code: only on `needs-rebase` and never during a takeover)
+- Keep it mergeable (rebase on conflicts; T3 Code: only on `needs-rebase` and never during its maintainers' takeover, see `oss-prispevky`)
   and under the repo's open-PR limit.
 
 ## Issues
