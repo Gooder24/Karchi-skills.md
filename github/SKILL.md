@@ -8,7 +8,7 @@ description: How to write on GitHub for Karchi - commit messages, branches, pull
 ## Where changes go
 
 - Karchi's personal repos are full send: every repo of Gooder24's own except forks and the eSYST work repos
-  (spotrex, eSYSTAK, enex-crz-email-mvp). Partsheet is his own (a songbook for his choir), not eSYST. Commit straight to `main` and push without asking. No
+  (enex-crz-email-mvp, and every repo of the organization `e-SYST`: spotrex, eSYSTAK, skills, dizajn). Partsheet is his own (a songbook for his choir), not eSYST. Commit straight to `main` and push without asking. No
   branches or pull requests; an open PR there is cleaned up at once (AGENTS.md, GitHub).
 - Repos that his machines use by themselves (Karchi, 2026-11-18): karchi-os, karchi-os-headless-debian with
   its parts laptop-server and reboot-when-idle, weft, kalendarix and Karchi-skills.md. A change reaches them

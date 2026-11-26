@@ -28,7 +28,7 @@ povolené modely sa menia len v `ALLOWED` v `antigravity/agy-guard.mts`.
 
 # SPOTREX (Karchi, 2026-11-16)
 
-SPOTREX (eSYST, `Gooder24/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
+SPOTREX (eSYST, `e-SYST/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
 
 # Weft (Karchi, 2026-11-20 a 2026-11-25)
 
@@ -112,7 +112,7 @@ Karchi chce každého subagenta na Haiku 5.5 s effort xhigh, na všetkých stroj
 
 # GitHub
 
-Osobné repá sú full send (Karchi, 2026-11-17): všetky vlastné repá Gooder24 okrem forkov a pracovných eSYST (`spotrex`, `eSYSTAK`, `enex-crz-email-mvp`), teda `karchi-os`, `Karchi-skills.md`, `weft`, `ucenie`, `kalendarix`, `partsheet` (spevník zboru, Karchiho vlastný, nie eSYST; Karchi, 2026-11-23) a ďalšie. Zmena v nich ide hneď do `main` a pushne sa bez pýtania: pred pushom `git pull --rebase`, žiadne vetvy ani PR (v repách, ktoré jeho stroje používajú samé, je jediná iná cesta PR, ktorý agent sám zlúči až po zelených testoch; skill `github`), jedna zmena je jeden commit a `git add` len súbory tej zmeny. Otvorené PR v nich je chyba: keď na nejaké narazíš (aj z inboxu, kam ich raz denne zapisuje Hermes úloha „Visiace PR“, `~/.hermes/scripts/hanging-prs.py`), to, čo je stále žiadané, daj do `main` a PR zavri s jednou vetou a commitom; zastarané zavri s jednou vetou prečo. Pracovné projekty (eSYST): pred commitom alebo pushom sa spýtaj. Zvyšok je v skille `github`.
+Osobné repá sú full send (Karchi, 2026-11-17): všetky vlastné repá Gooder24 okrem forkov a pracovných eSYST (`enex-crz-email-mvp`; ostatné eSYST repá sú od 26. 11. v organizácii `e-SYST`: `spotrex`, `eSYSTAK`, `skills`, `dizajn`, vlastní ich firma a Karchi ich spravuje), teda `karchi-os`, `Karchi-skills.md`, `weft`, `ucenie`, `kalendarix`, `partsheet` (spevník zboru, Karchiho vlastný, nie eSYST; Karchi, 2026-11-23) a ďalšie. Zmena v nich ide hneď do `main` a pushne sa bez pýtania: pred pushom `git pull --rebase`, žiadne vetvy ani PR (v repách, ktoré jeho stroje používajú samé, je jediná iná cesta PR, ktorý agent sám zlúči až po zelených testoch; skill `github`), jedna zmena je jeden commit a `git add` len súbory tej zmeny. Otvorené PR v nich je chyba: keď na nejaké narazíš (aj z inboxu, kam ich raz denne zapisuje Hermes úloha „Visiace PR“, `~/.hermes/scripts/hanging-prs.py`), to, čo je stále žiadané, daj do `main` a PR zavri s jednou vetou a commitom; zastarané zavri s jednou vetou prečo. Pracovné projekty (eSYST): pred commitom alebo pushom sa spýtaj. Zvyšok je v skille `github`.
 
 # Na x270 a pri KarchiOS
 
