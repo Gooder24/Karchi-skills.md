@@ -26,7 +26,7 @@ one-line fixes, "nechcem X") and put it in the file, so none of it comes back as
   order of work, small UX calls that follow `taste.md`).
 - **Nesmieš:** hard limits: live services, real people (no messages, no sending), deleting data,
   secrets in chat, spending money.
-- **Karchiho krok** (a login, token, purchase or taste decision): name it under `Tvoj krok` in the
+- **Karchiho krok** (a login, token, purchase or taste decision): name it under **Od teba** in the
   final reply (the thread stays unsettled, so it waits there; skill `priority`), skip that item and go
   on with the rest. Never stop to wait.
 - **Koniec:** stop when every check passes, or after the time limit he gave (default 3 hours of
@@ -43,7 +43,8 @@ one-line fixes, "nechcem X") and put it in the file, so none of it comes back as
 
 ## 3. Report
 
-End with the checks as a list (prešlo / neprešlo and why), then exactly three lines:
-`Commit: <repo@sha or nič>`, `Beží: <URL or service, or nič>`, `Tvoj krok: <one action, or nič>`.
+End in the one shape of AGENTS.md „Koniec odpovede“, with no separate list of checks: each check that passed is a
+Hotové bullet with its evidence, the commit (`repo@sha`) and where it runs (URL or service); each that did not is a
+Nehotové row; his one step is Od teba.
 He asked "takže už to funguje? commitol si?" 28 times this month: answer those questions before he
 has to ask them.

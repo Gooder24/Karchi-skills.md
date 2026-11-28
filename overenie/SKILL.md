@@ -63,8 +63,8 @@ it between machines. Never `git add -f` it and never move checks to another fold
 - Where he will see it, test it there, not on a stand-in: his x270 session over `ssh x270` (`hyprctl`,
   `grim` of the live screen), his phone through Playwright WebKit with an iPhone profile on dell, the
   public URL rather than localhost. What you truly cannot reach (his real chats, a physical cable, his
-  eyes) is a `tvoj krok` check: put it on the `Overenie: neoverené – …` line; it waits in the thread, never
-  in the inbox (skill `priority`).
+  eyes) is his check: a Nehotové row with 🔴 Karchi, and the `Overenie: neoverené – …` line says what he tries and
+  sees; it waits in the thread, never in the inbox (skill `priority`).
 - Looks that no machine can judge ("not AI generic", "nice icons"): mark them `👁 tvoje oko`, put the
   screenshot beside the reference, and never count them as passed.
 
@@ -90,7 +90,7 @@ file, a section per verifier:
 
 Only when he asks for other verifiers, set `OVERENIE_KTO` to the chain he wants (`OVERENIE_KTO="sol-moj neon"`).
 Each verifier keeps its files in `overenie/<name>/`. When one leaves no verdict (a limit), its section says so: name it
-in the reply. Judge every finding from both; when they disagree, check it yourself in the real target.
+where the reply cites the verdict (its Hotové bullet or a finding's Nehotové row). Judge every finding from both; when they disagree, check it yourself in the real target.
 
 ```sh
 cd "$PROJECT" && ~/.work/karchi-skills/overenie/verify.sh overenie/verifier.md   # [verdict, default overenie/verdikt.md]
@@ -118,8 +118,8 @@ output instead of a rerun, about ten minutes. Write `Hĺbka: dôkladná` in the 
 messages to real people, live company services, code every case shares, or when he asks for it.
 
 A pull request to someone else's repo (T3 Code upstream) gets one round: its CI, CodeRabbit, Macroscope and the
-maintainers' pipeline check it again. Fix what that round found, rerun run.sh and the repo's checks yourself, and name
-in the reply each finding only you re-checked (#37314, 15. 11.: the second round found only a test-locale issue that
+maintainers' pipeline check it again. Fix what that round found, rerun run.sh and the repo's checks yourself, and give
+each finding only you re-checked a Nehotové row „opravené, neoverené“ (#37314, 15. 11.: the second round found only a test-locale issue that
 CodeRabbit flagged anyway).
 
 `overenie/verifier.md` is short and points instead of pasting: the checks (or the path to `checks.md`), where the
@@ -142,9 +142,10 @@ word on a check it judges. Then report what is still failing.
 
 ## 4. Report
 
-No report page: he does not read one (10. 11.). The reply names in a sentence or two only what failed or could not be
-verified, then the `zadanie` footer when there is one (Commit, Beží, Tvoj krok), and the `Overenie:` line with the
-path of `verdikt.md`.
+No report page: he does not read one (10. 11.). The reply has the one shape of AGENTS.md „Koniec odpovede“ and no
+list of findings of its own: each finding still open is a row of the Nehotové table with `(neprešlo)` or
+`(nedá sa overiť)` in „Čo“, a finding you fixed without another verifier round is a row „opravené, neoverené“, and
+only what a verdict passed goes into Hotové. The `Overenie:` line with the path of `verdikt.md` ends it.
 
 ## 5. Every miss becomes a check
 

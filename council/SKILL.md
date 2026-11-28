@@ -101,7 +101,7 @@ Rounds: 2
 If a delegate gives no score, write `no score`. Do not invent one.
 If the PR is open, edit the description. Do not post a comment for this.
 If there is no PR (Karchi's own projects commit straight to `main`), put the
-same results in the final reply only.
+same results in the final reply only, as Hotové bullets and Nehotové rows.
 
 If you agree with their recommendations, make the changes and request a fresh
 review after. Continue this process until all delegates are satisfied with the

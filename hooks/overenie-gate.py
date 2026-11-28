@@ -63,7 +63,7 @@ STATUS_LINE = re.compile(r"^[ \t>*_`#-]*overenie[ \t*]*[:\u2013\u2014-][ \t*]*([
 # netreba needs a reason after a dash: "Overenie: netreba – len poznámky pre mňa"
 STATUS_WORD = re.compile(r"^[`*_ ]*(neoveren\w*|prebieha|netreba(?=\s*[\u2013\u2014:-]\s*\S+\s+\S+\s+\S+))")
 FENCE = re.compile(r"```.*?(```|$)", re.S)
-FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit)")
+FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene, neoveren)")
 # The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
@@ -72,6 +72,8 @@ SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,2
 EVIDENCE_NAMES = {"verdikt.md", "index.html"}
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
+# The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
+OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*$")
 NOT_A_USER_TURN = ("<task-notification", "this session is being continued", "<command-", "caveat:",
                    "[system notification", "background command", "monitor \"")
 
@@ -200,14 +202,14 @@ def decide(event):
         if ev and FAILED_IN_VERDICT.search(norm(open(ev, errors="replace").read(200000))) \
                 and not FAILED_IN_REPLY.search(norm(text)):
             problem = (f"{ev} records checks that failed or could not be verified, and the reply does not "
-                       "say which (write neprešlo / nedá sa overiť for each in the reply)")
+                       "say which (one row per finding in the Nehotové table, marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings, AGENTS.md „Koniec odpovede“)")
         elif ev:
             log("pass-evidence", event, evidence=ev)
             return None
         word = STATUS_WORD.match(norm(status))
         if problem:
             pass
-        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(norm(text[:300])):
+        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(OPENING_END.split(norm(text[:300]))[0]):
             problem = "it says neoverené but its opening still calls the work hotové or funguje"
         elif word:
             log("pass-" + ("neoverene" if word.group(1).startswith("neoveren") else word.group(1)), event,

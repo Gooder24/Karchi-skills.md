@@ -124,5 +124,5 @@ Decide everything else yourself with sensible defaults, and list those decisions
 in the report.
 
 If no question tool is available, or the tool returns no answer, take the safe
-path: leave the PR open and unmerged, and start your final message with the
-question.
+path: leave the PR open and unmerged, and put the question under **Od teba** in
+the final message.

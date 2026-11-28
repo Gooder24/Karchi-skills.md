@@ -69,9 +69,11 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 
 1. Jedna veta: kde je celá úloha.
 2. **Hotové:** odrážky, každá s dôkazom (číslo, commit, verdikt). Neoverené sem nepatrí.
-3. **Nehotové:** tabuľka `| Čo | Prečo nie | Ako to opraviť | Kto |`, kde „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem aj neoverené a čo overovateľ označil ako chybu. Keď nič nechýba, napíš „Nič nechýba“.
+3. **Nehotové:** tabuľka `| Čo | Prečo nie | Ako to opraviť | Kto |`, kde „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem aj neoverené a každý nález overovateľa, ktorý ostal: riadok so slovom `(neprešlo)` alebo `(nedá sa overiť)` v „Čo“. Nález opravený bez ďalšieho kola overenia je riadok „opravené, neoverené“, nie bod v Hotové. Keď nič nechýba, napíš „Nič nechýba“.
 4. **Od teba:** len keď niečo musí spraviť alebo rozhodnúť Karchi: očíslované kroky alebo jedna jasná otázka (vkus v skille `taste`).
 5. Riadok `Overenie:` ako posledný.
+
+Iný tvar nie je: žiadny zoznam nálezov overovateľov, kontrol ani pätička skillu pred, medzi ani za týmito časťami (27. 11. SPOTREX: nálezy hore a znova v tabuľke). Skill, ktorý chce niečo v odpovedi, to dáva do týchto častí.
 
 Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho začína hlavička každého stĺpca iným farebným
 krúžkom, aby stĺpce rozoznal: `| 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce ⚪, ⚫. Bunka
