@@ -84,6 +84,7 @@ OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*(?:nic\.?|[\u2013\u
 WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
 TILDE_FENCE = re.compile(r"~~~.*?(~~~|$)", re.S)
 # one line per step a verifier gave back, inside its `Na schv\u00e1lenie:` list (the verdict text is norm()ed)
+APPROVAL_SECTION = re.compile(r"^[ \t*_]*na schvalenie:.*$", re.M)
 KARCHI_REFERRAL = re.compile(r"^[ \t]*-[ \t]+karchi[ \t]+[\u2013\u2014-][ \t]", re.M)
 NOT_A_USER_TURN = ("<task-notification", "this session is being continued", "<command-", "caveat:",
                    "[system notification", "background command", "monitor \"")
@@ -194,13 +195,14 @@ def evidence(line, t0, cwd):
 
 def waiting_without_referral(text, status, t0, cwd):
     """Why the 🟠 rows of the reply may not wait for Karchi yet, or "" when there are none or a verdict gave each back."""
-    rows = len(WAITING_ROW.findall(FENCE.sub("", TILDE_FENCE.sub("", text))))
+    rows = len(WAITING_ROW.findall(TILDE_FENCE.sub("", FENCE.sub("", text))))
     if not rows:
         return ""
     ev = evidence(status, t0, cwd) if status else None
     verdict = norm(open(ev, errors="replace").read(200000)) if ev else ""
     # each verifier lists every step, so the verifier that gave the most back counts, not their sum
-    referrals = max([len(KARCHI_REFERRAL.findall(part.split("\n#")[0])) for part in verdict.split("na schvalenie:")[1:]] or [0])
+    # ponytail: counts steps, does not match them to rows; match step texts if agents start gaming the count
+    referrals = max([len(KARCHI_REFERRAL.findall(part.split("\n#")[0])) for part in APPROVAL_SECTION.split(verdict)[1:]] or [0])
     if referrals >= rows:
         return ""
     return (f"the reply has {rows} row(s) waiting for Karchi's yes (🟠), but the verdict of this turn gave only "
@@ -264,7 +266,7 @@ def decide(event):
     why = problem or ("its 'Overenie:' line neither names an overenie/…/verdikt.md written "
                       "in this turn nor starts with neoverené, netreba or prebieha" if status
                       else "it has no 'Overenie:' line")
-    return {"decision": "block", "reason": (orange + "\nAlso: " if orange else "") + (
+    return {"decision": "block", "reason": ("overenie-gate: " + orange + "\nAlso: " if orange else "") + (
         f"overenie-gate: this turn changed something ({change[:80]}), but {why}. Karchi has been burned "
         "many times by 'hotové' from the agent that built the change, so every reply after a change "
         "ends with one line he can trust at a glance. Add exactly one, truthfully:\n"
