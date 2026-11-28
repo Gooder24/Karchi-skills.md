@@ -8,6 +8,6 @@ Environment=GIT_TERMINAL_PROMPT=0
 ExecStart=/usr/bin/timeout 60 /bin/bash %h/.work/karchi-skills/install.sh
 # Runs every 3 minutes; keep the "ok" lines and systemd's start and stop lines out of the journal.
 StandardOutput=null
-# Warnings (lines that start with <4>, such as hooks/codex-hooks.mts failing) still reach the journal.
+# Errors still reach the journal (hooks/codex-hooks.mts marks its failures as warnings with <4>); a normal run prints none.
 StandardError=journal
 LogLevelMax=notice

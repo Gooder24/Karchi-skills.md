@@ -206,26 +206,6 @@ def read_codex_turn(lines):
     return t0, tools, ""  # Codex hands the reply over as last_assistant_message
 
 
-# A heredoc body is data for its command (python3 - <<'PY' …), not shell: `a > b` in it is no redirect. A body that
-# feeds a shell (bash, sh, ssh host) stays, and file writes in any body still count (WRITE_IN_BODY).
-HEREDOC = re.compile(r"<<-?[ \t]*(['\"]?)(\w+)\1([^\n]*)\n(.*?)\n[ \t]*\2[ \t]*(?=\n|$)", re.S)
-SHELL_FEED = re.compile(r"(?:^|[\s;&|(])(?:bash|sh|zsh|dash|ssh)\b[^\n;&|]*$")
-WRITE_IN_BODY = re.compile(r"writeFileSync|appendFileSync|open\([^)]{0,300}['\"][wax]b?\+?['\"]|\.write_text\(|\.write_bytes\("
-                           r"|json\.dump\(|\b(?:os\.(?:remove|unlink|rename|replace)|shutil\.(?:copy\w*|move|rmtree))\(")
-
-
-def shell_part(cmd):
-    """The command with the bodies of heredocs that do not feed a shell taken out."""
-    def keep(m):
-        before = cmd[:m.start()].rsplit("\n", 1)[-1]
-        return m.group() if SHELL_FEED.search(before) else "<<" + m.group(2) + m.group(3) + "\n" + m.group(2)
-    return HEREDOC.sub(keep, cmd)
-
-
-def bash_changes(cmd):
-    return CHANGING_BASH.search(shell_part(cmd)) or any(WRITE_IN_BODY.search(m.group(4)) for m in HEREDOC.finditer(cmd))
-
-
 def changed_something(tools):
     for name, inp in tools:
         if name in EDIT_TOOLS:
@@ -234,7 +214,7 @@ def changed_something(tools):
             return name
         if name.startswith("mcp__") and not READONLY_MCP & set(re.split(r"[_\-]", name.split("__")[-1].lower())):
             return name
-        if name == "Bash" and bash_changes(str(inp.get("command", ""))):
+        if name == "Bash" and CHANGING_BASH.search(str(inp.get("command", ""))):
             return "Bash: " + str(inp.get("command", ""))[:120]
     return None
 

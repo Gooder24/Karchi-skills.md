@@ -5,7 +5,7 @@
 // Usage: codex-hooks.mts [codex home …]     (default: every home on this machine)
 // See it: `codex` → /hooks lists the hook and whether it is trusted. Way out: disable it there (hooks.state enabled =
 // false, which this script leaves alone); deleting it from hooks.json does not stick, install.sh adds it back.
-// Failures go to stderr with a <4> prefix, so the timer's journal keeps them as warnings (LogLevelMax=notice).
+// Failures go to stderr with a <4> prefix: the timer's journal keeps them as warnings; a normal run prints nothing there.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const HOME = process.env.HOME ?? "";
@@ -36,7 +36,7 @@ function wire(home: string) {
 }
 
 // The trust stamp holds the hooks.json it was given for: any change there (ours, a field someone added, a failed earlier
-// trust) means Codex sees a new hash, so the hook is trusted again; an unchanged file costs one read.
+// trust) or a trust entry gone from config.toml means the hook is trusted again; otherwise a run costs two reads.
 const stampOf = (home: string) => `${home}/.overenie-gate-trusted`;
 const digest = (home: string) => new Bun.CryptoHasher("sha256").update(readFileSync(`${home}/hooks.json`)).digest("hex");
 
@@ -103,7 +103,8 @@ for (const home of process.argv.length > 2 ? process.argv.slice(2) : homes()) {
     continue;
   }
   const sum = digest(home);
-  if (existsSync(stampOf(home)) && readFileSync(stampOf(home), "utf8") === sum) continue;
+  const trusted = readFileSync(`${home}/config.toml`, "utf8").includes(`"${home}/hooks.json:stop:`);
+  if (trusted && existsSync(stampOf(home)) && readFileSync(stampOf(home), "utf8") === sum) continue;
   if (await trust(home)) writeFileSync(stampOf(home), sum);
   else failed = true;
 }
