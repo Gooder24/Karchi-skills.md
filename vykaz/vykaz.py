@@ -59,7 +59,7 @@ PRAVIDLA = 6     # raise when the counting changes: days written by older rules 
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 EKONOMIKA = "ekonomika@esyst.sk"  # Andrea Hanková, ekonomika eSYST
 PREDMET = "Karol Ľupták"  # the whole mail: this subject and the file, no text (Karchi 24. 11.)
-POSLAT_Z = "administrativa@esyst.sk"  # Weft account (`weft mail --from`), Outlook in Weft since 28. 11.; None = do not send
+POSLAT_Z = None  # "administrativa@esyst.sk" (Outlook in Weft since 28. 11.) once he says the mail may go; None = do not send
 ODOSLANE = DATA / "odoslane.json"
 TYPY, PODKLADY = DATA / "typy.json", DATA / "podklady"  # row -> work type; per day: what the time was counted from
 NAZVY = {1: "január", 2: "február", 3: "marec", 4: "apríl", 5: "máj", 6: "jún", 7: "júl", 8: "august",
@@ -447,6 +447,10 @@ def preco(iv, p, svoj):
         t = datetime.fromisoformat(r["t"])
         if a - timedelta(seconds=KROK) <= t <= b:  # a is rounded to the half minute
             vl.setdefault(f"{r['projekt']} / {r['vlakno']}", []).append(hm(t))
+    if not vl:  # a row cut short by one already in the sheet: its time came from the next message
+        po = [r for r in p["spravy"] if b < datetime.fromisoformat(r["t"]) <= b + timedelta(minutes=NAD_SPRAVOU[1])]
+        for r in po[:1]:
+            vl[f"{r['projekt']} / {r['vlakno']}"] = [hm(datetime.fromisoformat(r["t"])) + " (čas pred touto správou)"]
     out = [f"správy vo vlákne T3 {k}: {', '.join(v)}" for k, v in vl.items()]
     ok, sucet = {}, Counter()  # (kind, title) -> its focus intervals inside the row (nearly touching ones merged
     # for reading), and its real focused seconds
@@ -735,7 +739,7 @@ def auto():
         return
     hotove = stav().get("dni", {})
     d, today = START, datetime.now(TZ).date()
-    pridane = 0
+    pridane, mesiace = 0, set()
     while d < today and datetime.now(TZ).hour in ZOBUDENY:
         v = hotove.get(str(d))
         stare = not novy_den(v) and (not isinstance(v, dict) or v.get("pravidla", 1) != PRAVIDLA)
@@ -750,10 +754,15 @@ def auto():
             if r is None:
                 break
             pridane += len(r)
+            mesiace.add(d.replace(day=1))
         d += timedelta(days=1)
     if pridane:
         notify(f"Výkaz: pridal som {pridane} riadkov do {subor(today - timedelta(days=1)).name}")
-        export(today - timedelta(days=1))  # so the files for ekonomika always match the month's file
+    for m in sorted(mesiace):  # so the files for ekonomika match the month's file (also after rows were taken out)
+        try:
+            export(m)
+        except (SystemExit, Exception) as e:
+            print(f"súbory pre ekonomiku ({MESIACE[m.month]}) sa teraz nedali vyrobiť: {e}")
 
 
 def vrat(mesiac=None):
@@ -821,12 +830,14 @@ def poslat(teraz=None):
         spolu = next((ws.cell(r[0].row, 3).value for r in ws.iter_rows(min_col=4, max_col=4)
                       if str(r[0].value or "").strip() == "spolu"), "?") if ws else "?"
         kam = f"O 21:00 pošlem hodiny podľa typu práce a podklady (zo súboru {f.name}) na {EKONOMIKA}" if POSLAT_Z else \
-            f"Posielanie cez Weft ešte nie je zapnuté: {f.name} pošli dnes sám na {EKONOMIKA}"
+            f"Posielanie nie je zapnuté: súbory „Karol Ľupták – {NAZVY[mesiac.month]} {mesiac.year}“ (hodiny a podklady) " \
+            f"v {PLAT} pošli dnes sám na {EKONOMIKA}"
         notify(f"Výkaz {MESIACE[mesiac.month]}: spolu {spolu}. {kam}. Ak niečo nesedí, oprav súbor pred tým.")
         return
     cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]  # shown when off
     if not POSLAT_Z:
-        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (Weft ešte nie je nastavený): pošli {f} na {EKONOMIKA}.")
+        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (posielanie nie je zapnuté): pošli súbory „Karol Ľupták – "
+               f"{NAZVY[mesiac.month]} {mesiac.year}“ z {PLAT} na {EKONOMIKA}.")
         print("neposlané, chýba POSLAT_Z:", " ".join(cmd))
         return
     # the last day (so far), else it would be missing from the file that goes out
@@ -836,7 +847,7 @@ def poslat(teraz=None):
         sys.exit(1)
     try:
         subory = export(mesiac, obnov=True)
-    except SystemExit as e:
+    except (SystemExit, Exception) as e:
         notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal: súbory pre ekonomiku sa nedali vyrobiť ({str(e)[:120]}). "
                f"Pošli {f} sám na {EKONOMIKA}.")
         sys.exit(1)
