@@ -37,6 +37,8 @@ ln -sfn "$R/ucenie/ucenie" "$HOME/.local/bin/ucenie"
 ln -sfn "$R/citacka/citacka" "$HOME/.local/bin/citacka"
 # stroj: is x270/asus/dell/e540 up, and if not, why (agents run it before saying a machine is asleep).
 ln -sfn "$R/stroj/stroj.mts" "$HOME/.local/bin/stroj"
+# agy-limit: how much of the Antigravity limits is left (T3 no longer shows them).
+ln -sfn "$R/antigravity/agy-limit.mts" "$HOME/.local/bin/agy-limit"
 # ship and land: commit+push+CI and merge-on-green in one call (see github/SKILL.md).
 ln -sfn "$R/github/ship.mts" "$HOME/.local/bin/ship"
 ln -sfn "$R/github/land.mts" "$HOME/.local/bin/land"
