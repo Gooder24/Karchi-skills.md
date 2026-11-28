@@ -69,7 +69,7 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 
 1. Jedna veta: kde je celá úloha.
 2. **Hotové:** odrážky, každá s dôkazom (číslo, commit, verdikt). Neoverené sem nepatrí.
-3. **Nehotové:** tabuľka `| # | Čo | Prečo nie | Ako to opraviť | Kto |`, kde „#“ je číslo riadku od 1, aby Karchi mohol odpovedať „2 áno, 3 nie“ (Karchi, 2026-11-28), a „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem aj neoverené a každý nález overovateľa, ktorý ostal: riadok so slovom `(neprešlo)` alebo `(nedá sa overiť)` v „Čo“. Nález opravený bez ďalšieho kola overenia je riadok „opravené, neoverené“, nie bod v Hotové. Keď nič nechýba, napíš „Nič nechýba“.
+3. **Nehotové:** tabuľka `| # | Čo | Prečo nie | Ako to opraviť | Kto |`, kde „#“ je číslo riadku od 1, aby Karchi mohol odpovedať „2 áno, 3 nie“ (Karchi, 2026-11-28), a „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem len to, čo ešte niekto spraví: aj neoverené a každá kontrola, ktorú overovateľ neuznal, ako riadok so slovom `(neprešlo)` alebo `(nedá sa overiť)` v „Čo“. Nález opravený bez ďalšieho kola overenia je riadok „opravené, neoverené“, nie bod v Hotové. Keď nič nechýba, napíš „Nič nechýba“.
 4. **Od teba:** len keď niečo musí spraviť alebo rozhodnúť Karchi: každý krok alebo otázka je odrážka s číslom svojho riadku z Nehotové (`- **2:** …`; číslovaný zoznam `2.`, `4.` Markdown prečísluje na 2, 3), nie vlastné číslovanie, lebo každá vec, na ktorej je Karchi na ťahu, je v tabuľke (vkus v skille `taste`).
 5. Riadok `Overenie:` ako posledný.
 
@@ -77,7 +77,7 @@ Iný tvar nie je: žiadny zoznam nálezov overovateľov, kontrol ani pätička s
 
 Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho začína hlavička každého stĺpca iným farebným
 krúžkom, aby stĺpce rozoznal: `| ⚪ # | 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce ⚫. Bunka
-„Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď, ⚫ nikto (nález, ktorý sa vedome neopravuje). Nič iné
+„Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď. Nič iné
 nefarbi: žiadne vzorce (`$\textcolor…$` sa bez zapnutého Render math ukáže ako surový text), HTML ani rámčeky
 (`> [!TIP]`, `> [!WARNING]` a podobné).
 
@@ -92,9 +92,10 @@ istom ťahu a over ich ďalším kolom. V tabuľke ostane 🟠 len to, čo overo
 Sprav, čo treba (Karchi, 2026-11-28): čo podľa teba treba spraviť a vieš to spraviť, sprav v tom istom behu, aj keď
 by si sa inak spýtal (krok, ktorý ide von alebo je nevratný, najprv overovateľovi podľa „Áno od overovateľa“); Karchi to prípadne potom zruší, preto pri tom v Hotové stojí commit, ktorým sa to vráti.
 „Ak chceš“, „keď sa to stane v praxi“ ani „pri ďalšej zmene“ nie je dôvod nechať riadok v Nehotové: 🟢 znamená, že
-to robíš teraz. Čo podľa teba netreba, do tabuľky nepíš; nález overovateľa, ktorý vedome neopravíš, je riadok
-„(neprešlo) – nerobím: <prečo>“ s Kto „⚫ nikto“. Karchimu ostáva len to, čo mu vrátil overovateľ, a to, čo vie
-spraviť len on (prihlásenie, heslo, jeho oko).
+to robíš teraz. Čo netreba, do tabuľky nepíš (Karchi, 2026-11-28: riadok „nikto“ je zbytočný): vedľajšiu poznámku
+overovateľa (Broken, Unverified), ktorú neopravíš, vynechaj; kontrolu, ktorú neuznal, buď oprav, alebo ostane
+riadkom s tým, kto ju spraví. Karchimu ostáva len to, čo mu vrátil overovateľ, a to, čo vie spraviť len on
+(prihlásenie, heslo, jeho oko).
 
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 

@@ -65,11 +65,9 @@ STATUS_WORD = re.compile(r"^[`*_ ]*(neoveren\w*|prebieha|netreba(?=\s*[\u2013\u2
 # a ``` or ~~~ block, closed only by the same marker it opened with
 FENCE = re.compile(r"(`{3}|~{3}).*?(?:\1|$)", re.S)
 FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene[\s,\u2013\u2014-]+(?:a\s+)?neoveren)")
-# Findings of one verifier section: its numbered checks that did not pass, or its Broken / Unverified lines,
-# whichever is more (a failed check usually has its own Broken line).
+# Checks of one verifier section that did not pass; its Broken / Unverified side notes the builder may leave out.
 FAILED_CHECK = re.compile(r"^\s*\d+\.\s*\**(?:failed|unverifiable)", re.M)
 OVERALL_FAILED = re.compile(r"^\s*overall:\s*\**(?:failed|unverifiable)", re.M)
-FINDING_LINE = re.compile(r"^\s*(?:broken|unverified):", re.M)
 # The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
@@ -293,9 +291,8 @@ def decide(event):
     if status:
         ev = evidence(status, t0, event.get("cwd"))
         verdict = norm(open(ev, errors="replace").read(200000)) if ev else ""
-        # each verifier section lists the same findings, so the one with the most counts, not their sum
-        needed = max([max(len(FAILED_CHECK.findall(part)), len(FINDING_LINE.findall(part)))
-                      for part in verdict.split("## overovatel")] or [0])
+        # each verifier section checks the same list, so the one with the most failures counts, not their sum
+        needed = max([len(FAILED_CHECK.findall(part)) for part in verdict.split("## overovatel")] or [0])
         if "overall:" not in verdict:  # the older Slovak shape: one finding per line that says it, not its summary
             needed = max([sum(1 for line in part.splitlines() if FAILED_IN_VERDICT.search(line)
                               and not line.lstrip("#*- ").startswith("vysledok"))
@@ -306,8 +303,8 @@ def decide(event):
             needed = max(needed, 1)
         marked = marked_rows(text)
         if ev and needed and marked < needed:
-            problem = (f"{ev} records {needed} finding(s) (failed or unverifiable checks, Broken and Unverified lines "
-                       f"of one verifier), but the reply's table marks only {marked}. One Nehotové row per finding, "
+            problem = (f"{ev} records {needed} check(s) that failed or could not be verified (in one verifier), "
+                       f"but the reply's table marks only {marked}. One Nehotové row per such check, "
                        "marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings "
                        "(AGENTS.md „Koniec odpovede“).")
         elif ev and not orange:

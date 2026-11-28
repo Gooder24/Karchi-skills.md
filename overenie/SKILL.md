@@ -150,9 +150,9 @@ the table has 🟠 rows.
 ## 4. Report
 
 No report page: he does not read one (10. 11.). The reply has the one shape of AGENTS.md „Koniec odpovede“ and no
-list of findings of its own: each finding still open is a row of the Nehotové table with `(neprešlo)` or
+list of findings of its own: each check the verdict did not pass is a row of the Nehotové table with `(neprešlo)` or
 `(nedá sa overiť)` in „Čo“, a finding you fixed without another verifier round is a row „opravené, neoverené“, and
-only what a verdict passed goes into Hotové. The `Overenie:` line with the path of `verdikt.md` ends it.
+only what a verdict passed goes into Hotové. A Broken or Unverified side note you do not fix stays out of the reply. The `Overenie:` line with the path of `verdikt.md` ends it.
 
 ## 5. Every miss becomes a check
 
