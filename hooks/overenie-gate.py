@@ -72,7 +72,7 @@ OVERALL_FAILED = re.compile(r"^\s*overall:\s*\**(?:failed|unverifiable)", re.M)
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
 # an absolute or ~ path that contains spaces, such as ~/Obhajoba práce/overenie/verdikt.md
-SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)(?![.~]?[\w~-])")
+SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)(?=$|[\s`'\"<>*,;!?)\]]|[.:](?:$|[\s`'\"<>*)\]]))")
 # verify.sh takes another verdict name as its second argument: overenie/verdikt-<topic>.md
 EVIDENCE_NAME = re.compile(r"(?:verdikt(?:-[\w.-]+)?\.md|index\.html)$")
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
@@ -162,10 +162,22 @@ def read_turn(path):
     return t0, tools, "\n".join(texts)
 
 
-# Every string literal in the exec tool's JavaScript or a function call's JSON: the commands are among them, also when
-# the cmd is a variable, a quoted key or String.raw.
-CODEX_STRING = re.compile(r"""("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
-CODEX_PATCH = re.compile(r"\bapply_patch\s*\(|\*\*\* Begin Patch")
+# The string literals of the exec tool's JavaScript or a function call's JSON: its commands are among them, also when
+# the cmd is a variable, a quoted key or String.raw. Literals joined by + or , ("git " + "commit", ["git", "add"]) are
+# tried joined too; prose fields (justification, description …) are skipped.
+_LIT = r"""(?:"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)"""
+CODEX_STRING = re.compile(_LIT)
+CODEX_RUN = re.compile(_LIT + r"(?:\s*[+,]\s*" + _LIT + r")+")
+CODEX_PROSE = re.compile(r"(?:justification|description|explanation|reason|message|title|plan|step|summary|comment)"
+                         r"[\"']?\s*:\s*$")
+CODEX_PATCH = re.compile(r"\btools\.apply_patch\s*\(")
+
+
+def codex_literal(raw):
+    try:
+        return str(json.loads(raw)) if raw[0] == '"' else raw[1:-1]
+    except ValueError:
+        return raw[1:-1]
 
 
 def read_codex_turn(lines):
@@ -185,13 +197,33 @@ def read_codex_turn(lines):
         code = str(p.get("input") or p.get("arguments") or "")
         if p.get("name") == "apply_patch" or CODEX_PATCH.search(code):
             tools.append(("Edit", {}))
-        for raw in CODEX_STRING.findall(code):
-            try:
-                text = json.loads(raw) if raw[0] == '"' else raw[1:-1]
-            except ValueError:
-                text = raw[1:-1]
-            tools.append(("Bash", {"command": str(text)}))
+        for m in CODEX_STRING.finditer(code):
+            if not CODEX_PROSE.search(code[max(0, m.start() - 40):m.start()]):
+                text = codex_literal(m.group())
+                tools.append(("Edit", {}) if text.startswith("*** Begin Patch") else ("Bash", {"command": text}))
+        for m in CODEX_RUN.finditer(code):
+            tools.append(("Bash", {"command": " ".join(codex_literal(x) for x in CODEX_STRING.findall(m.group()))}))
     return t0, tools, ""  # Codex hands the reply over as last_assistant_message
+
+
+# A heredoc body is data for its command (python3 - <<'PY' …), not shell: `a > b` in it is no redirect. A body that
+# feeds a shell (bash, sh, ssh host) stays, and file writes in any body still count (WRITE_IN_BODY).
+HEREDOC = re.compile(r"<<-?[ \t]*(['\"]?)(\w+)\1([^\n]*)\n(.*?)\n[ \t]*\2[ \t]*(?=\n|$)", re.S)
+SHELL_FEED = re.compile(r"(?:^|[\s;&|(])(?:bash|sh|zsh|dash|ssh)\b[^\n;&|]*$")
+WRITE_IN_BODY = re.compile(r"writeFileSync|appendFileSync|open\([^)]{0,300}['\"][wax]b?\+?['\"]|\.write_text\(|\.write_bytes\("
+                           r"|json\.dump\(|\b(?:os\.(?:remove|unlink|rename|replace)|shutil\.(?:copy\w*|move|rmtree))\(")
+
+
+def shell_part(cmd):
+    """The command with the bodies of heredocs that do not feed a shell taken out."""
+    def keep(m):
+        before = cmd[:m.start()].rsplit("\n", 1)[-1]
+        return m.group() if SHELL_FEED.search(before) else "<<" + m.group(2) + m.group(3) + "\n" + m.group(2)
+    return HEREDOC.sub(keep, cmd)
+
+
+def bash_changes(cmd):
+    return CHANGING_BASH.search(shell_part(cmd)) or any(WRITE_IN_BODY.search(m.group(4)) for m in HEREDOC.finditer(cmd))
 
 
 def changed_something(tools):
@@ -202,7 +234,7 @@ def changed_something(tools):
             return name
         if name.startswith("mcp__") and not READONLY_MCP & set(re.split(r"[_\-]", name.split("__")[-1].lower())):
             return name
-        if name == "Bash" and CHANGING_BASH.search(str(inp.get("command", ""))):
+        if name == "Bash" and bash_changes(str(inp.get("command", ""))):
             return "Bash: " + str(inp.get("command", ""))[:120]
     return None
 

@@ -23,18 +23,22 @@ function homes() {
   return [`${HOME}/.codex`, ...accounts].filter((h) => existsSync(`${h}/config.toml`));
 }
 
-// Adds the handler to hooks.json, keeping any other hooks there. Returns whether the file changed.
+// Adds the handler to hooks.json, or brings ours back to HANDLER, keeping any other hooks and fields there.
 function wire(home: string) {
   const path = `${home}/hooks.json`;
   const config: Hooks = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
   const stop = ((config.hooks ??= {}).Stop ??= []);
   const ours = stop.flatMap((g) => g.hooks).find((h) => h.command === COMMAND);
-  if (ours && JSON.stringify(ours) === JSON.stringify(HANDLER)) return false;
-  if (ours) Object.assign(ours, HANDLER); // a changed handler gets a new hash, so it is trusted again below
+  if (ours && ours.type === HANDLER.type && ours.timeout === HANDLER.timeout) return;
+  if (ours) Object.assign(ours, HANDLER);
   else stop.push({ hooks: [{ ...HANDLER }] });
   writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
-  return true;
 }
+
+// The trust stamp holds the hooks.json it was given for: any change there (ours, a field someone added, a failed earlier
+// trust) means Codex sees a new hash, so the hook is trusted again; an unchanged file costs one read.
+const stampOf = (home: string) => `${home}/.overenie-gate-trusted`;
+const digest = (home: string) => new Bun.CryptoHasher("sha256").update(readFileSync(`${home}/hooks.json`)).digest("hex");
 
 // Trusts the hook through Codex's own app-server, the way its /hooks screen does, so the hash is Codex's own.
 async function trust(home: string) {
@@ -91,16 +95,16 @@ async function trust(home: string) {
 if (!Bun.which("codex")) process.exit(0);
 let failed = false;
 for (const home of process.argv.length > 2 ? process.argv.slice(2) : homes()) {
-  let changed: boolean;
   try {
-    changed = wire(home);
+    wire(home);
   } catch (e) {
     warn(`${home}/hooks.json: ${e}`);
     failed = true;
     continue;
   }
-  const config = readFileSync(`${home}/config.toml`, "utf8");
-  if (!changed && config.includes(`"${home}/hooks.json:stop:`)) continue;
-  if (!(await trust(home))) failed = true;
+  const sum = digest(home);
+  if (existsSync(stampOf(home)) && readFileSync(stampOf(home), "utf8") === sum) continue;
+  if (await trust(home)) writeFileSync(stampOf(home), sum);
+  else failed = true;
 }
 process.exit(failed ? 1 : 0);
