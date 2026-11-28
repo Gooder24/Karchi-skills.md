@@ -162,27 +162,10 @@ def read_turn(path):
     return t0, tools, "\n".join(texts)
 
 
-# The string literals of the exec tool's JavaScript or a function call's JSON: its commands are among them, also when
-# the cmd is a variable, a quoted key or String.raw. Literals joined by + or , ("git " + "commit", ["git", "add"]) are
-# tried joined too; prose fields (justification, description …) are skipped.
-_LIT = r"""(?:"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)"""
-CODEX_STRING = re.compile(_LIT)
-CODEX_RUN = re.compile(_LIT + r"(?:\s*[+,]\s*" + _LIT + r")+")
-CODEX_PROSE = re.compile(r"(?:justification|description|explanation|reason|message|title|plan|step|summary|comment)"
-                         r"[\"']?\s*:\s*$")
-CODEX_PATCH = re.compile(r"\btools\.apply_patch\s*\(")
-
-
-def codex_literal(raw):
-    try:
-        return str(json.loads(raw)) if raw[0] == '"' else raw[1:-1]
-    except ValueError:
-        return raw[1:-1]
-
-
 def read_codex_turn(lines):
     """The same for a Codex rollout (its Stop hook, hooks.json from install.sh): the turn starts at the last
-    task_started, and its tools run as JavaScript in one `exec` tool (tools.exec_command({cmd}), tools.apply_patch)."""
+    task_started; its tools are the items Codex really ran (CommandExecution, FileChange, McpToolCall), not the
+    JavaScript that called them."""
     start = 0
     for i, o in enumerate(lines):
         if o.get("type") == "event_msg" and (o.get("payload") or {}).get("type") == "task_started":
@@ -192,17 +175,16 @@ def read_codex_turn(lines):
     tools = []
     for o in turn:
         p = o.get("payload") or {}
-        if o.get("type") != "response_item" or p.get("type") not in ("custom_tool_call", "function_call"):
+        item = p.get("item") if o.get("type") == "event_msg" and p.get("type") == "item_completed" else None
+        if not isinstance(item, dict):
             continue
-        code = str(p.get("input") or p.get("arguments") or "")
-        if p.get("name") == "apply_patch" or CODEX_PATCH.search(code):
+        kind, cmd = item.get("type"), item.get("command")
+        if kind == "CommandExecution":
+            tools.append(("Bash", {"command": cmd[-1] if isinstance(cmd, list) and cmd else str(cmd or "")}))
+        elif kind == "FileChange":
             tools.append(("Edit", {}))
-        for m in CODEX_STRING.finditer(code):
-            if not CODEX_PROSE.search(code[max(0, m.start() - 40):m.start()]):
-                text = codex_literal(m.group())
-                tools.append(("Edit", {}) if text.startswith("*** Begin Patch") else ("Bash", {"command": text}))
-        for m in CODEX_RUN.finditer(code):
-            tools.append(("Bash", {"command": " ".join(codex_literal(x) for x in CODEX_STRING.findall(m.group()))}))
+        elif kind == "McpToolCall" and not item.get("readOnlyHint"):
+            tools.append((f"mcp__{item.get('server')}__{item.get('tool')}", {}))
     return t0, tools, ""  # Codex hands the reply over as last_assistant_message
 
 
