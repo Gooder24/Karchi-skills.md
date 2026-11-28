@@ -62,7 +62,8 @@ STATUS_LINE = re.compile(r"^[ \t>*_`#-]*overenie[ \t*]*[:\u2013\u2014-][ \t*]*([
 # the status word must open the line: "Overenie: všetko beží a funguje" is not a status
 # netreba needs a reason after a dash: "Overenie: netreba – len poznámky pre mňa"
 STATUS_WORD = re.compile(r"^[`*_ ]*(neoveren\w*|prebieha|netreba(?=\s*[\u2013\u2014:-]\s*\S+\s+\S+\s+\S+))")
-FENCE = re.compile(r"```.*?(```|$)", re.S)
+# a ``` or ~~~ block, closed only by the same marker it opened with
+FENCE = re.compile(r"(`{3}|~{3}).*?(?:\1|$)", re.S)
 FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene[\s,\u2013\u2014-]+(?:a\s+)?neoveren)")
 # Findings of one verifier section: its numbered checks that did not pass, or its Broken / Unverified lines,
 # whichever is more (a failed check usually has its own Broken line).
@@ -73,7 +74,7 @@ TABLE_ROW = re.compile(r"^[ \t]*\|.*$", re.M)
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
 # an absolute or ~ path that contains spaces, such as ~/Obhajoba práce/overenie/verdikt.md
-SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)")
+SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)(?!\.?[\w-])")
 # verify.sh takes another verdict name as its second argument: overenie/verdikt-<topic>.md
 EVIDENCE_NAME = re.compile(r"(?:verdikt(?:-[\w.-]+)?\.md|index\.html)$")
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
@@ -83,9 +84,8 @@ OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*(?:nic\.?|[\u2013\u
 # A Nehotové row whose Kto cell is 🟠 (waits for Karchi's yes), and the verdict line that gave such a step back to him.
 # The Kto cell is the last one, so a \ud83d\udfe0 in another column (Ako to opravi\u0165) does not count.
 WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
-TILDE_FENCE = re.compile(r"~~~.*?(~~~|$)", re.S)
 # one line per step a verifier gave back, inside its `Na schv\u00e1lenie:` list (the verdict text is norm()ed)
-APPROVAL_SECTION = re.compile(r"^[ \t*_]*na schvalenie:.*$", re.M)
+APPROVAL_SECTION = re.compile(r"^[ \t*_]*na schvalenie:[ \t*_]*(?:\(.*\))?[ \t]*$", re.M)
 KARCHI_REFERRAL = re.compile(r"^[ \t]*-[ \t]+karchi[ \t]+[\u2013\u2014-][ \t]", re.M)
 NOT_A_USER_TURN = ("<task-notification", "this session is being continued", "<command-", "caveat:",
                    "[system notification", "background command", "monitor \"")
@@ -179,7 +179,7 @@ def evidence(line, t0, cwd):
     for raw in PATH.findall(line) + SPACED_PATH.findall(line):
         if ".." in raw:
             continue
-        p = os.path.expanduser(raw.rstrip(".:"))
+        p = os.path.expanduser(raw.rstrip(".:,;!?"))
         if not os.path.isabs(p) and isinstance(cwd, str):
             p = os.path.join(cwd, p)
         p = os.path.realpath(p)
@@ -196,7 +196,7 @@ def evidence(line, t0, cwd):
 
 def waiting_without_referral(text, status, t0, cwd):
     """Why the 🟠 rows of the reply may not wait for Karchi yet, or "" when there are none or a verdict gave each back."""
-    rows = len(WAITING_ROW.findall(TILDE_FENCE.sub("", FENCE.sub("", text))))
+    rows = len(WAITING_ROW.findall(FENCE.sub("", text)))
     if not rows:
         return ""
     ev = evidence(status, t0, cwd) if status else None
@@ -237,7 +237,7 @@ def decide(event):
         # each verifier section lists the same findings, so the one with the most counts, not their sum
         needed = max([max(len(FAILED_CHECK.findall(part)), len(FINDING_LINE.findall(part)))
                       for part in verdict.split("## overovatel")] or [0])
-        marked = sum(1 for row in TABLE_ROW.findall(FENCE.sub("", TILDE_FENCE.sub("", norm(text)))) if FAILED_IN_REPLY.search(row))
+        marked = sum(1 for row in TABLE_ROW.findall(FENCE.sub("", norm(text))) if FAILED_IN_REPLY.search(row))
         # a verdict without Overall: is the older Slovak shape, counted as one finding
         if ev and (needed or ("overall:" not in verdict and FAILED_IN_VERDICT.search(verdict))) and marked < max(needed, 1):
             problem = (f"{ev} records {needed} finding(s) (failed or unverifiable checks, Broken and Unverified lines "
