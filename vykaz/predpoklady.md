@@ -16,6 +16,18 @@ obhajoba, kapitoly, prezentácia pre komisiu), vlastný notebook a jeho vzhľad,
 kalendár), hudba (aj partsheet, spevník zboru), open source, jeho vlastný výkaz hodín a nástroj, ktorý ho plní (vykaz). Vlákno v projekte „Obhajoba práce“ sa ráta len vtedy, keď v ňom robí niečo pre
 eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prácu.
 
+## Typy práce
+
+Súbor pre ekonomiku delí hodiny podľa týchto typov (poradie platí aj v súbore); každý riadok mesiaca zaradí Haiku
+podľa popisu a pamätá si to (`~/.local/share/vykaz/typy.json`, zlé zaradenie oprav tam alebo povedz agentovi).
+Riadok bez popisu ide do posledného typu.
+
+- **SPOTREX**: systém odpočtov meračov tepla a vody, stanice CRS 40, KBF, MQTT, alerty, VPS a server, účtovanie
+- **Firemné AI a IT**: eSYSŤák, Hermes, firemný T3 Code, účty Claude, lokálne AI a stroj naň, GitHub organizácia eSYST, prístupy, heslá, firemné počítače
+- **Komunikácia**: firemná pošta v Outlooku, Teams, kolegovia, Martin Štepánek, stretnutia
+- **Zákazky a EUCF**: zákazky eSYST (Hurbanova a ďalšie), EUCF, marketing a príspevky firmy
+- **Iná firemná práca**: všetko ostatné pre eSYST
+
 ## Čas
 
 - Utorková prax (dochadzka, 7 h) do výkazu nepatrí: je to výkaz nadčasov, preto sa jej čas vynecháva.
@@ -51,6 +63,9 @@ eSYST (napr. firemný AI stack, účty, firemný T3 Code), nie keď píše prác
   administrativa@esyst.sk ako prílohu mailu „Nadčasy Karol Ľupták“ (1. 10.) a „Karol Ľupták pracovné hodiny“
   (31. 10.), posledný alebo prvý deň mesiaca. Od 24. 11. ho má posielať výkaz sám (`vykaz poslat`,
   `vykaz-poslat.timer`): posledný deň mesiaca o 20:00 upozornenie so súčtom, o 21:00 mail cez Weft z
-  administrativa@esyst.sk, predmet „Karol Ľupták“, žiadny text, príloha súbor mesiaca (Karchi 24. 11.). Súbor
-  ostáva, kde je. Kým Weft s tým účtom nie je nastavený (`POSLAT_Z` vo `vykaz.py`), nepošle nič a pripomenie mu
-  poslať ho ručne. Práca po 21:00 posledného dňa už v odoslanom súbore nie je.
+  administrativa@esyst.sk, predmet „Karol Ľupták“, žiadny text (Karchi 24. 11.). Od 28. 11. idú dve prílohy
+  (Karchi: radšej podľa typu práce a k tomu, na základe čoho sa čas uznal): „Karol Ľupták – <mesiac> <rok>.xlsx“
+  (typ práce, deň, kedy, hodiny; súčet sedí so „spolu“ v súbore mesiaca) a „… – podklady.xlsx“ (každý riadok
+  súboru mesiaca: čas, hodiny, typ, popis a z čoho je: vlákna T3 s časmi jeho správ, okná Outlook/Teams/Weft/
+  súbor s časom a titulom; texty jeho správ tam nie sú). Oba vyrába `vykaz export` zo súboru mesiaca (ten ostáva
+  jeho pracovný, opravuje sa v ňom). Práca po 21:00 posledného dňa už v odoslanom nie je.

@@ -40,9 +40,24 @@ vykaz zapis DÁTUM     deň znova: pridá len sedenia, ktoré v súbore ešte ni
 vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky nahradí novým výpočtom, jeho riadky ostanú
 vykaz vrat [MESIAC]   vráti súbor do stavu pred posledným zápisom
 vykaz stav            zapísané dni, zálohy, dnešné okná a stav jednotiek
+vykaz export [RRRR-MM] súbory pre ekonomiku zo súboru mesiaca (robí to aj po každom zápise)
 vykaz poslat          posledný deň mesiaca (timer): 20:00 upozornenie, 21:00 mail na ekonomika@esyst.sk
-                      (predmet „Karol Ľupták“, bez textu) cez Weft; kým POSLAT_Z nie je nastavené, nepošle nič
+                      (predmet „Karol Ľupták“, bez textu, oba súbory pre ekonomiku) cez Weft z
+                      administrativa@esyst.sk; POSLAT_Z = None vo vykaz.py posielanie vypne
 ```
+
+## Súbory pre ekonomiku
+
+Andrea Hanková dostane dva súbory, ktoré `vykaz export` vyrobí zo súboru mesiaca vedľa neho (prepíšu sa pri
+každom zápise, preto sa opravuje súbor mesiaca, nie tieto):
+
+- `Karol Ľupták – <mesiac> <rok>.xlsx`: hodiny podľa typu práce (typy a čo k nim patrí sú v `predpoklady.md`,
+  sekcia „Typy práce“), pod typom jeden riadok za deň s časmi a hodinami, na konci „Spolu“ (sedí so „spolu“).
+- `Karol Ľupták – <mesiac> <rok> – podklady.xlsx`: každý riadok súboru mesiaca s typom, popisom a z čoho je:
+  jeho správy vo firemných vláknach T3 (vlákno a časy, bez textu) a firemné okná (druh, titul, ako dlho, kedy);
+  „zapísal Karol ručne“ pri jeho vlastných riadkoch. Podklad dňa je v `~/.local/share/vykaz/podklady/<deň>.json`;
+  pred odoslaním sa znova opýta strojov, ktoré predtým spali.
+- Typ riadku si pamätá `~/.local/share/vykaz/typy.json` (kľúč „čas popis“); zlé zaradenie sa opraví tam.
 
 Riadok, ktorý nesedí, Karchi jednoducho zmaže alebo prepíše v súbore. Zmazaný riadok si výkaz pamätá
 (`zmazane` v `zapisane.json`, aj po `vykaz vrat`) a jeho čas ani správy už nenavrhne, ani pri prepočítaní; riadok

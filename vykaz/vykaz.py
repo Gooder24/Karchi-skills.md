@@ -7,9 +7,10 @@
   vykaz znova DÁTUM     deň nanovo: svoje nezmenené riadky toho dňa nahradí novým výpočtom (jeho riadky ostanú)
   vykaz vrat [MESIAC]   vráti súbor mesiaca do stavu pred posledným zápisom (záloha)
   vykaz stav            zapísané dni, posledné zálohy, stav zberu okien
-  vykaz poslat          posledný deň mesiaca (vykaz-poslat.timer): o 20:00 upozorní, o 21:00 pošle súbor mesiaca
-                        na ekonomika@esyst.sk cez Weft (predmet „Karol Ľupták“, bez textu); kým POSLAT_Z nie je
-                        nastavené, nepošle nič a povie, že ho treba poslať ručne
+  vykaz export [RRRR-MM] zo súboru mesiaca vyrobí „Karol Ľupták – <mesiac> <rok>.xlsx“ (hodiny podľa typu
+                        práce) a „… – podklady.xlsx“ (na základe čoho je ktorý čas); robí to aj po každom zápise
+  vykaz poslat          posledný deň mesiaca (vykaz-poslat.timer): o 20:00 upozorní, o 21:00 pošle oba súbory
+                        na ekonomika@esyst.sk cez Weft (predmet „Karol Ľupták“, bez textu); POSLAT_Z = None vypne
 
 Riadok súboru je jedno sedenie: popis | "D.M.RRRR H:MM-H:MM" | "H.MM h" (hodiny.minúty); čas, ktorý nie je na
 celú minútu, má aj sekundy ("13:40:30", "1.05.30 h", vždy po pol minúte). Posledný riadok "H.MM h | spolu".
@@ -25,6 +26,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import openpyxl
+from openpyxl.styles import Alignment, Font
 
 TZ = ZoneInfo("Europe/Bratislava")
 HERE = Path(__file__).resolve().parent
@@ -57,8 +59,11 @@ PRAVIDLA = 6     # raise when the counting changes: days written by older rules 
 ZOBUDENY = range(7, 23)  # the timer writes only by day: no model runs while he sleeps
 EKONOMIKA = "ekonomika@esyst.sk"  # Andrea Hanková, ekonomika eSYST
 PREDMET = "Karol Ľupták"  # the whole mail: this subject and the file, no text (Karchi 24. 11.)
-POSLAT_Z = None  # Weft account of his eSYST mailbox (`weft mail --from`); None until he sets it up in Weft
+POSLAT_Z = "administrativa@esyst.sk"  # Weft account (`weft mail --from`), Outlook in Weft since 28. 11.; None = do not send
 ODOSLANE = DATA / "odoslane.json"
+TYPY, PODKLADY = DATA / "typy.json", DATA / "podklady"  # row -> work type; per day: what the time was counted from
+NAZVY = {1: "január", 2: "február", 3: "marec", 4: "apríl", 5: "máj", 6: "jún", 7: "júl", 8: "august",
+         9: "september", 10: "október", 11: "november", 12: "december"}
 WEFT = next((p for p in [Path.home() / ".local/bin/weft"] if p.exists()), "weft")  # systemd PATH lacks ~/.local/bin
 
 
@@ -356,10 +361,11 @@ def navrh(d, ws, zmazane=()):
         vynechat.append(p)
     # a message inside a row already in the sheet (his, or one he edited) is counted there, and one inside a row he
     # deleted is work he rejected: neither adds time around it, even where newer rules would start it earlier
-    dna = [r for r in spravy if r["t"].date() == d and r.get("esyst", True)
-           and not any(a <= r["t"] <= b for a, b in vynechat)]
     okn = okna(d)
-    dna_spravy, vlakna = firemne(d, dna, [t for _, _, k, t in okn if k == "t3"])
+    prace, vlakna = firemne(d, [r for r in spravy if r["t"].date() == d and r.get("esyst", True)],
+                            [t for _, _, k, t in okn if k == "t3"])
+    uloz_podklad(d, prace, okn, vlakna, chyby)
+    dna_spravy = [r for r in prace if not any(a <= r["t"] <= b for a, b in vynechat)]
     # a focused thread that is not eSYST work is his own: subtracted from the sitting around it
     osobne = [(s, e) for s, e, k, t in okn if k == "t3" and t not in vlakna]
     praca = [o for o in okn if o[2] != "t3" or o[3] in vlakna]
@@ -368,6 +374,179 @@ def navrh(d, ws, zmazane=()):
     rows = [(t, s) for t, s in zip(txt, sed) if t]
     return [{"popis": t, "cas": f"{d.day}.{d.month}.{d.year} {hms(s['od'])}-{hms(s['do'])}",
              "sek": int(s["sek"])} for t, s in rows], chyby, len(sed)
+
+
+def uloz_podklad(d, prace, okn, vlakna, chyby):
+    """What the day's work time was counted from, for the podklady file: his eSYST messages (no text) and the
+    work windows. Kept when asus and x270 answered; a sleeping dell/e540 is noted ("chyby") and asked again
+    before sending (podklad_dna obnov)."""
+    p = {"spravy": [{"t": r["t"].isoformat(), "projekt": r["projekt"], "vlakno": r["vlakno"]}
+                    for r in prace if r["t"].date() == d],
+         "okna": [[a.isoformat(), b.isoformat(), k, t] for a, b, k, t in okn if k != "t3" or t in vlakna],
+         "chyby": chyby}
+    if "asus" not in chyby and "x270" not in chyby:
+        PODKLADY.mkdir(parents=True, exist_ok=True)
+        (PODKLADY / f"{d}.json").write_text(json.dumps(p, ensure_ascii=False, indent=1) + "\n")
+    return p
+
+
+def podklad_dna(d, obnov=False):
+    f = PODKLADY / f"{d}.json"
+    if f.exists() and not (obnov and json.loads(f.read_text())["chyby"]):
+        return json.loads(f.read_text())
+    spravy, chyby = t3_spravy(d)
+    okn = okna(d)
+    prace, vlakna = firemne(d, [r for r in spravy if r["t"].date() == d and r.get("esyst", True)],
+                            [t for _, _, k, t in okn if k == "t3"])
+    return uloz_podklad(d, prace, okn, vlakna, chyby)
+
+
+# --- the files for ekonomika -------------------------------------------------
+
+def typy():
+    """[(name, what belongs there)] from the "Typy práce" section of predpoklady.md, in the file's order."""
+    t = (HERE / "predpoklady.md").read_text().split("## Typy práce", 1)[1].split("\n## ", 1)[0]
+    return [(m[1], m[2].strip()) for m in re.finditer(r"^- \*\*(.+?)\*\*:\s*(.*)$", t, re.M)]
+
+
+def zarad(riadky):
+    """Work type of each row {key ("cas popis"): popis}; Haiku decides new ones once, typy.json remembers them.
+    A row without a description goes to the last type."""
+    mena = [n for n, _ in typy()]
+    pamat = json.loads(TYPY.read_text()) if TYPY.exists() else {}
+    nove = sorted(k for k, popis in riadky.items() if popis and pamat.get(k) not in mena)
+    if nove:
+        zoznam = "\n".join(f"{i}. {n}: {o}" for i, (n, o) in enumerate(typy(), 1))
+        prompt = f"""Riadky výkazu práce pre firmu eSYST zaraď do typov práce:
+{zoznam}
+
+Odpovedz presne {len(nove)} riadkami v tvare „ČÍSLO RIADKU: ČÍSLO TYPU“ a ničím iným.
+
+""" + "\n".join(f"{i + 1}: {riadky[k]}" for i, k in enumerate(nove))
+        for k, a in zip(nove, haiku(prompt, len(nove))):
+            m = re.match(r"\d+", a)
+            pamat[k] = mena[int(m[0]) - 1] if m and 1 <= int(m[0]) <= len(mena) else mena[-1]
+        DATA.mkdir(parents=True, exist_ok=True)
+        TYPY.write_text(json.dumps(pamat, ensure_ascii=False, indent=1) + "\n")
+    return {k: pamat[k] if pamat.get(k) in mena else mena[-1] for k in riadky}
+
+
+DRUHY = {"outlook": "Outlook", "teams": "Teams", "weft": "Weft", "subor": "súbor", "t3": "vlákno T3"}
+
+
+def preco(iv, p, svoj):
+    """Lines saying what a row's time was counted from: his messages in eSYST threads and the work windows.
+    svoj: vykaz wrote the row (else he wrote it by hand)."""
+    if not svoj:
+        return ["zapísal Karol ručne"]
+    if not iv or not p:
+        return ["podklad sa teraz nedal načítať"]
+    a, b = iv
+    vl = {}
+    for r in p["spravy"]:
+        t = datetime.fromisoformat(r["t"])
+        if a - timedelta(seconds=KROK) <= t <= b:  # a is rounded to the half minute
+            vl.setdefault(f"{r['projekt']} / {r['vlakno']}", []).append(hm(t))
+    out = [f"správy vo vlákne T3 {k}: {', '.join(v)}" for k, v in vl.items()]
+    ok, sucet = {}, Counter()  # (kind, title) -> its focus intervals inside the row (nearly touching ones merged
+    # for reading), and its real focused seconds
+    for s_, e_, k, t in p["okna"]:
+        s, e = max(datetime.fromisoformat(s_), a), min(datetime.fromisoformat(e_), b)
+        if e > s:
+            kt = (k, re.sub(r"\s+[-–]\s+(Helium|Chromium|Google Chrome|Mozilla Firefox)$", "", t))
+            iv_ = ok.setdefault(kt, [])
+            sucet[kt] += (e - s).total_seconds()
+            if iv_ and (s - iv_[-1][1]).total_seconds() < 60:
+                iv_[-1][1] = max(iv_[-1][1], e)
+            else:
+                iv_.append([s, e])
+    for (k, t), ivs in sorted(ok.items(), key=lambda x: x[1][0][0]):
+        sek = int(sucet[(k, t)])
+        dlzka = f"{sek // 60} min {sek % 60} s" if sek >= 60 else f"{sek} s"
+        out.append(f"okno {DRUHY.get(k, k)} „{t}“ {dlzka}: " + ", ".join(f"{hms(s)}-{hms(e)}" for s, e in ivs))
+    if not out and p.get("chyby"):
+        return [f"podklad je na počítači {', '.join(p['chyby'])}, ktorý teraz neodpovedal"]
+    return out or ["bez podkladu"]
+
+
+def export(mesiac, obnov=False):
+    """The two files that go to ekonomika, from the month's file (which stays his working copy):
+    hours by work type and day, and for every row what it was counted from. Returns their paths.
+    obnov: ask the machines that were asleep before again (for the files that go out)."""
+    f = subor(mesiac)
+    ws = openpyxl.load_workbook(f).active
+    riadky = []  # (date or None, interval or None, popis, cas, seconds)
+    for r in range(1, ws.max_row + 1):
+        a, b, c, dd = (ws.cell(r, i).value for i in (1, 2, 3, 4))
+        if str(dd or "").strip() == "spolu":
+            break
+        if not sekundy_bunky(c):
+            continue
+        m = CAS.match(str(b or ""))
+        d = date(int(m[3]), int(m[2]), int(m[1])) if m else None
+        riadky.append((d, interval(b, d) if d else None, str(a or "").strip(), str(b or "").strip(), sekundy_bunky(c)))
+    typ = zarad({f"{x[3]} {x[2]}": x[2] for x in riadky})
+    nazov = f"Karol Ľupták – {NAZVY[mesiac.month]} {mesiac.year}"
+    hlavny, podklady = PLAT / f"{nazov}.xlsx", PLAT / f"{nazov} – podklady.xlsx"
+    tucne = Font(bold=True)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Hodiny"
+    ws.append([f"{nazov}: odpracované hodiny podľa typu práce"])
+    ws.append([])
+    ws.append(["Typ práce", "Dátum", "Kedy", "Hodiny"])
+    for c in ws[1] + ws[3]:
+        c.font = tucne
+    for n, _ in typy():
+        moje = [x for x in riadky if typ[f"{x[3]} {x[2]}"] == n]
+        if not moje:
+            continue
+        ws.append([n, None, None, trvanie(sum(x[4] for x in moje))])
+        ws[ws.max_row][0].font = ws[ws.max_row][3].font = tucne
+        dni = sorted({x[0] for x in moje}, key=lambda d: d or date.min)
+        for d in dni:
+            den = sorted((x for x in moje if x[0] == d), key=lambda x: x[1][0] if x[1] else datetime.min.replace(tzinfo=TZ))
+            kedy = ", ".join(f"{hms(x[1][0])}-{hms(x[1][1])}" if x[1] else x[3] or "bez času" for x in den)
+            ws.append([None, f"{d.day}.{d.month}.{d.year}" if d else "bez dátumu", kedy, trvanie(sum(x[4] for x in den))])
+    ws.append([])
+    ws.append(["Spolu", None, None, trvanie(sum(x[4] for x in riadky))])
+    ws[ws.max_row][0].font = ws[ws.max_row][3].font = tucne
+    for col, w in zip("ABCD", (24, 12, 70, 12)):
+        ws.column_dimensions[col].width = w
+    for row in ws.iter_rows(min_row=4):
+        row[2].alignment = Alignment(wrap_text=True, vertical="top")
+
+    wb2 = openpyxl.Workbook()
+    ws2 = wb2.active
+    ws2.title = "Podklady"
+    ws2.append([f"{nazov}: na základe čoho je čas v hodinách"])
+    ws2.append(["Čas zo správ agentom vo firemných vláknach T3 (čítanie odpovede, rozmýšľanie a písanie) a z času, keď "
+                "bolo na počítači otvorené firemné okno; vlastná práca uprostred je odrátaná."])
+    ws2.append([])
+    ws2.append(["Kedy", "Hodiny", "Typ práce", "Čo", "Na základe čoho"])
+    for c in ws2[1] + ws2[4]:
+        c.font = tucne
+    cache = {}
+    for d, iv, popis, cas, sek in sorted(riadky, key=lambda x: (x[0] or date.min, x[1][0] if x[1] else datetime.min.replace(tzinfo=TZ))):
+        if d and d not in cache:
+            try:
+                cache[d] = podklad_dna(d, obnov)
+            except SystemExit:  # Haiku down: the row still goes out, without its sources
+                cache[d] = None
+        svoj = bool(d) and f"{cas} {popis}" in svoje_riadky(d)
+        ws2.append([cas or "bez času", trvanie(sek), typ[f"{cas} {popis}"], popis,
+                    "\n".join(preco(iv, cache.get(d), svoj))])
+    for col, w in zip("ABCDE", (26, 11, 20, 50, 90)):
+        ws2.column_dimensions[col].width = w
+    for row in ws2.iter_rows(min_row=5):
+        for c in row:
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+    for w, cesta in ((wb, hlavny), (wb2, podklady)):
+        tmp = cesta.with_name(f".{cesta.name}.tmp")
+        w.save(tmp)
+        os.replace(tmp, cesta)
+    return [hlavny, podklady]
 
 
 # --- the sheet --------------------------------------------------------------
@@ -574,6 +753,7 @@ def auto():
         d += timedelta(days=1)
     if pridane:
         notify(f"Výkaz: pridal som {pridane} riadkov do {subor(today - timedelta(days=1)).name}")
+        export(today - timedelta(days=1))  # so the files for ekonomika always match the month's file
 
 
 def vrat(mesiac=None):
@@ -640,11 +820,11 @@ def poslat(teraz=None):
         ws = openpyxl.load_workbook(f).active if f.exists() else None
         spolu = next((ws.cell(r[0].row, 3).value for r in ws.iter_rows(min_col=4, max_col=4)
                       if str(r[0].value or "").strip() == "spolu"), "?") if ws else "?"
-        kam = f"O 21:00 pošlem {f.name} na {EKONOMIKA}" if POSLAT_Z else \
+        kam = f"O 21:00 pošlem hodiny podľa typu práce a podklady (zo súboru {f.name}) na {EKONOMIKA}" if POSLAT_Z else \
             f"Posielanie cez Weft ešte nie je zapnuté: {f.name} pošli dnes sám na {EKONOMIKA}"
         notify(f"Výkaz {MESIACE[mesiac.month]}: spolu {spolu}. {kam}. Ak niečo nesedí, oprav súbor pred tým.")
         return
-    cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]
+    cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]  # shown when off
     if not POSLAT_Z:
         notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (Weft ešte nie je nastavený): pošli {f} na {EKONOMIKA}.")
         print("neposlané, chýba POSLAT_Z:", " ".join(cmd))
@@ -654,6 +834,16 @@ def poslat(teraz=None):
         notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal: {mesiac:%-d. %-m.} sa nedal zapísať (otvorený súbor alebo "
                f"nedostupný stroj). Pošli {f} sám na {EKONOMIKA}.")
         sys.exit(1)
+    try:
+        subory = export(mesiac, obnov=True)
+    except SystemExit as e:
+        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal: súbory pre ekonomiku sa nedali vyrobiť ({str(e)[:120]}). "
+               f"Pošli {f} sám na {EKONOMIKA}.")
+        sys.exit(1)
+    cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET]
+    for x in subory:
+        cmd += ["--file", str(x)]
+    cmd.append(EKONOMIKA)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     except (OSError, subprocess.TimeoutExpired) as e:
@@ -683,5 +873,7 @@ if __name__ == "__main__":
         stav_vypis()
     elif a[0] == "poslat":
         poslat()
+    elif a[0] == "export":  # export [YYYY-MM]: the two files for ekonomika, from the month's file
+        print(*export(date.fromisoformat(a[1] + "-01") if a[1:] else datetime.now(TZ).date()), sep="\n")
     else:
         sys.exit(__doc__)
