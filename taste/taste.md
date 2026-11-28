@@ -102,8 +102,7 @@ says now applies.
 - **Steps he does by hand must be exact, short and only what is known** ("it's happened several times that when
   you write a longer text and give me instructions, they don't match what I actually have to do", 2026-10-29,
   after guessed NicNames labels and a Cloudflare "Authorize" button he never saw).
-  - His steps come first, as a numbered list, one action per line, values to type in code blocks. Status and
-    background go after them, briefly.
+  - His steps go under Od teba (AGENTS.md „Koniec odpovede“), one action per line, values to type in code blocks.
   - Name the site or app where the steps happen, with its address (e.g. "on nicnames.com"). Never point at
     "the page from your screenshot"; show the image again if it helps. Keep links that are not a step out of the
     list: he read a side link to another registrar as the place to go.

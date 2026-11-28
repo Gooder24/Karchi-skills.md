@@ -63,7 +63,12 @@ STATUS_LINE = re.compile(r"^[ \t>*_`#-]*overenie[ \t*]*[:\u2013\u2014-][ \t*]*([
 # netreba needs a reason after a dash: "Overenie: netreba – len poznámky pre mňa"
 STATUS_WORD = re.compile(r"^[`*_ ]*(neoveren\w*|prebieha|netreba(?=\s*[\u2013\u2014:-]\s*\S+\s+\S+\s+\S+))")
 FENCE = re.compile(r"```.*?(```|$)", re.S)
-FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene, neoveren)")
+FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene[\s,\u2013\u2014-]+(?:a\s+)?neoveren)")
+# Findings of one verifier section: its numbered checks that did not pass, or its Broken / Unverified lines,
+# whichever is more (a failed check usually has its own Broken line).
+FAILED_CHECK = re.compile(r"^\s*\d+\.\s*\**(?:failed|unverifiable)", re.M)
+FINDING_LINE = re.compile(r"^\s*(?:broken|unverified):", re.M)
+TABLE_ROW = re.compile(r"^[ \t]*\|.*$", re.M)
 # The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
@@ -73,7 +78,7 @@ EVIDENCE_NAMES = {"verdikt.md", "index.html"}
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
 # The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
-OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*$")
+OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*(?:nic\.?|[\u2013\u2014-])?\s*$")
 # A Nehotové row whose Kto cell is 🟠 (waits for Karchi's yes), and the verdict line that gave such a step back to him.
 # The Kto cell is the last one, so a \ud83d\udfe0 in another column (Ako to opravi\u0165) does not count.
 WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
@@ -225,17 +230,24 @@ def decide(event):
     problem = ""
     if status:
         ev = evidence(status, t0, event.get("cwd"))
-        if ev and FAILED_IN_VERDICT.search(norm(open(ev, errors="replace").read(200000))) \
-                and not FAILED_IN_REPLY.search(norm(text)):
-            problem = (f"{ev} records checks that failed or could not be verified, and the reply does not "
-                       "say which (one row per finding in the Nehotové table, marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings, AGENTS.md „Koniec odpovede“)")
+        verdict = norm(open(ev, errors="replace").read(200000)) if ev else ""
+        # each verifier section lists the same findings, so the one with the most counts, not their sum
+        needed = max([max(len(FAILED_CHECK.findall(part)), len(FINDING_LINE.findall(part)))
+                      for part in verdict.split("## overovatel")] or [0])
+        marked = sum(1 for row in TABLE_ROW.findall(FENCE.sub("", TILDE_FENCE.sub("", norm(text)))) if FAILED_IN_REPLY.search(row))
+        # a verdict without Overall: is the older Slovak shape, counted as one finding
+        if ev and (needed or ("overall:" not in verdict and FAILED_IN_VERDICT.search(verdict))) and marked < max(needed, 1):
+            problem = (f"{ev} records {needed} finding(s) (failed or unverifiable checks, Broken and Unverified lines "
+                       f"of one verifier), but the reply's table marks only {marked}. One Nehotové row per finding, "
+                       "marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings "
+                       "(AGENTS.md „Koniec odpovede“).")
         elif ev and not orange:
             log("pass-evidence", event, evidence=ev)
             return None
         word = STATUS_WORD.match(norm(status))
         if problem:
             pass
-        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(OPENING_END.split(norm(text[:300]))[0]):
+        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(OPENING_END.split(norm(text))[0][:300]):
             problem = "it says neoverené but its opening still calls the work hotové or funguje"
         elif (word or ev) and orange:
             problem = "-"  # the line itself is fine; only the 🟠 rows are sent back
