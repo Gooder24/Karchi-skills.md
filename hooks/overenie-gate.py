@@ -73,8 +73,9 @@ TABLE_ROW = re.compile(r"^[ \t]*\|.*$", re.M)
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
 # an absolute or ~ path that contains spaces, such as ~/Obhajoba práce/overenie/verdikt.md
-SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt\.md|index\.html)")
-EVIDENCE_NAMES = {"verdikt.md", "index.html"}
+SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)")
+# verify.sh takes another verdict name as its second argument: overenie/verdikt-<topic>.md
+EVIDENCE_NAME = re.compile(r"(?:verdikt(?:-[\w.-]+)?\.md|index\.html)$")
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
 # The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
@@ -174,7 +175,7 @@ def changed_something(tools):
 
 
 def evidence(line, t0, cwd):
-    """A verdikt.md or index.html under an overenie/ folder, non-empty and written in this turn."""
+    """A verdikt.md, verdikt-<topic>.md or index.html under an overenie/ folder, non-empty and written in this turn."""
     for raw in PATH.findall(line) + SPACED_PATH.findall(line):
         if ".." in raw:
             continue
@@ -182,7 +183,7 @@ def evidence(line, t0, cwd):
         if not os.path.isabs(p) and isinstance(cwd, str):
             p = os.path.join(cwd, p)
         p = os.path.realpath(p)
-        if os.path.basename(p) not in EVIDENCE_NAMES or "/overenie/" not in p or "/.claude/" in p:
+        if not EVIDENCE_NAME.fullmatch(os.path.basename(p)) or "/overenie/" not in p or "/.claude/" in p:
             continue
         try:
             st = os.stat(p)
