@@ -184,6 +184,9 @@ if [ "$(uname -n)" = karchi ] && command -v systemctl >/dev/null; then
       cp "$R/vykaz/okna.py" "$HOME/.local/share/vykaz/okna.py.bezi" && echo "ok vykaz-okna.service"
   fi
 fi
+# Codex: the overenie-gate Stop hook in every Codex home, trusted (hooks/codex-hooks.mts). A login shell, because bun
+# and codex live in mise or vite-plus paths that the timer's PATH lacks.
+bash -lc 'command -v bun >/dev/null && command -v codex >/dev/null && bun "$0"' "$R/hooks/codex-hooks.mts" || echo "codex-hooks failed"
 # codex-unlock: po zlyhanom Codex ťahu (limit) pustí konverzáciu, aby išla prepnúť na iný Codex účet.
 if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
   mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"

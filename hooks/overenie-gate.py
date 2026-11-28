@@ -139,6 +139,8 @@ def read_turn(path):
                 continue
             if isinstance(o, dict):
                 lines.append(o)
+    if lines and lines[0].get("type") == "session_meta":
+        return read_codex_turn(lines)
     start = 0
     for i, o in enumerate(lines):
         if user_text(o) is not None:
@@ -160,6 +162,35 @@ def read_turn(path):
             elif x.get("type") == "text" and isinstance(x.get("text"), str):
                 texts.append(x["text"])
     return t0, tools, "\n".join(texts)
+
+
+CODEX_CMD = re.compile(r"""\bcmd\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
+
+
+def read_codex_turn(lines):
+    """The same for a Codex rollout (its Stop hook, hooks.json from install.sh): the turn starts at the last
+    task_started, and its tools run as JavaScript in one `exec` tool (tools.exec_command({cmd}), tools.apply_patch)."""
+    start = 0
+    for i, o in enumerate(lines):
+        if o.get("type") == "event_msg" and (o.get("payload") or {}).get("type") == "task_started":
+            start = i
+    turn = lines[start:]
+    t0 = parse_ts(turn[0].get("timestamp")) if turn else None
+    tools = []
+    for o in turn:
+        p = o.get("payload") or {}
+        if o.get("type") != "response_item" or p.get("type") not in ("custom_tool_call", "function_call"):
+            continue
+        code = str(p.get("input") or p.get("arguments") or "")
+        if p.get("name") == "apply_patch" or "apply_patch" in code:
+            tools.append(("Edit", {}))
+        for raw in CODEX_CMD.findall(code):
+            try:
+                cmd = json.loads(raw) if raw[0] == '"' else raw[1:-1]
+            except ValueError:
+                cmd = raw[1:-1]
+            tools.append(("Bash", {"command": cmd}))
+    return t0, tools, ""  # Codex hands the reply over as last_assistant_message
 
 
 def changed_something(tools):

@@ -57,7 +57,7 @@ Scripts in `hooks/` are not skills; `install.sh` does not wire them. Each is wir
 | Hook | What it does |
 |------|---------|
 | [`background-wait.py`](hooks/background-wait.py) | asus only. `PostToolUse` on `Bash\|Monitor`: in a T3 thread, each background task reminds the agent to call `t3_background_wait`, so the thread stays in Working instead of showing Done ([pingdotgg/t3code#25585](https://github.com/pingdotgg/t3code/issues/25585)) |
-| [`overenie-gate.py`](hooks/overenie-gate.py) | asus, x270, dell, e540. `Stop`: a turn that changed something must end with an `Overenie:` line (a fresh evidence file under `overenie/`, or neoverené, netreba, prebieha); otherwise it is sent back once. A reply with a 🟠 row (waiting for his yes) is sent back once too, unless the verdict gave that step back to Karchi. Decisions go to `~/.claude/overenie-gate.jsonl`; `overenie/audit.py` reports them with Karchi's complaints per week |
+| [`overenie-gate.py`](hooks/overenie-gate.py) | asus, x270, dell, e540, in Claude Code and Codex (Codex: [`codex-hooks.mts`](hooks/codex-hooks.mts), run by `install.sh`, writes `hooks.json` in every Codex home and trusts it). `Stop`: a turn that changed something must end with an `Overenie:` line (a fresh evidence file under `overenie/`, or neoverené, netreba, prebieha); otherwise it is sent back once. A reply with a 🟠 row (waiting for his yes) is sent back once too, unless the verdict gave that step back to Karchi. Decisions go to `~/.claude/overenie-gate.jsonl`; `overenie/audit.py` reports them with Karchi's complaints per week |
 
 Wiring:
 
