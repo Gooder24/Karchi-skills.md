@@ -434,9 +434,9 @@ Odpovedz presne {len(nove)} riadkami v tvare „ČÍSLO RIADKU: ČÍSLO TYPU“ 
 DRUHY = {"outlook": "Outlook", "teams": "Teams", "weft": "Weft", "subor": "súbor", "t3": "vlákno T3"}
 
 
-def preco(iv, p, svoj):
+def preco(iv, p, svoj, zaciatky=()):
     """Lines saying what a row's time was counted from: his messages in eSYST threads and the work windows.
-    svoj: vykaz wrote the row (else he wrote it by hand)."""
+    svoj: vykaz wrote the row (else he wrote it by hand); zaciatky: when the day's other rows start."""
     if not svoj:
         return ["zapísal Karol ručne"]
     if not iv or not p:
@@ -448,7 +448,8 @@ def preco(iv, p, svoj):
         if a - timedelta(seconds=KROK) <= t <= b:  # a is rounded to the half minute
             vl.setdefault(f"{r['projekt']} / {r['vlakno']}", []).append(hm(t))
     okno_v = any(datetime.fromisoformat(s_) < b and datetime.fromisoformat(e_) > a for s_, e_, _, _ in p["okna"])
-    if not vl and not okno_v:  # a row cut short by one already in the sheet: its time came from the next message
+    if not vl and not okno_v and not p.get("chyby") and b in zaciatky:
+        # a row cut short by the next one in the sheet: its time came from the message that row was made from
         po = [r for r in p["spravy"] if b < datetime.fromisoformat(r["t"]) <= b + timedelta(minutes=NAD_SPRAVOU[1])]
         for r in po[:1]:
             vl[f"{r['projekt']} / {r['vlakno']}"] = [hm(datetime.fromisoformat(r["t"])) + " (čas pred touto správou)"]
@@ -540,14 +541,15 @@ def export(mesiac, obnov=False):
             except SystemExit:  # Haiku down: the row still goes out, without its sources
                 cache[d] = None
         svoj = bool(d) and f"{cas} {popis}" in svoje_riadky(d)
+        zaciatky = {x[1][0] for x in riadky if x[0] == d and x[1]}
         ws2.append([cas or "bez času", trvanie(sek), typ[f"{cas} {popis}"], popis,
-                    "\n".join(preco(iv, cache.get(d), svoj))])
+                    "\n".join(preco(iv, cache.get(d), svoj, zaciatky))])
     for col, w in zip("ABCDE", (26, 11, 20, 50, 90)):
         ws2.column_dimensions[col].width = w
     for row in ws2.iter_rows(min_row=5):
         for c in row:
             c.alignment = Alignment(wrap_text=True, vertical="top")
-    for w, cesta in ((wb, hlavny), (wb2, podklady)):
+    for w, cesta in ((wb2, podklady), (wb, hlavny)):  # hlavny last: auto() redoes both while it is older
         tmp = cesta.with_name(f".{cesta.name}.tmp")
         w.save(tmp)
         os.replace(tmp, cesta)
