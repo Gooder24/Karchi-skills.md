@@ -186,7 +186,8 @@ if [ "$(uname -n)" = karchi ] && command -v systemctl >/dev/null; then
 fi
 # Codex: the overenie-gate Stop hook in every Codex home, trusted (hooks/codex-hooks.mts). A login shell, because bun
 # and codex live in mise or vite-plus paths that the timer's PATH lacks.
-bash -lc 'command -v bun >/dev/null && command -v codex >/dev/null && bun "$0"' "$R/hooks/codex-hooks.mts" || echo "codex-hooks failed"
+bash -lc 'command -v bun >/dev/null && command -v codex >/dev/null || exit 0; bun "$0"' "$R/hooks/codex-hooks.mts" ||
+  echo "<4>codex-hooks failed: run bun $R/hooks/codex-hooks.mts" >&2
 # codex-unlock: po zlyhanom Codex ťahu (limit) pustí konverzáciu, aby išla prepnúť na iný Codex účet.
 if [ -d "$HOME/.t3/userdata" ] && command -v systemctl >/dev/null; then
   mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"

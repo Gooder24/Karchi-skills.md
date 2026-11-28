@@ -72,7 +72,7 @@ OVERALL_FAILED = re.compile(r"^\s*overall:\s*\**(?:failed|unverifiable)", re.M)
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
 # an absolute or ~ path that contains spaces, such as ~/Obhajoba práce/overenie/verdikt.md
-SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)(?!\.?[\w-])")
+SPACED_PATH = re.compile(r"(?:~|/)[^\n`'\"<>*]{0,300}?/overenie/[^\n`'\"<>*]{0,200}?(?:verdikt[\w.-]*\.md|index\.html)(?![.~]?[\w~-])")
 # verify.sh takes another verdict name as its second argument: overenie/verdikt-<topic>.md
 EVIDENCE_NAME = re.compile(r"(?:verdikt(?:-[\w.-]+)?\.md|index\.html)$")
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
@@ -162,7 +162,10 @@ def read_turn(path):
     return t0, tools, "\n".join(texts)
 
 
-CODEX_CMD = re.compile(r"""\bcmd\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
+# Every string literal in the exec tool's JavaScript or a function call's JSON: the commands are among them, also when
+# the cmd is a variable, a quoted key or String.raw.
+CODEX_STRING = re.compile(r"""("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
+CODEX_PATCH = re.compile(r"\bapply_patch\s*\(|\*\*\* Begin Patch")
 
 
 def read_codex_turn(lines):
@@ -180,14 +183,14 @@ def read_codex_turn(lines):
         if o.get("type") != "response_item" or p.get("type") not in ("custom_tool_call", "function_call"):
             continue
         code = str(p.get("input") or p.get("arguments") or "")
-        if p.get("name") == "apply_patch" or "apply_patch" in code:
+        if p.get("name") == "apply_patch" or CODEX_PATCH.search(code):
             tools.append(("Edit", {}))
-        for raw in CODEX_CMD.findall(code):
+        for raw in CODEX_STRING.findall(code):
             try:
-                cmd = json.loads(raw) if raw[0] == '"' else raw[1:-1]
+                text = json.loads(raw) if raw[0] == '"' else raw[1:-1]
             except ValueError:
-                cmd = raw[1:-1]
-            tools.append(("Bash", {"command": cmd}))
+                text = raw[1:-1]
+            tools.append(("Bash", {"command": str(text)}))
     return t0, tools, ""  # Codex hands the reply over as last_assistant_message
 
 
@@ -284,7 +287,7 @@ def decide(event):
     change = changed_something(tools)
     if not change:
         return None
-    lines = STATUS_LINE.findall(FENCE.sub("", text[-4000:]))
+    lines = STATUS_LINE.findall(FENCE.sub("", text)[-4000:])
     status = lines[-1].strip()[:500] if lines else ""
     orange = waiting_without_referral(text, status, t0, event.get("cwd"))
     problem = ""
