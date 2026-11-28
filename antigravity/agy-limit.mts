@@ -40,7 +40,11 @@ function usage(home: string) {
     let err = "";
     agy.stdout.on("data", (chunk) => (out += chunk));
     agy.stderr.on("data", (chunk) => (err += chunk));
-    const timer = setTimeout(() => agy.kill("SIGTERM"), 90_000);
+    // After 90 s the run fails at once: a process agy left behind may hold its output open.
+    const timer = setTimeout(() => {
+      agy.kill("SIGTERM");
+      resolve({ out: "", err: "agy gave no answer in 90 s" });
+    }, 90_000);
     agy.on("error", (error) => (err += error.message));
     agy.on("close", (code, signal) => {
       clearTimeout(timer);
@@ -60,7 +64,9 @@ if (!existsSync(AGY)) fail(`${AGY} is missing (Antigravity CLI)`);
 // Older than any run can last (90 s for agy): a run still going keeps its copy.
 for (const left of readdirSync(RUNTIME).filter((name) => name.startsWith("agy-limit-"))) {
   const path = join(RUNTIME, left);
-  if (Date.now() - statSync(path).mtimeMs > 120_000) rmSync(path, { recursive: true, force: true });
+  try {
+    if (Date.now() - statSync(path).mtimeMs > 120_000) rmSync(path, { recursive: true, force: true });
+  } catch {} // another run took it first, or it is another user's
 }
 
 let result: Awaited<ReturnType<typeof usage>>;
