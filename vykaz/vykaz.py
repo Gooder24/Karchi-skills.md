@@ -447,7 +447,8 @@ def preco(iv, p, svoj):
         t = datetime.fromisoformat(r["t"])
         if a - timedelta(seconds=KROK) <= t <= b:  # a is rounded to the half minute
             vl.setdefault(f"{r['projekt']} / {r['vlakno']}", []).append(hm(t))
-    if not vl:  # a row cut short by one already in the sheet: its time came from the next message
+    okno_v = any(datetime.fromisoformat(s_) < b and datetime.fromisoformat(e_) > a for s_, e_, _, _ in p["okna"])
+    if not vl and not okno_v:  # a row cut short by one already in the sheet: its time came from the next message
         po = [r for r in p["spravy"] if b < datetime.fromisoformat(r["t"]) <= b + timedelta(minutes=NAD_SPRAVOU[1])]
         for r in po[:1]:
             vl[f"{r['projekt']} / {r['vlakno']}"] = [hm(datetime.fromisoformat(r["t"])) + " (čas pred touto správou)"]
@@ -739,7 +740,7 @@ def auto():
         return
     hotove = stav().get("dni", {})
     d, today = START, datetime.now(TZ).date()
-    pridane, mesiace = 0, set()
+    pridane = 0
     while d < today and datetime.now(TZ).hour in ZOBUDENY:
         v = hotove.get(str(d))
         stare = not novy_den(v) and (not isinstance(v, dict) or v.get("pravidla", 1) != PRAVIDLA)
@@ -754,15 +755,20 @@ def auto():
             if r is None:
                 break
             pridane += len(r)
-            mesiace.add(d.replace(day=1))
         d += timedelta(days=1)
     if pridane:
         notify(f"Výkaz: pridal som {pridane} riadkov do {subor(today - timedelta(days=1)).name}")
-    for m in sorted(mesiace):  # so the files for ekonomika match the month's file (also after rows were taken out)
-        try:
-            export(m)
-        except (SystemExit, Exception) as e:
-            print(f"súbory pre ekonomiku ({MESIACE[m.month]}) sa teraz nedali vyrobiť: {e}")
+    # the files for ekonomika follow the month's file: made again whenever it is newer (a write, rows taken out,
+    # his own edit, or an export that failed last time)
+    m = START
+    while m <= today:
+        f, h = subor(m), PLAT / f"Karol Ľupták – {NAZVY[m.month]} {m.year}.xlsx"
+        if f.exists() and (not h.exists() or h.stat().st_mtime < f.stat().st_mtime):
+            try:
+                export(m)
+            except (SystemExit, Exception) as e:
+                print(f"súbory pre ekonomiku ({MESIACE[m.month]}) sa teraz nedali vyrobiť: {e}")
+        m = (m.replace(day=28) + timedelta(days=4)).replace(day=1)
 
 
 def vrat(mesiac=None):
@@ -830,15 +836,14 @@ def poslat(teraz=None):
         spolu = next((ws.cell(r[0].row, 3).value for r in ws.iter_rows(min_col=4, max_col=4)
                       if str(r[0].value or "").strip() == "spolu"), "?") if ws else "?"
         kam = f"O 21:00 pošlem hodiny podľa typu práce a podklady (zo súboru {f.name}) na {EKONOMIKA}" if POSLAT_Z else \
-            f"Posielanie nie je zapnuté: súbory „Karol Ľupták – {NAZVY[mesiac.month]} {mesiac.year}“ (hodiny a podklady) " \
-            f"v {PLAT} pošli dnes sám na {EKONOMIKA}"
+            f"Posielanie nie je zapnuté: „Karol Ľupták – {NAZVY[mesiac.month]} {mesiac.year}.xlsx“ a „… – podklady.xlsx“ " \
+            f"z {PLAT} pošli dnes sám na {EKONOMIKA}"
         notify(f"Výkaz {MESIACE[mesiac.month]}: spolu {spolu}. {kam}. Ak niečo nesedí, oprav súbor pred tým.")
         return
-    cmd = [str(WEFT), "mail", "--yes", "--from", str(POSLAT_Z), "--subject", PREDMET, "--file", str(f), EKONOMIKA]  # shown when off
+    nazov = f"Karol Ľupták – {NAZVY[mesiac.month]} {mesiac.year}"
     if not POSLAT_Z:
-        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (posielanie nie je zapnuté): pošli súbory „Karol Ľupták – "
-               f"{NAZVY[mesiac.month]} {mesiac.year}“ z {PLAT} na {EKONOMIKA}.")
-        print("neposlané, chýba POSLAT_Z:", " ".join(cmd))
+        notify(f"Výkaz {MESIACE[mesiac.month]} som neposlal (posielanie nie je zapnuté): pošli „{nazov}.xlsx“ a "
+               f"„{nazov} – podklady.xlsx“ z {PLAT} na {EKONOMIKA}.")
         return
     # the last day (so far), else it would be missing from the file that goes out
     if zapis_den(mesiac) is None:
