@@ -77,7 +77,7 @@ Iný tvar nie je: žiadny zoznam nálezov overovateľov, kontrol ani pätička s
 
 Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho začína hlavička každého stĺpca iným farebným
 krúžkom, aby stĺpce rozoznal: `| ⚪ # | 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce ⚫. Bunka
-„Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď. Nič iné
+„Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď, ⚫ nikto (nález, ktorý sa vedome neopravuje). Nič iné
 nefarbi: žiadne vzorce (`$\textcolor…$` sa bez zapnutého Render math ukáže ako surový text), HTML ani rámčeky
 (`> [!TIP]`, `> [!WARNING]` a podobné).
 
@@ -88,6 +88,13 @@ riadok na krok; overovateľ každý vráti `áno` alebo `Karchi – <prečo>`. K
 práce alebo je vec vkusu; keď jeden z dvoch overovateľov povie `Karchi`, platí Karchi. Kroky s `áno` sprav v tom
 istom ťahu a over ich ďalším kolom. V tabuľke ostane 🟠 len to, čo overovateľ vrátil Karchimu; stop hook
 `overenie-gate.py` ťah s 🟠 bez takého verdiktu raz vráti.
+
+Sprav, čo treba (Karchi, 2026-11-28): čo podľa teba treba spraviť a vieš to spraviť, sprav v tom istom behu, aj keď
+by si sa inak spýtal (krok, ktorý ide von alebo je nevratný, najprv overovateľovi podľa „Áno od overovateľa“); Karchi to prípadne potom zruší, preto pri tom v Hotové stojí commit, ktorým sa to vráti.
+„Ak chceš“, „keď sa to stane v praxi“ ani „pri ďalšej zmene“ nie je dôvod nechať riadok v Nehotové: 🟢 znamená, že
+to robíš teraz. Čo podľa teba netreba, do tabuľky nepíš; nález overovateľa, ktorý vedome neopravíš, je riadok
+„(neprešlo) – nerobím: <prečo>“ s Kto „⚫ nikto“. Karchimu ostáva len to, čo mu vrátil overovateľ, a to, čo vie
+spraviť len on (prihlásenie, heslo, jeho oko).
 
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 

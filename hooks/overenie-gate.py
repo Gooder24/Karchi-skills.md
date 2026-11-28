@@ -68,8 +68,8 @@ FAILED_IN_REPLY = re.compile(r"(nepreslo|neda sa overit|opravene[\s,\u2013\u2014
 # Findings of one verifier section: its numbered checks that did not pass, or its Broken / Unverified lines,
 # whichever is more (a failed check usually has its own Broken line).
 FAILED_CHECK = re.compile(r"^\s*\d+\.\s*\**(?:failed|unverifiable)", re.M)
+OVERALL_FAILED = re.compile(r"^\s*overall:\s*\**(?:failed|unverifiable)", re.M)
 FINDING_LINE = re.compile(r"^\s*(?:broken|unverified):", re.M)
-TABLE_ROW = re.compile(r"^[ \t]*\|.*$", re.M)
 # The verdict's own status lines (verifier-agents.md), or the older Slovak verdicts.
 FAILED_IN_VERDICT = re.compile(r"(nepreslo|neda sa overit|^\s*(?:overall:|\d+\.)\s*\**(?:failed|unverifiable))", re.M)
 PATH = re.compile(r"(?:[^\s`'\"()\[\]<>*,;]{0,300}/)?overenie/[^\s`'\"()\[\]<>*,;]{1,200}")
@@ -80,13 +80,14 @@ EVIDENCE_NAME = re.compile(r"(?:verdikt(?:-[\w.-]+)?\.md|index\.html)$")
 DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|opravil\w*|fixnut\w*|fixol|spraven\w*"
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
 # The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
-OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*(?:nic\.?|[\u2013\u2014-])?\s*$")
+OPENING_END = re.compile(r"(?m)^\s*#*\s*\**(?:ne)?hotove:?\**:?\s*(?:nic(?:\s+nechyba)?\.?|[\u2013\u2014-])?\s*$")
 # A Nehotové row whose Kto cell is 🟠 (waits for Karchi's yes), and the verdict line that gave such a step back to him.
 # The Kto cell is the last one, so a \ud83d\udfe0 in another column (Ako to opravi\u0165) does not count.
 WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
 # one line per step a verifier gave back, inside its `Na schv\u00e1lenie:` list (the verdict text is norm()ed)
 APPROVAL_SECTION = re.compile(r"^[ \t*_]*na schvalenie:[ \t*_]*(?:\(.*\))?[ \t]*$", re.M)
 KARCHI_REFERRAL = re.compile(r"^[ \t]*-[ \t]+karchi[ \t]+[\u2013\u2014-][ \t]", re.M)
+DASH = re.compile(r"\s[\u2013\u2014-]\s(?!.*\s[\u2013\u2014-]\s)")
 NOT_A_USER_TURN = ("<task-notification", "this session is being continued", "<command-", "caveat:",
                    "[system notification", "background command", "monitor \"")
 
@@ -194,6 +195,30 @@ def evidence(line, t0, cwd):
     return None
 
 
+def opening(text):
+    """The reply's first sentence: all of it before a Hotové / Nehotové heading, else its first 300 characters."""
+    parts = OPENING_END.split(norm(text), maxsplit=1)
+    return parts[0] if len(parts) > 1 else parts[0][:300]
+
+
+def marked_rows(text):
+    """Rows of a real Markdown table (it has a |---| line) whose Čo cell marks a finding; any cell when no Čo column."""
+    count, block = 0, []
+    for line in FENCE.sub("", norm(text)).splitlines() + [""]:
+        if line.strip().startswith("|"):
+            cells = re.sub(r"`[^`\n]*`", lambda m: m.group(0).replace("|", ""), line).replace("\\|", "").strip().strip("|").split("|")
+            block.append([c.strip() for c in cells])
+            continue
+        if len(block) > 2 and all(set(c) <= set("-: ") and "-" in c for c in block[1]):
+            names = [re.sub(r"[^a-z#]", "", c) for c in block[0]]
+            col = names.index("co") if "co" in names else None
+            for row in block[2:]:
+                cells = row if col is None else row[col:col + 1]
+                count += any(FAILED_IN_REPLY.search(c) for c in cells)
+        block = []
+    return count
+
+
 def waiting_without_referral(text, status, t0, cwd):
     """Why the 🟠 rows of the reply may not wait for Karchi yet, or "" when there are none or a verdict gave each back."""
     rows = len(WAITING_ROW.findall(FENCE.sub("", text)))
@@ -201,9 +226,12 @@ def waiting_without_referral(text, status, t0, cwd):
         return ""
     ev = evidence(status, t0, cwd) if status else None
     verdict = norm(open(ev, errors="replace").read(200000)) if ev else ""
-    # each verifier lists every step, so the verifier that gave the most back counts, not their sum
-    # ponytail: counts steps, does not match them to rows; match step texts if agents start gaming the count
-    referrals = max([len(KARCHI_REFERRAL.findall(part.split("\n#")[0])) for part in APPROVAL_SECTION.split(verdict)[1:]] or [0])
+    # one verifier giving a step to Karchi is enough, so count the distinct steps of all verifiers together
+    # ponytail: does not match the steps to the rows; match step texts if agents start gaming the count
+    # a step is the text between "- Karchi –" and its last "– <which rule>", whatever dash each verifier typed
+    referrals = len({DASH.split(KARCHI_REFERRAL.sub("", line).strip())[0].strip()
+                     for part in APPROVAL_SECTION.split(verdict)[1:]
+                     for line in part.split("\n#")[0].splitlines() if KARCHI_REFERRAL.match(line)})
     if referrals >= rows:
         return ""
     return (f"the reply has {rows} row(s) waiting for Karchi's yes (🟠), but the verdict of this turn gave only "
@@ -237,9 +265,16 @@ def decide(event):
         # each verifier section lists the same findings, so the one with the most counts, not their sum
         needed = max([max(len(FAILED_CHECK.findall(part)), len(FINDING_LINE.findall(part)))
                       for part in verdict.split("## overovatel")] or [0])
-        marked = sum(1 for row in TABLE_ROW.findall(FENCE.sub("", norm(text))) if FAILED_IN_REPLY.search(row))
-        # a verdict without Overall: is the older Slovak shape, counted as one finding
-        if ev and (needed or ("overall:" not in verdict and FAILED_IN_VERDICT.search(verdict))) and marked < max(needed, 1):
+        if "overall:" not in verdict:  # the older Slovak shape: one finding per line that says it, not its summary
+            needed = max([sum(1 for line in part.splitlines() if FAILED_IN_VERDICT.search(line)
+                              and not line.lstrip("#*- ").startswith("vysledok"))
+                          for part in verdict.split("## overovatel")] or [0])
+            if FAILED_IN_VERDICT.search(verdict):
+                needed = max(needed, 1)
+        elif OVERALL_FAILED.search(verdict):
+            needed = max(needed, 1)
+        marked = marked_rows(text)
+        if ev and needed and marked < needed:
             problem = (f"{ev} records {needed} finding(s) (failed or unverifiable checks, Broken and Unverified lines "
                        f"of one verifier), but the reply's table marks only {marked}. One Nehotové row per finding, "
                        "marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings "
@@ -250,7 +285,7 @@ def decide(event):
         word = STATUS_WORD.match(norm(status))
         if problem:
             pass
-        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(OPENING_END.split(norm(text))[0][:300]):
+        elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(opening(text)):
             problem = "it says neoverené but its opening still calls the work hotové or funguje"
         elif (word or ev) and orange:
             problem = "-"  # the line itself is fine; only the 🟠 rows are sent back
