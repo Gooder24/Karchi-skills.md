@@ -80,7 +80,7 @@ DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|oprav
 # The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
 OPENING_END = re.compile(r"(?m)^\s*#*\s*\**(?:ne)?hotove:?\**:?\s*(?:nic(?:\s+nechyba)?\.?|[\u2013\u2014-])?\s*$")
 # A Nehotové row whose Kto cell is 🟠 (waits for Karchi's yes), and the verdict line that gave such a step back to him.
-# The Kto cell is the last one, so a \ud83d\udfe0 in another column (Ako to opravi\u0165) does not count.
+# The Kto cell is the last one, so a \ud83d\udfe0 in another column (\u010eal\u0161\u00ed krok) does not count.
 WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
 # one line per step a verifier gave back, inside its `Na schv\u00e1lenie:` list (the verdict text is norm()ed)
 APPROVAL_SECTION = re.compile(r"^[ \t*_]*na schvalenie:[ \t*_]*(?:\(.*\))?[ \t]*$", re.M)

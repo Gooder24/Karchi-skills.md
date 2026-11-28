@@ -69,14 +69,14 @@ Odpoveď po ťahu, ktorý robil prácu, končí prehľadom celej úlohy vlákna 
 
 1. Jedna veta: kde je celá úloha.
 2. **Hotové:** odrážky, každá s dôkazom (číslo, commit, verdikt). Neoverené sem nepatrí.
-3. **Nehotové:** tabuľka `| # | Čo | Prečo nie | Ako to opraviť | Kto |`, kde „#“ je číslo riadku od 1, aby Karchi mohol odpovedať „2 áno, 3 nie“ (Karchi, 2026-11-28), a „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem len to, čo ešte niekto spraví: aj neoverené a každá kontrola, ktorú overovateľ neuznal, ako riadok so slovom `(neprešlo)` alebo `(nedá sa overiť)` v „Čo“. Nález opravený bez ďalšieho kola overenia je riadok „opravené, neoverené“, nie bod v Hotové. Keď nič nechýba, napíš „Nič nechýba“.
+3. **Nehotové:** tabuľka `| # | Čo | Na čom to stojí | Ďalší krok | Kto |` (Karchi, 2026-11-28: „Prečo nie“ a „Ako to opraviť“ mu nepovedali, ako vec vyriešiť). „#“ je číslo riadku od 1, aby mohol odpovedať „2 áno, 3 nie“. „Čo“ je vec tak, ako ju uvidí Karchi, nie názov funkcie či súboru. „Na čom to stojí“ je jedna konkrétna prekážka (čaká na tvoje heslo; e540 je vypnutý; na mobile to nikto neskúsil), nie technický rozbor. „Ďalší krok“ je presná akcia, po ktorej riadok zmizne: pre Karchiho čo spraví a kde (príkaz, adresa, tlačidlo), pre agenta čo urobí; s údajmi, ktoré na to treba (adresa, názov tokenu, znenie otázky), nie odkaz na skoršiu správu; nikdy „netreba“, „over to“ ani nápad na riešenie. Jeden riadok je jedna vec: štyri otázky sú štyri riadky. „Kto“ je agent (a či to spraví sám hneď, alebo čaká na Karchiho áno) alebo Karchi. Patrí sem len to, čo ešte niekto spraví: aj neoverené a každá kontrola, ktorú overovateľ neuznal, ako riadok so slovom `(neprešlo)` alebo `(nedá sa overiť)` v „Čo“. Nález opravený bez ďalšieho kola overenia je riadok „opravené, neoverené“, nie bod v Hotové. Keď nič nechýba, napíš „Nič nechýba“.
 4. **Od teba:** len keď niečo musí spraviť alebo rozhodnúť Karchi: každý krok alebo otázka je odrážka s číslom svojho riadku z Nehotové (`- **2:** …`; číslovaný zoznam `2.`, `4.` Markdown prečísluje na 2, 3), nie vlastné číslovanie, lebo každá vec, na ktorej je Karchi na ťahu, je v tabuľke (vkus v skille `taste`).
 5. Riadok `Overenie:` ako posledný.
 
 Iný tvar nie je: žiadny zoznam nálezov overovateľov, kontrol ani pätička skillu pred, medzi ani za týmito časťami (27. 11. SPOTREX: nálezy hore a znova v tabuľke). Skill, ktorý chce niečo v odpovedi, to dáva do týchto častí.
 
 Farebné stĺpce (Karchi, 2026-11-24): v každej tabuľke pre Karchiho začína hlavička každého stĺpca iným farebným
-krúžkom, aby stĺpce rozoznal: `| ⚪ # | 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opraviť | 🟡 Kto |`, ďalšie stĺpce ⚫. Bunka
+krúžkom, aby stĺpce rozoznal: `| ⚪ # | 🔵 Čo | 🟣 Na čom to stojí | 🟤 Ďalší krok | 🟡 Kto |`, ďalšie stĺpce ⚫. Bunka
 „Kto“ začína krúžkom podľa toho, kto je na ťahu: 🔴 Karchi, 🟠 agent čaká na jeho áno, 🟢 agent sám hneď. Nič iné
 nefarbi: žiadne vzorce (`$\textcolor…$` sa bez zapnutého Render math ukáže ako surový text), HTML ani rámčeky
 (`> [!TIP]`, `> [!WARNING]` a podobné).
