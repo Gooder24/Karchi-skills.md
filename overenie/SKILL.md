@@ -140,6 +140,13 @@ tries to break each, and reruns run.sh only when it doubts your output or the br
 shares, the brief says `Hĺbka: dôkladná` and it re-checks every check the fix can reach. It never trusts the builder's
 word on a check it judges. Then report what is still failing.
 
+A step you would ask his yes for (🟠) goes to the verifier first (AGENTS.md „Áno od overovateľa“): a `Na schválenie:`
+section in the brief, one line per step, ideally in the first round. Do every step no verifier gives to `Karchi`; the
+targeted round verifies them. When the 🟠 steps turn up only at the round cap, two more rounds are allowed beyond it:
+one that answers them, one that verifies the steps it approved. A step either verifier gives to `Karchi` stays 🟠, and
+the Stop hook lets the reply through only when the verdict on its `Overenie:` line gives back at least as many steps as
+the table has 🟠 rows.
+
 ## 4. Report
 
 No report page: he does not read one (10. 11.). The reply has the one shape of AGENTS.md „Koniec odpovede“ and no

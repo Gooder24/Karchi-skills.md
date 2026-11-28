@@ -41,7 +41,16 @@ Overall: passed | failed | unverifiable – <reason in a few words>
 2. …
 Broken: <when, what goes wrong, file:line; "code only" when not reproduced>   (one line each, worst first)
 Unverified: <what and why; name a simulation as one: "WebKit iPhone profile", not "iPhone">
+Na schválenie:   (only when the brief has that section)
+- áno – <step>
+- Karchi – <step> – <which rule>
 ```
+
+`Na schválenie:` lists steps the builder would otherwise wait on Karchi's yes for. Answer `áno` when the step stays
+on his own machines and can be undone (a commit and push to his own repo, a file, a setting, a restart of his own
+service). Answer `Karchi` when it goes out (a commit or push in an eSYST repo, the vps, a message to a real person,
+money), cannot be undone (deleting data), changes how he works, or is a matter of taste, and when you are unsure.
+You only judge each step; never do it.
 
 `passed` only with evidence from this run of yours, never from the brief, the builder's output or an earlier verdict.
 Leave out a `Broken` or `Unverified` line that would say nothing. Your final message is one line:

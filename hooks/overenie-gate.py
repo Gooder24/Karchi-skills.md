@@ -74,6 +74,12 @@ DONE_WORDS = re.compile(r"\b(hotov\w*|funguje|funguju|funkcn\w*|opraven\w*|oprav
                         r"|nasaden\w*|vsetko ide|done|works|fixed)\b")
 # The opening is the sentence before the **Hotové:** or **Nehotové:** heading line of AGENTS.md „Koniec odpovede“.
 OPENING_END = re.compile(r"(?m)^\s*\**(?:ne)?hotove:?\**:?\s*$")
+# A Nehotové row whose Kto cell is 🟠 (waits for Karchi's yes), and the verdict line that gave such a step back to him.
+# The Kto cell is the last one, so a \ud83d\udfe0 in another column (Ako to opravi\u0165) does not count.
+WAITING_ROW = re.compile(r"^[ \t]*\|.*\|[ \t*_]*\U0001F7E0[^|\n]*\|?[ \t]*$", re.M)
+TILDE_FENCE = re.compile(r"~~~.*?(~~~|$)", re.S)
+# one line per step a verifier gave back, inside its `Na schv\u00e1lenie:` list (the verdict text is norm()ed)
+KARCHI_REFERRAL = re.compile(r"^[ \t]*-[ \t]+karchi[ \t]+[\u2013\u2014-][ \t]", re.M)
 NOT_A_USER_TURN = ("<task-notification", "this session is being continued", "<command-", "caveat:",
                    "[system notification", "background command", "monitor \"")
 
@@ -181,6 +187,25 @@ def evidence(line, t0, cwd):
     return None
 
 
+def waiting_without_referral(text, status, t0, cwd):
+    """Why the 🟠 rows of the reply may not wait for Karchi yet, or "" when there are none or a verdict gave each back."""
+    rows = len(WAITING_ROW.findall(FENCE.sub("", TILDE_FENCE.sub("", text))))
+    if not rows:
+        return ""
+    ev = evidence(status, t0, cwd) if status else None
+    verdict = norm(open(ev, errors="replace").read(200000)) if ev else ""
+    # each verifier lists every step, so the verifier that gave the most back counts, not their sum
+    referrals = max([len(KARCHI_REFERRAL.findall(part.split("\n#")[0])) for part in verdict.split("na schvalenie:")[1:]] or [0])
+    if referrals >= rows:
+        return ""
+    return (f"the reply has {rows} row(s) waiting for Karchi's yes (🟠), but the verdict of this turn gave only "
+            f"{referrals} step(s) back to him under `Na schválenie:`. AGENTS.md „Áno od overovateľa“: he wants the run "
+            "finished before he is interrupted. Put each 🟠 step into a brief under `Na schválenie:` (one line per step) "
+            "and run verify.sh; each verifier answers `áno` or `Karchi – <why>`. Do every step no verifier gives to "
+            "Karchi now and verify it in the next round. Keep 🟠 only for steps a verifier gave back to him, and end "
+            "with the path of that verdict.")
+
+
 def decide(event):
     if os.environ.get("OVERENIE_VERIFIER") or event.get("agent_id"):
         return None
@@ -196,6 +221,7 @@ def decide(event):
         return None
     lines = STATUS_LINE.findall(FENCE.sub("", text[-4000:]))
     status = lines[-1].strip()[:500] if lines else ""
+    orange = waiting_without_referral(text, status, t0, event.get("cwd"))
     problem = ""
     if status:
         ev = evidence(status, t0, event.get("cwd"))
@@ -203,7 +229,7 @@ def decide(event):
                 and not FAILED_IN_REPLY.search(norm(text)):
             problem = (f"{ev} records checks that failed or could not be verified, and the reply does not "
                        "say which (one row per finding in the Nehotové table, marked (neprešlo), (nedá sa overiť) or opravené, neoverené; no separate list of findings, AGENTS.md „Koniec odpovede“)")
-        elif ev:
+        elif ev and not orange:
             log("pass-evidence", event, evidence=ev)
             return None
         word = STATUS_WORD.match(norm(status))
@@ -211,6 +237,8 @@ def decide(event):
             pass
         elif word and word.group(1).startswith("neoveren") and DONE_WORDS.search(OPENING_END.split(norm(text[:300]))[0]):
             problem = "it says neoverené but its opening still calls the work hotové or funguje"
+        elif (word or ev) and orange:
+            problem = "-"  # the line itself is fine; only the 🟠 rows are sent back
         elif word:
             log("pass-" + ("neoverene" if word.group(1).startswith("neoveren") else word.group(1)), event,
                 status=status[:200])
@@ -218,11 +246,13 @@ def decide(event):
     if event.get("stop_hook_active"):
         log("pass-after-block", event, status=status[:200], change=change)
         return None
-    log("block", event, status=status[:200], change=change, opening=text[:200])
+    log("block-orange" if problem == "-" else "block", event, status=status[:200], change=change, opening=text[:200])
+    if problem == "-":
+        return {"decision": "block", "reason": "overenie-gate: " + orange}
     why = problem or ("its 'Overenie:' line neither names an overenie/…/verdikt.md written "
                       "in this turn nor starts with neoverené, netreba or prebieha" if status
                       else "it has no 'Overenie:' line")
-    return {"decision": "block", "reason": (
+    return {"decision": "block", "reason": (orange + "\nAlso: " if orange else "") + (
         f"overenie-gate: this turn changed something ({change[:80]}), but {why}. Karchi has been burned "
         "many times by 'hotové' from the agent that built the change, so every reply after a change "
         "ends with one line he can trust at a glance. Add exactly one, truthfully:\n"

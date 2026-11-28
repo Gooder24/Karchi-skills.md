@@ -81,6 +81,14 @@ krúžkom, aby stĺpce rozoznal: `| 🔵 Čo | 🟣 Prečo nie | 🟤 Ako to opr
 nefarbi: žiadne vzorce (`$\textcolor…$` sa bez zapnutého Render math ukáže ako surový text), HTML ani rámčeky
 (`> [!TIP]`, `> [!WARNING]` a podobné).
 
+Áno od overovateľa (Karchi, 2026-11-28): krok, na ktorý by si čakal Karchiho áno (🟠), najprv daj overovateľovi,
+aby si beh dokončil a Karchiho vyrušil až potom. V briefe pre `verify.sh` mu daj sekciu `Na schválenie:`, jeden
+riadok na krok; overovateľ každý vráti `áno` alebo `Karchi – <prečo>`. Karchimu ostáva len krok, ktorý ide von
+(commit či push v eSYST, `vps`, správa skutočným ľuďom, peniaze), je nevratný (mazanie dát), mení jeho spôsob
+práce alebo je vec vkusu; keď jeden z dvoch overovateľov povie `Karchi`, platí Karchi. Kroky s `áno` sprav v tom
+istom ťahu a over ich ďalším kolom. V tabuľke ostane 🟠 len to, čo overovateľ vrátil Karchimu; stop hook
+`overenie-gate.py` ťah s 🟠 bez takého verdiktu raz vráti.
+
 Bez rozprávania o priebehu práce. Technické detaily len tam, kde ich Karchi potrebuje na rozhodnutie.
 
 # Jazyky (Karchi, 2026-11-21 a 2026-11-23)
