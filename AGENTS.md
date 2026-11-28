@@ -28,7 +28,7 @@ povolené modely sa menia len v `ALLOWED` v `antigravity/agy-guard.mts`.
 
 # SPOTREX (Karchi, 2026-11-16)
 
-SPOTREX (eSYST, `e-SYST/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Súbory staníc z Outlooku nosí na ostrý príjem časovač `spotrex-posta.timer` na asuse (`~/.local/share/spotrex-posta/synchronizuj.sh`, Karchi 2026-11-19).
+SPOTREX (eSYST, `e-SYST/spotrex`) sa vyvíja na asuse: T3 projekt „SPOTREX“ v `~/projects/spotrex`. Nové SPOTREX vlákno zakladaj tam (`environmentId` asusu). Na `vps` beží len ostrá stránka: agent tam ide (`ssh vps` z x270 alebo asusu) iba keď stránka nefunguje alebo na Karchiho výslovný pokyn (napr. nasadenie), a len do `/srv/spotrex`. Odpočty zo staníc CRS 40 sťahuje raz denne priamo cez VPN kontajner `spotrex-zber` na VPS (`compose.zber.yaml`, `rozhodnutia/0024`); časovač `spotrex-posta.timer` na asuse, ktorý ich nosil z Outlooku, je od 24. 11. vypnutý.
 
 # Weft (Karchi, 2026-11-20 a 2026-11-25)
 
