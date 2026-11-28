@@ -29,6 +29,31 @@ for d in "$R"/*/; do
     echo "ok $t/$n"
   done
 done
+# eSYST skills (private e-SYST/skills): pulled and linked the same way, where a clone in ~/.work/esyst-skills
+# exists. A clone needs GitHub access to the org, so it is made once by hand:
+# git clone https://github.com/e-SYST/skills.git ~/.work/esyst-skills
+E="$HOME/.work/esyst-skills"
+if [ -d "$E/.git" ]; then
+  timeout 30 git -C "$E" pull -q --ff-only || echo "<4>esyst-skills: git pull failed in $E" >&2
+  for t in "$HOME/.claude/skills" "$HOME/.codex/skills" "$HOME/.gemini/config/skills"; do
+    for l in "$t"/*; do
+      [ -L "$l" ] && [ ! -e "$l/SKILL.md" ] && case "$(readlink "$l")" in "$E"/*) rm "$l" && echo "rm $l";; esac
+    done
+  done
+  for d in "$E"/*/; do
+    [ -f "$d/SKILL.md" ] || continue
+    n=$(basename "$d")
+    # A karchi-skills skill of the same name wins; the eSYST one needs another name.
+    if [ -f "$R/$n/SKILL.md" ]; then echo "<4>esyst-skills: $n is also in karchi-skills, not linked" >&2; continue; fi
+    for t in "$HOME/.claude/skills" "$HOME/.codex/skills" "$HOME/.gemini/config/skills"; do
+      [ -d "$(dirname "$t")" ] || continue
+      mkdir -p "$t"
+      if [ -e "$t/$n" ] && [ ! -L "$t/$n" ]; then echo "SKIP $t/$n: real folder exists"; continue; fi
+      ln -sfn "${d%/}" "$t/$n"
+      echo "ok $t/$n"
+    done
+  done
+fi
 # weft: Karchi's Weft inbox for agents, on every machine (runs on asus, elsewhere over ssh; see weft/SKILL.md).
 mkdir -p "$HOME/.local/bin" && ln -sfn "$R/weft/weft" "$HOME/.local/bin/weft"
 # ucenie: Karchi's learning app Učenie for agents (runs on asus, elsewhere over ssh; see ucenie/SKILL.md).
